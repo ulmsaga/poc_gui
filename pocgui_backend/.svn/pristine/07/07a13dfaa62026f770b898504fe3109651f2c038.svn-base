@@ -1,0 +1,16 @@
+package com.mobigen.cdev.datagw.module.provide.interfacesource.dto;
+
+import java.util.List;
+
+public class ProvideDataManageDetailDefDto {
+  private List<ProvideInterfaceAddedFileDto> interfaceFileList;
+
+  public List<ProvideInterfaceAddedFileDto> getInterfaceFileList() {
+    return interfaceFileList;
+  }
+
+  public void setInterfaceFileList(List<ProvideInterfaceAddedFileDto> interfaceFileList) {
+    this.interfaceFileList = interfaceFileList;
+  }
+  
+}

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.mariadb.core.paging">
+  <sql id="pagingPreSQL">
+    WITH TMP AS
+		(
+			SELECT
+				@ROWNUM:=@ROWNUM+1 row_num
+			,	MAINSQL.*
+			FROM
+			(
+  </sql>
+
+	<!-- -->
+	<!-- PAGE 관련 필드 정의 -->
+	<!-- tot_count : 총 DATA ROW COUNT -->
+	<!-- page_count : 총 PAGE COUNT -->
+	<!-- page_per_count : 1 PAGE 당 ROW COUNT -->
+	<!-- curr_page : 현재 PAGE -->
+	<!-- curr_page_btn_num :  현재 클릭/선택된 하단 버튼의 위치 순서 번호, 순서 대로 : 버튼1, 2, 3, 4, 5 -->
+	<!-- curr_page_group_start : 현재 PAGE GROUP에서 버튼 1 ~ 5 중 첫번째 버튼 1의 PAGE 번호 -->
+	<!-- curr_page_group_end : 현재 PAGE GROUP에서 버튼 1 ~ 5 중 마지막 버튼 5의 PAGE 번호 -->
+	<!-- first_page_group_start : 맨 처음 PAGE GROUP 의 1버튼의 PAGE 번호 : 무조건 1 -->
+	<!-- first_page_group_end : 맨 처음 PAGE의 5버튼의 PAGE 번호 : 5 PAGE 이상일 경우 5, 아닐 경우 MAX PAGE -->
+	<!-- first_page_group_end : 맨 마지막 PAGE GROUP 의 1버튼 PAGE 번호 -->
+	<!-- last_page_group_end : 맨 마지막 PAGE GROUP 의 5버튼 PAGE 번호-->
+	<!-- -->
+  <sql id="pagingPostSQL">
+      ) MAINSQL
+			WHERE (@ROWNUM:=0) = 0
+		)
+		SELECT
+			PAGEINFO.*
+		,	MAININFO.*
+		FROM
+			(
+				SELECT * FROM TMP
+        WHERE 1 = 1
+				AND row_num &gt; FN_GET_MORE_THAN_START_BY_PAGE_INFO(${currPage}, ${pagePerCount})
+				AND row_num &lt; FN_GET_LESS_THAN_END_BY_PAGE_INFO(${currPage}, ${pagePerCount})
+			) MAININFO
+		,	(
+				SELECT
+					COUNT(*) tot_count
+				,	CEILING(COUNT(*) / ${pagePerCount}) page_count
+				,	${pagePerCount} page_per_count
+				,	${currPage} curr_page
+				,	${currPage} - ${pageGroupStart} + 1 curr_page_btn_num
+				,	${pageGroupStart} curr_page_group_start
+				,	CASE WHEN CEILING(COUNT(*) / ${pagePerCount}) &gt;= ${pageGroupStart} + 4 THEN ${pageGroupStart} + 4 ELSE CEILING(COUNT(*) / ${pagePerCount}) END curr_page_group_end
+				,	1 first_page_group_start
+				,	CASE WHEN CEILING(COUNT(*) / 100) &gt;= 5 THEN 5 ELSE CEILING(COUNT(*) / 100) END first_page_group_end
+				,	CASE WHEN CEILING(COUNT(*) / ${pagePerCount}) &gt;= 5 THEN CEILING(COUNT(*) / ${pagePerCount}) - 4 ELSE CEILING(COUNT(*) / ${pagePerCount}) END last_page_group_start
+				,	CEILING(COUNT(*) / ${pagePerCount}) last_page_group_end
+				FROM TMP
+			) PAGEINFO
+  </sql>
+</mapper>

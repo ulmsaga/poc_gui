@@ -1,0 +1,36 @@
+package com.mobigen.cdev.datagw.module.manage.service;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.module.manage.dto.NmsChargeManageDto;
+import com.mobigen.cdev.datagw.module.manage.dto.NmsInfoManageDto;
+import com.mobigen.cdev.datagw.module.manage.dto.ResultManageRegDto;
+import com.mobigen.cdev.datagw.module.manage.dto.UserInfoManageDto;
+
+public interface ManageService {
+  //
+  List<UserInfoManageDto> getUserInfoList(Map<String, Object> param);
+  ExcelDto getUserInfoListExcel(Map<String, Object> param);
+
+  //
+  List<NmsInfoManageDto> getNmsInfoList(Map<String, Object> param);
+  List<NmsInfoManageDto> getSelectNmsId(Map<String, Object> param);
+  ExcelDto getNmsInfoListExcel(Map<String, Object> param);
+
+  ResultManageRegDto insertNmsInfo(Map<String, Object> param);
+  ResultManageRegDto updateNmsInfo(Map<String, Object> param);
+  ResultManageRegDto deleteNmsInfo(Map<String, Object> param);
+
+  //
+  // ResultManageRegDto updateNmsChargeManage(Map<String, Object> param, HttpServletRequest requset, HttpServletResponse response);
+  // ResultManageRegDto deleteNmsChargeManage(Map<String, Object> param);
+  ResultManageRegDto regNmsChargeManage(Map<String, Object> param, HttpServletRequest requset, HttpServletResponse response);
+
+  ExcelDto getNmsChargeManageListExcel(Map<String, Object> param);
+  List<NmsChargeManageDto> getManagerChangeStatus(Map<String, Object> param);
+}

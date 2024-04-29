@@ -1,0 +1,34 @@
+package com.mobigen.cdev.datagw.module.manage.repository.mybatis;
+
+import java.util.List;
+import java.util.Map;
+
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.manage.dto.NmsChargeManageDto;
+import com.mobigen.cdev.datagw.module.manage.dto.NmsInfoManageDto;
+import com.mobigen.cdev.datagw.module.manage.dto.UserInfoManageDto;
+
+public interface ManageRepository {
+  //
+  List<UserInfoManageDto> getUserInfoList(Map<String, Object> param);
+  void getUserInfoListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh);
+
+  //
+  List<NmsInfoManageDto> getNmsInfoList(Map<String, Object> param);
+  List<NmsInfoManageDto> getSelectNmsId(Map<String, Object> param);
+  void getNmsInfoListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh);
+
+  int existNmsInfoInInterface(Map<String, Object> param);
+  int existNmsInfoName(Map<String, Object> param);
+  int updateNmsInfo(Map<String, Object> param);
+  int insertNmsInfo(Map<String, Object> param);
+  int deleteNmsManagerMap(Map<String, Object> param);
+  int deleteNmsInfo(Map<String, Object> param);
+  
+  //
+  int deleteNmsChargeManage(Map<String, Object> param);
+  int insertNmsChargeManage(Map<String, Object> param);
+
+  void getNmsChargeManageListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh);
+  List<NmsChargeManageDto> getManagerChangeStatus(Map<String, Object> param);
+}

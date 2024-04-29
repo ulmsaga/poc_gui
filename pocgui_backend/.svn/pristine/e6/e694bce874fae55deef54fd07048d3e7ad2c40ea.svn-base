@@ -1,0 +1,109 @@
+package com.mobigen.cdev.datagw.module.provide.interfacesource.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.mobigen.cdev.datagw.core.base.dto.RsResultDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideDataManageDetailDefDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideResultDataRegDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.service.ProvideInterfaceSourceService;
+
+@RestController
+@RequestMapping("provide/interfacesource")
+public class ProvideInterfaceSourceController {
+
+  private final ProvideInterfaceSourceService provideInterfaceSourceService;
+
+  public ProvideInterfaceSourceController(ProvideInterfaceSourceService provideInterfaceSourceService) {
+    this.provideInterfaceSourceService = provideInterfaceSourceService;
+  }
+
+  @PostMapping(value = "/getDataMainList", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getDataMainList(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(provideInterfaceSourceService.getDataMainList(param));
+		return ResponseEntity.ok(result);
+	}
+
+	@PostMapping(value = "/getDataMainListExcel", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getDataMainListExcel(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(provideInterfaceSourceService.getDataMainListExcel(param));
+		return ResponseEntity.ok(result);
+	}
+
+	@PostMapping(value = "/getDataDetailList", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getDataDetailList(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		ProvideDataManageDetailDefDto detailDef = new ProvideDataManageDetailDefDto();
+		detailDef.setInterfaceFileList(provideInterfaceSourceService.getInterfaceAddedFileList(param));
+		result.setRs(detailDef);
+		return ResponseEntity.ok(result);
+	}
+
+	@PostMapping(value = "/getDataMainJsonPropertyList", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getDataMainJsonPropertyList(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(provideInterfaceSourceService.getDataMainJsonPropertyList(param));
+		return ResponseEntity.ok(result);
+	}
+
+	@PostMapping(value = "/regDataInfo", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> regDataInfo(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(provideInterfaceSourceService.regDataInfo(param, request, response));
+		return ResponseEntity.ok(result);
+	}
+
+	@SuppressWarnings("unchecked")
+	@PostMapping(value = "/regDataInfoMultiPartForm", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> regDataInfoMultiPartForm(
+      String interfaceType,
+      String applyType,
+			@RequestPart(value = "interfaceInfo") Map<String, Object> interfaceInfo,
+			// @RequestPart(value = "dataSourceInfo") Map<String, Object> dataSourceInfo,
+			// @RequestPart(value = "deletedInterfaceTopicInfo") Map<String, Object> deletedInterfaceTopicInfo,
+			// @RequestPart(value = "addedInterfaceTopicInfo") Map<String, Object> addedInterfaceTopicInfo,
+			@RequestPart(value = "deletedInterfaceFileInfo") Map<String, Object> deletedInterfaceFileInfo,
+			@RequestPart(value = "addedInterfaceFileInfo") Map<String, Object> addedInterfaceFileInfo,
+			MultipartFile[] files,
+			HttpServletRequest request,
+			HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+
+		Map<String, Object> paramInterface = (Map<String, Object>) interfaceInfo;
+		// List<Map<String, Object>> paramDataSourceList = (List<Map<String, Object>>) dataSourceInfo.get("list");
+		// List<Map<String, Object>> paramDelTopicList = (List<Map<String, Object>>) deletedInterfaceTopicInfo.get("list");
+		// List<Map<String, Object>> paramAddTopicList = (List<Map<String, Object>>) addedInterfaceTopicInfo.get("list");
+		List<Map<String, Object>> paramDelFileList = (List<Map<String, Object>>) deletedInterfaceFileInfo.get("list");
+		List<Map<String, Object>> paramAddFileList = (List<Map<String, Object>>) addedInterfaceFileInfo.get("list");
+
+		// result.setRs(provideInterfaceSourceService.regDataInfoWithAddedFiles(interfaceType, applyType, paramInterface, null, null, null, paramDelFileList, paramAddFileList, files, request, response));
+		ProvideResultDataRegDto provideResultDataRegDto = provideInterfaceSourceService.regDataInfoWithAddedFiles(interfaceType, applyType, paramInterface, null, null, null, paramDelFileList, paramAddFileList, files, request, response);
+		// regDataInfoWithAddedFiles 가 Transaction으로 묶여 있기 때문에 여기서 처리
+		provideResultDataRegDto.setMainDataPackage(provideInterfaceSourceService.getDataMainList(provideResultDataRegDto.getSearchMainParam()));
+		result.setRs(provideResultDataRegDto);
+
+		return ResponseEntity.ok(result);
+	}
+
+	@PostMapping(value = "/updateInterfaceUseYn", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> updateInterfaceUseYn(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(provideInterfaceSourceService.updateInterfaceUseYn(param, request, response));
+		return ResponseEntity.ok(result);
+	}
+  
+}

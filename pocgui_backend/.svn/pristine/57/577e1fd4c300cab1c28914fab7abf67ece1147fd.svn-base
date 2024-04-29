@@ -1,0 +1,64 @@
+package com.mobigen.cdev.datagw.module.datamanages.nmsinfo.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.mobigen.cdev.datagw.core.exception.RsRuntimeException;
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.datamanages.nmsinfo.dto.NmsInfoManageDto;
+import com.mobigen.cdev.datagw.module.datamanages.nmsinfo.repository.mybatis.NmsInfoManageRepository;
+
+@Service
+public class NmsInfoManageServiceImpl implements NmsInfoManageService {
+
+  private final NmsInfoManageRepository nmsInfoManageRepository;
+
+  public NmsInfoManageServiceImpl(NmsInfoManageRepository nmsInfoManageRepository) {
+    this.nmsInfoManageRepository = nmsInfoManageRepository;
+  }
+
+  @Override
+  public List<NmsInfoManageDto> getNmsInfoList(Map<String, Object> param) {
+    return nmsInfoManageRepository.getNmsInfoList(param);
+  }
+
+  @Override
+  public List<NmsInfoManageDto> getEditNmsInfo(Map<String, Object> param) {
+    return nmsInfoManageRepository.getEditNmsInfo(param);
+  }
+
+  @Override
+  public List<NmsInfoManageDto> getInsertNmsInfo(Map<String, Object> param) {
+    return nmsInfoManageRepository.getInsertNmsInfo(param);
+  }
+  
+  @Override
+  public List<NmsInfoManageDto> getSelectNmsId(Map<String, Object> param) {
+    return nmsInfoManageRepository.getSelectNmsId(param);
+  }
+
+  @Override
+  public ExcelDto getNmsInfoListExcel(Map<String, Object> param) {
+    ExcelDto excelDto = new ExcelDto();
+
+    try {
+      ExcelDefaultExceptionHandler resultHandler = new ExcelDefaultExceptionHandler(param);
+      nmsInfoManageRepository.getNmsInfoListExcel(param, resultHandler);
+
+      if("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+      if("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+      if("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+      excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+      excelDto.setFile_name(String.valueOf(param.get("fileName")));
+      excelDto.setTarget_file_path(resultHandler.execute());
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.excel.file");
+    }
+
+    return excelDto;
+  }
+}

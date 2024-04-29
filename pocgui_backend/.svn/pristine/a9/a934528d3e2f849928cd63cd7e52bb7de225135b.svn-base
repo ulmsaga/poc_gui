@@ -1,0 +1,68 @@
+package com.mobigen.cdev.datagw.module.test.controller;
+
+import com.mobigen.cdev.datagw.module.test.service.ExceptionTestService;
+import com.mobigen.cdev.datagw.core.exception.RsRuntimeException;
+import com.mobigen.cdev.datagw.core.base.dto.RsResultDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
+
+
+@RestController
+@RequestMapping("test")
+public class ExceptionTestController {
+
+    private final ExceptionTestService exceptionTestService;
+
+    Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    public ExceptionTestController(ExceptionTestService exceptionTestService) {
+        this.exceptionTestService = exceptionTestService;
+    }
+    @RequestMapping(value="/sqlExceptionTest", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RsResultDto> sqlExceptionTest(@RequestParam Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        RsResultDto resultDto = new RsResultDto();
+        resultDto.setRs(exceptionTestService.getBoardList(param));
+        return ResponseEntity.ok(resultDto);
+    }
+
+    @RequestMapping(value="/sqlQueryTimeoutTest", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RsResultDto> sqlQueryTimeoutTest(@RequestParam Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        RsResultDto resultDto = new RsResultDto();
+        resultDto.setRs(exceptionTestService.getBoardListForTimeOut(param));
+        return ResponseEntity.ok(resultDto);
+    }
+    @RequestMapping(value="/defaultException", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RsResultDto> defaultExceptionTest(@RequestParam Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        RsResultDto resultDto = new RsResultDto();
+
+        // String temp = param.get("userType").toString();
+        // logger.info("defaultExceptionTest temp : {}", temp);
+        resultDto.setRs(exceptionTestService.getBoardListFromNoneTryCatchRuntimException(param));
+        return ResponseEntity.ok(resultDto);
+    }
+
+    @RequestMapping(value="/rsRuntimeException", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RsResultDto> rsRuntimeExceptionTest(@RequestParam Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        RsResultDto resultDto = new RsResultDto();
+        try{
+            String temp = param.get("userType").toString();
+            logger.info("rsRuntimeException temp : {}", temp);
+        }catch (Exception e) {
+            throw new RsRuntimeException(String.valueOf(e.getCause()), new Object[]{}, e);
+        }
+
+        return ResponseEntity.ok(resultDto);
+    }
+}

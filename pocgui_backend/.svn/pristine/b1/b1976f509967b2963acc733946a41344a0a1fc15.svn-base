@@ -1,0 +1,7 @@
+package com.mobigen.cdev.datagw.module.provide.interfacesource.dto;
+
+import com.mobigen.cdev.datagw.module.collect.interfacesource.dto.InterfaceDto;
+
+public class ProvideInterfaceDto extends InterfaceDto {
+  
+}

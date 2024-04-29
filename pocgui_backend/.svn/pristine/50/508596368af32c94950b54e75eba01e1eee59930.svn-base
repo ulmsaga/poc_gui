@@ -1,0 +1,15 @@
+package com.mobigen.cdev.datagw.module.datamanages.nmsinfo.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.module.datamanages.nmsinfo.dto.UserInfoManageDto;
+
+@Service
+public interface UserInfoManageService {
+  List<UserInfoManageDto> getUserInfoList(Map<String, Object> param);
+  ExcelDto getUserInfoListExcel(Map<String, Object> param);
+}

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.mysql.module.datamanages">
+  <select id="getNmsChargeManageList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.datamanages.nmsinfo.dto.NmsChargeManageDto">
+    SELECT 
+      A.system_cd 
+    ,	A.system_nm
+    , A.description
+    , (
+        SELECT
+          LTRIM(GROUP_CONCAT(CONCAT(' ', B.user_name, '(', B.user_id, ' ', B.phone, ' ', B.team_name, ')'  ) ORDER BY B.user_name))
+        FROM system_manager B
+        WHERE 1=1 
+        AND B.user_id IN 
+        <foreach collection= "selectedItem" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>) AS charge_info
+    , (
+        SELECT
+          LTRIM(GROUP_CONCAT(CONCAT(B.user_id ) ORDER BY B.user_name)) 
+        FROM system_manager B
+        WHERE 1=1 
+        AND B.user_id IN 
+         <foreach collection= "selectedItem" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>) AS user_id
+    , (
+        SELECT
+          LTRIM(GROUP_CONCAT(CONCAT(B.phone ) ORDER BY B.user_name)) 
+        FROM system_manager B
+        WHERE 1=1 
+        AND B.user_id IN 
+         <foreach collection= "selectedItem" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>) AS phone
+    , (
+        SELECT
+          LTRIM(GROUP_CONCAT(CONCAT(B.team_name ) ORDER BY B.user_name)) 
+        FROM system_manager B
+        WHERE 1=1 
+        AND B.user_id IN 
+        <foreach collection= "selectedItem" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>) AS team_name
+    , (
+        SELECT
+          LTRIM(GROUP_CONCAT(CONCAT(B.user_name ) ORDER BY B.user_name)) 
+        FROM system_manager B
+        WHERE 1=1 
+        AND B.user_id IN 
+        <foreach collection= "selectedItem" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>) AS user_name
+    FROM system_code A
+    WHERE A.system_cd IN
+      <foreach collection= "systemCode" item="code"  open="(" close=")" separator=",">
+          #{code}
+      </foreach>
+    ORDER BY system_cd
+  </select>
+
+  <select id="getManagerChangeStatus" parameterType="map" resultType="com.mobigen.cdev.datagw.module.datamanages.nmsinfo.dto.NmsChargeManageDto">
+    SELECT
+				A.system_cd 
+			,	A.system_nm
+			,	IFNULL(B.charge_info, '-') charge_info
+			,	B.user_name
+			,	B.team_name
+			, B.user_id
+			,	IFNULL(A.description , '-') description
+			FROM system_code A
+			LEFT OUTER JOIN 
+				(
+					SELECT
+						system_cd
+						,B.user_name user_name
+						,B.team_name team_name
+						,B.user_id user_id
+					,	LTRIM(GROUP_CONCAT(CONCAT(' ', B.user_name, '(', A.user_id, ' ', phone, ' ', team_name, ')'  ) ORDER BY B.user_name)) charge_info
+					FROM
+						system_code_manager_map A
+					LEFT OUTER JOIN	(SELECT user_id, user_name, team_name, phone FROM system_manager WHERE use_yn = 'Y') B
+					ON A.user_id = B.user_id
+					WHERE 1 = 1
+					GROUP BY system_cd , user_name, team_name, user_id 
+				) B
+			ON A.system_cd = B.system_cd
+      WHERE 
+      <foreach collection= "selectedItem" item="item" separator=" AND ">
+            B.user_id = #{item}
+      </foreach>
+      AND 
+      <foreach collection= "systemCode" item="code" separator=" AND ">
+            A.system_cd = #{code}
+      </foreach>
+
+  </select>
+
+  <delete id = "getDeleteNmsChargeManageList" >
+    DELETE FROM system_code_manager_map
+    WHERE system_cd = #{systemCodeList}
+  </delete>
+
+  <insert id = "getInsertNmsChargeManageList" >
+    INSERT IGNORE INTO system_code_manager_map (user_id, system_cd) 
+    VALUES 
+      <foreach collection= "userIdList" item="userId" separator=",">
+           (#{userId}, #{systemCodeList} )
+     </foreach> 
+     
+    
+  </insert>
+
+  <!-- <delete id = "getDeleteNmsChargeManageList" >
+    DELETE FROM system_code_manager_map
+    WHERE system_cd = #{systemCodeList}
+  </delete>
+
+  <insert id = "getInsertNmsChargeManageList" >
+    INSERT IGNORE INTO system_code_manager_map (user_id, system_cd) 
+    VALUES (#{userIdList}, #{systemCodeList})
+    
+  </insert> -->
+
+</mapper>

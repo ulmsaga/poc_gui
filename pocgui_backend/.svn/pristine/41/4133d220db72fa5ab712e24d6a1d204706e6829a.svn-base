@@ -1,0 +1,40 @@
+package com.mobigen.cdev.datagw.module.provide.history.controller;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.mobigen.cdev.datagw.config.AsyncConfig;
+import com.mobigen.cdev.datagw.core.base.dto.RsResultDto;
+import com.mobigen.cdev.datagw.module.provide.history.service.ProvideHistoryService;
+
+@RestController
+@RequestMapping("provide/history")
+public class ProvideHistoryController {
+  private final ProvideHistoryService provideHistoryService;
+  public ProvideHistoryController(ProvideHistoryService provideHistoryService, AsyncConfig asyncConfig) {
+    this.provideHistoryService = provideHistoryService;
+  }
+
+  @PostMapping(value = "/getHistoryList", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getHistoryList(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(provideHistoryService.getHistoryList(param));
+		return ResponseEntity.ok(result);
+	}
+
+	@PostMapping(value = "/getHistoryListExcel", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getHistoryListExcel(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(provideHistoryService.getHistoryListExcel(param));
+		return ResponseEntity.ok(result);
+	}
+}

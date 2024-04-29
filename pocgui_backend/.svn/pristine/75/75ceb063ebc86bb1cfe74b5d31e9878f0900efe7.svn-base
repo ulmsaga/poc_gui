@@ -1,0 +1,38 @@
+package com.mobigen.cdev.datagw.module.datamanages.interfacesource.repository;
+
+import java.util.List;
+import java.util.Map;
+
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.InterfaceAddedFileDto;
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.InterfaceTopicDto;
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.JsonPropertyDefDto;
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.NotiTopicDto;
+
+public interface DataManageRepository {
+  List<JsonPropertyDefDto> getDataMainJsonPropertyList(Map<String, Object> param);
+  List<?> getDataMainList(Map<String, Object> param);
+
+  List<JsonPropertyDefDto> getDataDetailJsonPropertyList(Map<String, Object> param);
+  List<?> getDataDetailList(Map<String, Object> param);
+
+  List<InterfaceTopicDto> getInterfaceTopicList(Map<String, Object> param);
+  List<InterfaceAddedFileDto> getInterfaceAddedFileList(Map<String, Object> param);
+
+  @Deprecated
+  String getNextInterfaceSeq(Map<String, Object> param);
+  @Deprecated
+  String mergeSequenceTable(Map<String, Object> param);
+  String getNewInterfaceIdByGeneratedProcedure(Map<String, Object> param);
+
+  int mergeInterfaceInfo(Map<String, Object> param);
+  int merginDataSourceInfo(Map<String, Object> param);
+  
+  int deleteInterfaceTopicInfo(Map<String, Object> param);
+  int insertInterfaceTopicInfo(Map<String, Object> param);
+  int deleteInterfaceFileInfo(Map<String, Object> param);
+  int insertInterfaceFileInfo(Map<String, Object> param);
+
+  List<NotiTopicDto> getCloudList(Map<String, Object> param);
+
+  int updateInterfaceUseYn(Map<String, Object> param);
+}

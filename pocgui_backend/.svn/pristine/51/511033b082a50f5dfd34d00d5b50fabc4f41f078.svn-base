@@ -1,0 +1,319 @@
+package com.mobigen.cdev.datagw.module.historymanages.history.process;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import com.mobigen.cdev.datagw.core.sse.emmiter.EventEmitter;
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.InterfaceDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.dto.RetryDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.dto.CompleteEventDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.dto.RetryIdDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.repository.mybatis.HistoryRepository;
+
+@Component
+public class RetryWatchFinishedDemon implements Runnable {
+  
+  private final HistoryRepository historyRepository;
+  private final EventEmitter eventEmitter;
+  private final Environment env;
+
+  private ConcurrentMap<String, String> collectRetryNotFinishedIdMap = new ConcurrentHashMap<>();
+  private ConcurrentMap<String, String> provideRetryNotFinishedIdMap = new ConcurrentHashMap<>();
+  private ConcurrentMap<Integer, List<CompleteEventDto>> collectMsgMap = new ConcurrentHashMap<>();
+  private ConcurrentMap<Integer, Integer> collectMsgMapSendCount = new ConcurrentHashMap<>();
+  private ConcurrentMap<Integer, List<CompleteEventDto>> provideMsgMap = new ConcurrentHashMap<>();
+  private ConcurrentMap<Integer, Integer> provideMsgMapSendCount = new ConcurrentHashMap<>();
+  private int collectCurrentIdx = 0;
+  private int provideCurrentIdx = 0;
+
+  private final int CONFIG_SAVE_MAP_COUNT = 100;
+  private final int CONFIG_RESEND_MSG_COUNT = 2;
+  private String envStatus = "local";
+
+  private volatile boolean isRun = false;
+  private final long THREAD_SLEEP_TIMEOUT = 20 * 1000L;
+  private final long THREAD_SLEEP_TIMEOUT_FOR_DEV = 10 * 1000L;
+  private final long THREAD_SHORT_SLEEP = 500L;
+  private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  public RetryWatchFinishedDemon(HistoryRepository historyRepository, EventEmitter eventEmitter, Environment env) {
+    this.historyRepository = historyRepository;
+    this.eventEmitter = eventEmitter;
+    this.env = env;
+
+    this.envStatus = this.env.getProperty("spring.profiles.active");
+    initMsgMap();
+  }
+
+  private void initMsgMap() {
+    for (int i = 0; i < CONFIG_SAVE_MAP_COUNT; i++) {
+      collectMsgMap.put(i, new ArrayList<CompleteEventDto>());
+      collectMsgMapSendCount.put(i, 0);
+      provideMsgMap.put(i, new ArrayList<CompleteEventDto>());
+      provideMsgMapSendCount.put(i, 0);
+    }
+
+    collectCurrentIdx = CONFIG_SAVE_MAP_COUNT - 1;
+    provideCurrentIdx = CONFIG_SAVE_MAP_COUNT - 1;
+  }
+
+  public boolean isRun() {
+    return isRun;
+  }
+  public void setRun(boolean isRun) {
+    this.isRun = isRun;
+  }
+
+  public void addRetry(Map<String,Object> param) {
+    String interfaceType = param.get("interfaceType").toString();
+    if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+      // COLLECT
+      collectRetryNotFinishedIdMap.put(param.get("retry_id_seq").toString(), param.get("collect_hist_id").toString());
+    } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+      // PROVIDE
+      provideRetryNotFinishedIdMap.put(param.get("retry_id_seq").toString(), param.get("provide_hist_id").toString());
+    }
+  }
+  
+  private void removeIdMapNotFinishedLongTermOrTerminated(String interfaceType) {
+    List<String> targetRetryIdList = new ArrayList<>();
+    List<RetryIdDto> list = new ArrayList<RetryIdDto>();
+    Map<String, Object> param = null;
+
+    if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+      for(String retryIdSeq: collectRetryNotFinishedIdMap.keySet()) {
+        targetRetryIdList.add(retryIdSeq);
+      }
+      
+      if (targetRetryIdList.size() > 0) {
+        param = new HashMap<>();
+        param.put("interfaceType", InterfaceDto.INTERFACE_TYPE_COLLECT);
+        param.put("targetRetryIdList", targetRetryIdList);
+        param.put("notFinishedCheckLastMin", RetryIdDto.NOT_FINISHED_CHECK_LAST_MIN);
+        param.put("statusCdForceTerminated", RetryDto.STATUS_CD_FORCE_TERMINATED);
+        list = historyRepository.getNotFinishedRetryLongTermOrTerminated(param);
+        for (RetryIdDto retryIdDto : list) {
+          collectRetryNotFinishedIdMap.remove(retryIdDto.getRetry_id_seq());
+        }
+      }
+    } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+      targetRetryIdList = new ArrayList<>();
+      for (String retryIdSeq: provideRetryNotFinishedIdMap.keySet()) {
+        targetRetryIdList.add(retryIdSeq);
+      }
+      if (targetRetryIdList.size() > 0) {
+        param = new HashMap<>();
+        param.put("interfaceType", InterfaceDto.INTERFACE_TYPE_PROVIDE);
+        param.put("targetRetryIdList", targetRetryIdList);
+        param.put("notFinishedCheckLastMin", RetryIdDto.NOT_FINISHED_CHECK_LAST_MIN);
+        param.put("statusCdForceTerminated", RetryDto.STATUS_CD_FORCE_TERMINATED);
+        list = historyRepository.getNotFinishedRetryLongTermOrTerminated(param);
+        for (RetryIdDto retryIdDto : list) {
+          provideRetryNotFinishedIdMap.remove(retryIdDto.getRetry_id_seq());
+        }
+      }
+    }
+  }
+
+  private void addIdMapNotFinished(String interfaceType) {
+    Map<String, Object> param = new HashMap<>();
+    param.put("envStatus", envStatus);
+    List<RetryIdDto> list = null;
+    if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+      // collect
+      param.put("interfaceType", InterfaceDto.INTERFACE_TYPE_COLLECT);
+      list = historyRepository.getNotFinishedRetryIdList(param);
+      for (RetryIdDto retryIdDto: list) {
+        collectRetryNotFinishedIdMap.put(retryIdDto.getRetry_id_seq(), retryIdDto.getHist_id());
+      }
+    } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+      // provide
+      param.put("interfaceType", InterfaceDto.INTERFACE_TYPE_PROVIDE);
+      list =historyRepository.getNotFinishedRetryIdList(param);
+      for (RetryIdDto retryIdDto: list) {
+        provideRetryNotFinishedIdMap.put(retryIdDto.getRetry_id_seq(), retryIdDto.getHist_id());
+      }
+    }
+  }
+
+  private List<RetryIdDto> getFinishedRetryIdList(String interfaceType) {
+    List<String> targetRetryIdList = new ArrayList<>();
+    if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+      for(String retryIdSeq: collectRetryNotFinishedIdMap.keySet()) {
+        targetRetryIdList.add(retryIdSeq);
+      }
+    }
+    if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+      for(String retryIdSeq: provideRetryNotFinishedIdMap.keySet()) {
+        targetRetryIdList.add(retryIdSeq);
+      }
+    }
+
+    List<RetryIdDto> ret = new ArrayList<RetryIdDto>();
+    if (targetRetryIdList.size() > 0) {
+      Map<String, Object> param = new HashMap<>();
+      param.put("interfaceType", interfaceType);
+      param.put("targetRetryIdList", targetRetryIdList);
+      param.put("statusCdForceTerminated", RetryDto.STATUS_CD_FORCE_TERMINATED);
+      ret = historyRepository.getFinishedRetryIdList(param);
+    }
+    return ret;
+  }
+
+  private void sendMsgByFinishedRetryIdList(String interfaceType) {
+    List<RetryIdDto> finishedRetryIdList = getFinishedRetryIdList(interfaceType);
+    if (finishedRetryIdList.size() <= 0) return;
+
+    List<String> idList = new ArrayList<>();
+    List<Map<String, String>> histRetryIdList = new ArrayList<>();
+    Map<String, String> idObj;
+    StringBuilder histId = new StringBuilder();
+    for (RetryIdDto retryIdDto: finishedRetryIdList) {
+      idList.add(retryIdDto.getRetry_id_seq());
+      idObj = new HashMap<String, String>();
+      idObj.put("histId", retryIdDto.getHist_id());
+      idObj.put("retryIdSeq", retryIdDto.getRetry_id_seq());
+      histRetryIdList.add(idObj);
+      histId.append(retryIdDto.getHist_id()).append(",");
+      if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) collectRetryNotFinishedIdMap.remove(retryIdDto.getRetry_id_seq());
+      if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) provideRetryNotFinishedIdMap.remove(retryIdDto.getRetry_id_seq());
+    }
+
+    Map<String, Object> param = new HashMap<>();
+    String[] strArr = histId.toString().replaceAll(" ", "").split(",");
+    param.put("interfaceType", interfaceType);
+    param.put("histIdDataType", "list");
+    if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+      param.put("collectHistIdList", strArr);
+    } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+      param.put("provideHistIdList", strArr);
+    }
+    List<CompleteEventDto> retryEventList = historyRepository.getHistoryListByHistId(param);
+    addMsgMap(interfaceType, retryEventList);
+    eventEmitter.sendData(retryEventList, interfaceType);
+  }
+
+  public void addMsgMap(String interfaceType, List<CompleteEventDto> completionMsgList) {
+    if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+      collectCurrentIdx++;
+      if (collectCurrentIdx == CONFIG_SAVE_MAP_COUNT) collectCurrentIdx = 0;
+      collectMsgMap.put(collectCurrentIdx, completionMsgList);
+    }
+    if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+      provideCurrentIdx++;
+      if (provideCurrentIdx == CONFIG_SAVE_MAP_COUNT) provideCurrentIdx = 0;
+      provideMsgMap.put(provideCurrentIdx, completionMsgList);
+    }
+  }
+
+  private void sendAddedCollectMsgMap() {
+    // logger
+    logger.debug("=================================");
+    logger.debug("sendAddedCollectMsgMap");
+    logger.debug("Config Resend Msg Count :: {}", CONFIG_RESEND_MSG_COUNT);
+    for (int i = 0; i < CONFIG_SAVE_MAP_COUNT; i++) {
+      int idx = (i + collectCurrentIdx + 1) % CONFIG_SAVE_MAP_COUNT;
+      List<CompleteEventDto> list = collectMsgMap.get(idx);
+      if (list.size() > 0) {
+        // logger
+        logger.debug("idx: {}", idx);
+        if (collectMsgMapSendCount.get(idx) >= CONFIG_RESEND_MSG_COUNT) {
+          collectMsgMap.remove(idx);
+          collectMsgMap.put(idx, new ArrayList<CompleteEventDto>());
+          collectMsgMapSendCount.put(idx, 0);
+          // logger
+          logger.debug("init ::");
+        } else {
+          eventEmitter.sendData(list, InterfaceDto.INTERFACE_TYPE_COLLECT);
+          collectMsgMapSendCount.put(idx, collectMsgMapSendCount.get(idx) + 1);
+          // logger
+          logger.debug("Resend Msg Count :: {}", collectMsgMapSendCount.get(idx));
+        }
+        
+      }
+    }
+    // logger
+    logger.debug("=================================");
+  }
+
+  private void sendAddedProvideMsgMap() {
+    for (int i = 0; i < CONFIG_SAVE_MAP_COUNT; i++) {
+      int idx = (i + provideCurrentIdx + 1) % CONFIG_SAVE_MAP_COUNT;
+      List<CompleteEventDto> list = provideMsgMap.get(idx);
+      if (list.size() > 0) {
+        if (provideMsgMapSendCount.get(idx) >= CONFIG_RESEND_MSG_COUNT) {
+          provideMsgMap.remove(idx);
+          provideMsgMap.put(idx, new ArrayList<CompleteEventDto>());
+          provideMsgMapSendCount.put(idx, 0);
+        } else {
+          eventEmitter.sendData(list, InterfaceDto.INTERFACE_TYPE_PROVIDE);
+          provideMsgMapSendCount.put(idx, provideMsgMapSendCount.get(idx) + 1);
+        }
+      }
+    }
+  }
+
+  private void checkEmiiterList() {
+    List<String> emitters = eventEmitter.getEmitterList();
+    emitters.size();
+    eventEmitter.checkEmitterStatus();;
+  }
+  
+  public void destroy() {
+    isRun = false;
+  }
+
+  @Override
+  public void run() {
+    try {
+      while(isRun) {
+        checkEmiiterList();
+        removeIdMapNotFinishedLongTermOrTerminated(InterfaceDto.INTERFACE_TYPE_COLLECT);
+        removeIdMapNotFinishedLongTermOrTerminated(InterfaceDto.INTERFACE_TYPE_PROVIDE);
+
+        addIdMapNotFinished(InterfaceDto.INTERFACE_TYPE_COLLECT);
+        addIdMapNotFinished(InterfaceDto.INTERFACE_TYPE_PROVIDE);
+
+        sendMsgByFinishedRetryIdList(InterfaceDto.INTERFACE_TYPE_COLLECT);
+        sendMsgByFinishedRetryIdList(InterfaceDto.INTERFACE_TYPE_PROVIDE);
+
+        Thread.currentThread();
+        Thread.sleep(THREAD_SHORT_SLEEP);
+        sendAddedCollectMsgMap();
+
+        Thread.currentThread();
+        Thread.sleep(THREAD_SHORT_SLEEP);
+        sendAddedProvideMsgMap();
+
+        Thread.currentThread();
+        if ("dev".equals(envStatus)) {
+          Thread.sleep(THREAD_SLEEP_TIMEOUT_FOR_DEV);
+        } else {
+          Thread.sleep(THREAD_SLEEP_TIMEOUT);
+        }
+        
+        continue;
+      }
+    } catch (Exception e) {
+      isRun = false;
+
+      logger.error("==========================");
+      logger.error("DEMON");
+      logger.error("catch exception !!! : {}", isRun);
+      logger.error("Exception: {}", e);
+      logger.error("==========================");
+
+      throw new RuntimeException(e);
+    }
+  }
+
+}

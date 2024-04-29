@@ -1,0 +1,32 @@
+package com.mobigen.cdev.datagw.module.manage.dto;
+
+import com.mobigen.cdev.datagw.core.base.dto.BaseObject;
+
+public class ResultManageRegDto extends BaseObject {
+  public static final String EXIST_NMS_NAME = "이미 같은 NMS명이 존재 합니다.";
+  public static final String EXIST_USE_INF = "Interface 정의에 이미 사용중인 NMS 입니다.";
+  public static final String NOT_EXIST_REG = "저장된 건이 존재하지 않습니다.";
+  public static final String NOT_EXIST_APPLY = "처리된 건이 존재하지 않습니다.";
+  public static final String NOT_EXIST_DEL = "삭제된 건이 존재하지 않습니다.";
+  
+  public static final String APPLY_ADD = "ADD";
+  public static final String APPLY_DEL = "DEL";
+  public static final String APPLY_MOD = "MOD";
+
+  private int retCnt = 0;
+  private String retMsg = "";
+
+  public int getRetCnt() {
+    return retCnt;
+  }
+  public void setRetCnt(int retCnt) {
+    this.retCnt = retCnt;
+  }
+  public String getRetMsg() {
+    return retMsg;
+  }
+  public void setRetMsg(String retMsg) {
+    this.retMsg = retMsg;
+  }
+
+}

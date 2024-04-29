@@ -1,0 +1,32 @@
+package com.mobigen.cdev.datagw.module.historymanages.history.dto;
+
+import com.mobigen.cdev.datagw.core.base.dto.BaseObject;
+
+public class RetryIdDto extends BaseObject {
+  private static final long serialVersionUID = -2899002771965335438L;
+
+  public static final int NOT_FINISHED_CHECK_LAST_MIN = 120;
+
+  private String interface_type;
+  private String retry_id_seq;
+  private String hist_id;
+
+  public String getInterface_type() {
+    return interface_type;
+  }
+  public void setInterface_type(String interface_type) {
+    this.interface_type = interface_type;
+  }
+  public String getRetry_id_seq() {
+    return retry_id_seq;
+  }
+  public void setRetry_id_seq(String retry_id_seq) {
+    this.retry_id_seq = retry_id_seq;
+  }
+  public String getHist_id() {
+    return hist_id;
+  }
+  public void setHist_id(String hist_id) {
+    this.hist_id = hist_id;
+  }
+}

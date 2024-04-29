@@ -1,0 +1,171 @@
+
+#default
+product:
+  fullname: POC-GUI
+  lowername: poc-gui
+  abbrname: poc
+
+server:
+  servlet:
+    context-path: /poc_service
+
+---
+#local
+spring:
+  pid:
+    file: C:\Users\ZZ14932\Documents\poc.pid
+  config:
+    activate:
+      on-profile: config-local
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 110MB
+
+server:
+  port: 9091
+
+# File DownLoad 허용 Path 설정을 위한 규칙
+# file.path.xxx 은 반드시 지킬 것!!!
+# 하위 level은 상관 없음
+file:
+  path:
+    create:
+      excel: C:\Users\ZZ14932\Documents\
+    download:
+      excel: C:\Users\ZZ14932\Documents\
+    upload:
+      excel: C:\Users\ZZ14932\Documents\
+      docu: C:\Users\ZZ14932\Documents\
+    log:
+      main: C:\Users\ZZ14932\Documents\
+      etc: C:\Users\ZZ14932\Documents\
+
+sms:
+  server:
+    ip:
+    port:
+  msg:
+    title: POC
+    min:
+  keepup:
+    certi: N
+    time: 5
+  exception:
+    certi: Y
+
+poc:
+  config:
+    log:
+      allow-dao: N
+      allow-task-complete-noti: N
+
+---
+#dev
+spring:
+  pid:
+    file: C:\Users\TANGO1177\Documents\poc.pid
+  config:
+    activate:
+      on-profile: config-dev
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 110MB
+server:
+  port: 9091
+
+file:
+  path:
+    create:
+      excel: C:\Users\TANGO1177\Documents\
+    download:
+      excel: C:\Users\TANGO1177\Documents\
+    upload:
+      excel: C:\Users\TANGO1177\Documents\
+      docu: C:\Users\TANGO1177\Documents\
+    log:
+      main: C:\Users\TANGO1177\Documents\
+      etc: C:\Users\TANGO1177\Documents\
+
+tango:
+  sso:
+    login:
+      url: http://sso.tango.sktelecom.com:8080/tango-common-sso/sso/login
+    token:
+      url: http://sso.tango.sktelecom.com:8080/tango-common-sso/sso/token/verify
+    logout:
+      url: http://sso.tango.sktelecom.com:8080/tango-common-sso/sso/logout
+
+sms:
+  server:
+    ip:
+    port:
+  msg:
+    title: POC
+    min:
+  keepup:
+    certi: N
+    time: 5
+  exception:
+    certi: Y
+
+poc:
+  config:
+    log:
+      allow-dao: N
+      allow-task-complete-noti: N
+
+---
+#prod
+spring:
+  pid:
+    file: /local/BOS-GUI/poc.pid
+  config:
+    activate:
+      on-profile: config-prod
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 110MB
+server:
+  port: 9094
+
+file:
+  path:
+    create:
+      excel: /local/BOS-GUI/temp/files/create/excel/
+    download:
+      excel: /local/BOS-GUI/temp/files/download/excel/
+    upload:
+      excel: /local/BOS-GUI/temp/files/upload/excel/
+      docu: /local/BOS-GUI/temp/files/upload/docu/
+    log:
+      main: /local/BOS-GUI/temp/logs/
+      etc: /local/BOS-GUI/temp/logs/etc/
+tango:
+  sso:
+    login:
+      url: http://sso.tango.sktelecom.com:8080/tango-common-sso/sso/login
+    token:
+      url: http://sso.tango.sktelecom.com:8080/tango-common-sso/sso/token/verify
+    logout:
+      url: http://sso.tango.sktelecom.com:8080/tango-common-sso/sso/logout
+
+sms:
+  server:
+    ip:
+    port:
+  msg:
+    title: POC
+    min:
+  keepup:
+    certi: N
+    time: 5
+  exception:
+    certi: Y
+poc:
+  config:
+    log:
+      allow-dao: N
+      allow-task-complete-noti: Y

@@ -1,0 +1,32 @@
+package com.mobigen.cdev.datagw.module.collect.history.repository.mybatis;
+
+import java.util.List;
+import java.util.Map;
+
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.collect.history.dto.HistoryDto;
+import com.mobigen.cdev.datagw.module.collect.history.dto.RetryCountDto;
+import com.mobigen.cdev.datagw.module.collect.history.dto.RetryDto;
+import com.mobigen.cdev.datagw.module.collect.history.dto.CompleteEventDto;
+import com.mobigen.cdev.datagw.module.collect.history.dto.RetryIdDto;
+
+public interface CollectHistoryRepository {
+  List<HistoryDto> getHistoryList(Map<String, Object> param);
+  void getHistoryListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh);
+  int getNotFinishedRetryCount(Map<String, Object> param);
+  RetryCountDto getRetryCount(Map<String, Object> param);
+  int insertRetry(Map<String, Object> param);
+  int updateHistForRetry(Map<String, Object> param);
+  int updateRetryForceTerminate(Map<String, Object> param);
+
+  List<RetryDto> getRetryHistoryList(Map<String, Object> param);
+
+  List<RetryIdDto> getNotFinishedRetryLongTermOrTerminated(Map<String, Object> param);
+  List<RetryIdDto> getNotFinishedRetryIdList(Map<String, Object> param);
+  List<RetryIdDto> getFinishedRetryIdList(Map<String, Object> param);
+  List<CompleteEventDto> getFinishedRetryEventList(Map<String, Object> param);
+
+  String getHistoryStatusTime(Map<String, Object> param);
+
+  List<CompleteEventDto> getHistoryListByHistId(Map<String, Object> param);
+}

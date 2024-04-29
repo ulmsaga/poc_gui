@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.mysql.module.common">
+
+	<sql id="def_table_cm_user">
+		cm_user
+	</sql>
+	<sql id="def_table_cm_menu">
+		<choose>
+			<when test = 'envStatus eq "local".toString()'>cm_menu_p</when>
+			<when test = 'envStatus eq "dev".toString()'>cm_menu_p</when>
+			<when test = 'envStatus eq "stg".toString()'>cm_menu_p</when>
+			<when test = 'envStatus eq "prod".toString()'>cm_menu_p</when>
+			<otherwise>cm_menu_p</otherwise>
+		</choose>
+	</sql>
+
+	<sql id="def_table_common_code">
+    common_code
+  </sql>
+
+	<sql id="def_common_interface_cycle">
+    (
+      SELECT
+        sub_cd interface_cycle
+      ,	sub_cd_nm interface_cycle_nm
+      ,	IFNULL(description, '-') description
+      FROM
+        <include refid="com.mobigen.cdev.mapper.mysql.module.common.def_table_common_code" />
+      WHERE main_cd = '5000'
+      AND use_yn = 'Y'
+    )
+  </sql>
+
+	<select id="getUserList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.user.UserInfoDto">
+		<include refid="sqlUserList"/>
+	</select>
+	
+	<select id="getUserListExcel" parameterType="map" resultType="java.util.HashMap">
+		<include refid="sqlUserList"/>
+	</select>
+
+	<sql id="sqlUserList">
+		SELECT
+			USER_ID
+		,	USER_NAME
+		,	USER_PASS PASSWORD
+		,	PHONE
+		,	EMAIL
+		,	INSA_TEAM_ID
+		,	INSA_TEAM_NAME
+		,	ADMIN_LV
+		,	MODULE_HIS_LV
+		,	MODULE_DAT_LV
+		,	MODULE_SET_LV
+		,	LAST_LOGIN_TIME
+		,	UPDATE_TIME
+		,	UPDATE_USER
+		FROM
+			<include refid="def_table_cm_user" />
+		WHERE 1 = 1
+		AND USE_YN = 'Y'
+		<if test = 'userId != null and userId neq ""'>
+			<if test = 'userId neq "ALL".toString()'>
+				AND USER_ID = #{userId}
+			</if>
+		</if>
+		<choose>
+			<when test = 'checkUserPassYn eq "Y".toString()'>AND USER_PASS = #{userPwdEx}</when>
+			<when test = 'checkUserPassYn eq "N".toString()'>AND 1 = 1</when>
+			<otherwise>AND USER_PASS = #{userPwdEx}</otherwise>
+		</choose>
+		<choose>
+			<!-- checkUserPassByPhoneLastNum -->
+			<when test = 'checkUserPassByPhoneLastNum eq "Y".toString()'>AND RIGHT(PHONE, 4) = #{userPwdEx}</when>
+			<when test = 'checkUserPassByPhoneLastNum eq "N".toString()'>AND 1 = 1</when>
+			<otherwise>AND 1 = 1</otherwise>
+		</choose>
+	</sql>
+	
+	<insert id="insertUserInfo" parameterType="java.util.List">
+		<include refid = "sqlInsertUserInfo"/>
+	</insert>
+	
+	<sql id = "sqlInsertUserInfo">
+		INSERT INTO	<include refid="def_table_cm_user" />
+		(
+			USER_ID
+		,	USER_NAME
+		,	USER_PASS
+		,	PHONE
+		,	EMAIL
+		,	INSA_TEAM_ID
+		,	INSA_TEAM_NAME
+		,	ADMIN_LV
+		,	MODULE_HIS_LV
+		,	MODULE_DAT_LV
+		,	MODULE_SET_LV
+		,	USE_YN
+		, PASS_CHANGEDATE
+		,	LAST_EDIT_TIME
+		,	LAST_LOGIN_TIME
+		,	UPDATE_TIME
+		,	UPDATE_USER
+		)
+		VALUES
+		<foreach item="item" index="index" collection="list" separator=",">
+			(
+				#{item.user_id}
+			,	#{item.user_name}
+			,	''
+			,	#{item.phone}
+			,	#{item.email}
+			,	#{item.insa_team_id}
+			,	#{item.insa_team_name}
+			,	#{item.admin_lv}
+			,	#{item.module_his_lv}
+			,	#{item.module_dat_lv}
+			,	#{item.module_set_lv}
+			,	#{item.use_yn}
+			,	#{item.pass_changedate}
+			,	#{item.last_edit_time}
+			,	#{item.last_login_time}
+			,	#{item.update_time}
+			,	#{item.update_user}
+			)
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+			PHONE = values(phone)
+		,	EMAIL = values(email)
+		,	INSA_TEAM_ID = values(insa_team_id)
+		,	INSA_TEAM_NAME = values(insa_team_name)
+		,	PASS_CHANGEDATE = values(pass_changedate)
+		,	LAST_EDIT_TIME = values(last_edit_time)
+		,	LAST_LOGIN_TIME = values(last_login_time)
+		,	UPDATE_TIME = values(update_time)
+		,	UPDATE_USER = values(update_user)
+	</sql>
+	
+	<select id="getDefaultMenuInfo" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.menu.MenuInfoDto">
+		<include refid="sqlRecursiveMenuInfo"/>
+		<include refid="sqlMenuInfoMain"/>
+		<include refid="sqlMenuInfoDefaultUseMenuCond"/>
+	</select>
+
+	<select id="getUserMenuInfoList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.menu.MenuInfoDto">
+		<include refid="sqlRecursiveMenuInfo"/>
+		<include refid="sqlMenuInfoMain"/>
+		<include refid="sqlMenuInfoUserMenuCond"/>
+	</select>
+
+	<select id="getMenuInfoList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.menu.MenuInfoDto">
+		<include refid="sqlRecursiveMenuInfo"/>
+		<include refid="sqlMenuInfoMain"/>
+		<include refid="sqlMenuInfoAllMenuCode"/>
+	</select>
+
+	<sql id="sqlRecursiveMenuInfo">
+		WITH RECURSIVE CTE  AS (
+			SELECT
+				VERSION
+			,	MENU_PCODE
+			,	MENU_CODE
+			,	MENU_ORDER
+			,	MENU_TYPE
+			,	MENU_NAME
+			,	CASE IFNULL(MENU_NAVIGATION, '') WHEN '' THEN MENU_NAME ELSE MENU_NAVIGATION END AS MENU_NAVIGATION
+			,	MENU_LOCATION
+			,	END_FLAG
+			,	USE_YN
+			,	ADMIN_ALLOW_LV
+			,	REG_ADMIN_ALLOW_LV
+			,	MODULE_TYPE
+			,	MODULE_ALLOW_LV
+			,	REG_MODULE_ALLOW_LV
+			,	DEFAULT_MENU_YN
+			,	UPDATE_TIME
+			,	UPDATE_USER
+			FROM <include refid="def_table_cm_menu" />
+			WHERE VERSION = '1'
+			AND MENU_PCODE = '00000000'
+			UNION ALL
+			SELECT
+				C.VERSION 
+			,	C.MENU_PCODE
+			,	C.MENU_CODE
+			,	C.MENU_ORDER
+			,	C.MENU_TYPE
+			,	C.MENU_NAME
+			,	CONCAT(CTE.MENU_NAVIGATION, " &gt; ", C.MENU_NAVIGATION)
+			,	C.MENU_LOCATION
+			,	C.END_FLAG
+			,	C.USE_YN
+			,	C.ADMIN_ALLOW_LV
+			,	C.REG_ADMIN_ALLOW_LV
+			,	C.MODULE_TYPE
+			,	C.MODULE_ALLOW_LV
+			,	C.REG_MODULE_ALLOW_LV
+			,	C.DEFAULT_MENU_YN
+			,	C.UPDATE_TIME
+			,	C.UPDATE_USER
+			FROM <include refid="def_table_cm_menu" /> C
+			INNER JOIN CTE
+				ON CTE.VERSION = C.VERSION 
+				AND CTE.MENU_CODE = C.MENU_PCODE
+		)
+	</sql>
+	<sql id="sqlMenuInfoMain">
+		SELECT 
+			MENU_PCODE
+		,	MENU_CODE
+		,	LEAD(MENU_CODE) OVER (ORDER BY MENU_CODE, MENU_ORDER) MENU_CODE_NEXT
+		,	LEAD(MENU_PCODE) OVER (ORDER BY MENU_CODE, MENU_ORDER) MENU_PCODE_NEXT
+		,	LAG(MENU_CODE) OVER (ORDER BY MENU_CODE, MENU_ORDER) MENU_CODE_PREV
+		,	LAG(MENU_PCODE) OVER (ORDER BY MENU_CODE, MENU_ORDER) MENU_PCODE_PREV
+		,	MENU_ORDER
+		,	MENU_TYPE
+		,	MENU_NAME
+		,	MENU_NAVIGATION
+		,	MENU_LOCATION
+		,	END_FLAG
+		,	USE_YN
+		,	ADMIN_ALLOW_LV
+		,	REG_ADMIN_ALLOW_LV
+		,	MODULE_TYPE
+		,	MODULE_ALLOW_LV
+		,	REG_MODULE_ALLOW_LV
+		,	DEFAULT_MENU_YN
+		,	UPDATE_TIME
+		,	UPDATE_USER
+		FROM CTE
+	</sql>
+	<sql id="sqlMenuInfoUserMenuCond">
+		<include refid="sqlMenuInfoAllMenuCode"/>
+		<include refid="sqlMenuInfoUserAndAuthCond"/>
+		ORDER BY MENU_CODE, MENU_ORDER
+	</sql>
+	<sql id="sqlMenuInfoDefaultUseMenuCond">
+		<include refid="sqlMenuInfoAllMenuCode"/>
+		AND END_FLAG = '1'
+		AND DEFAULT_MENU_YN = 'Y'
+		<include refid="sqlMenuInfoUserAndAuthCond"/>
+		ORDER BY MENU_CODE, MENU_ORDER
+	</sql>
+	<sql id="sqlMenuInfoAllMenuCode">
+		WHERE 1 = 1
+		AND USE_YN = 'Y'
+	</sql>
+	<sql id="sqlMenuInfoUserAndAuthCond">
+		AND ADMIN_ALLOW_LV &gt;= (SELECT ADMIN_LV FROM <include refid="def_table_cm_user" /> WHERE USER_ID = #{userId})
+		AND MODULE_ALLOW_LV &gt;= (SELECT CASE CTE.MODULE_TYPE WHEN 'HIS' THEN MODULE_HIS_LV WHEN 'DAT' THEN MODULE_DAT_LV WHEN 'SET' THEN MODULE_SET_LV ELSE 5 END FROM <include refid="def_table_cm_user" /> WHERE  USER_ID = #{userId})
+	</sql>
+
+
+	<!-- ========  -->
+	<!-- 조회 조건  -->
+	<!-- ========  -->
+	<select id="getNmsCondList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.common.CondValueTextDto">
+		SELECT
+			system_cd value
+		<!-- ,	CONCAT(system_nm, '(', system_cd, ')') text -->
+		<!-- ,	IFNULL(system_nm, '-') text -->
+		,	CASE WHEN IFNULL(subcode, '') = '' THEN IFNULL(system_nm, '-') ELSE CONCAT(IFNULL(system_nm, '-'), ' (', subcode, ')') END text
+		<!-- ,	CONCAT(system_nm, '(', system_cd, ')') label -->
+		,	CASE WHEN IFNULL(subcode, '') = '' THEN IFNULL(system_nm, '-') ELSE CONCAT(IFNULL(system_nm, '-'), ' (', subcode, ')') END label
+		,	IFNULL(system_nm, '-') label
+		,	user_name description
+		FROM
+		(
+			<include refid = "sqlNmsInfoWithUserPivot"/>
+		) A
+		WHERE 1 = 1
+		<if test = 'condTarget != null and condTarget != "".toString()'>
+			<if test = 'targetValue != null and targetValue != "".toString()'>
+				AND ${condTarget} LIKE CONCAT('%', #{targetValue}, '%')
+			</if>
+		</if>
+		ORDER BY system_cd
+	</select>
+
+	<sql id="sqlNmsInfoWithUserPivot">
+		SELECT
+			A.system_cd 
+		,	A.system_nm
+		,	A.subcode
+		,	IFNULL(B.user_name, '-') user_name
+		FROM system_code A
+		LEFT OUTER JOIN 
+			(
+				SELECT
+					system_cd
+				,	LTRIM(GROUP_CONCAT(CONCAT(' ', B.user_name, '(', A.user_id, ' ', team_name, ')'  ) ORDER BY B.user_name)) user_name
+				FROM
+					system_code_manager_map A
+				LEFT OUTER JOIN	(SELECT user_id, user_name, team_name FROM system_manager WHERE use_yn = 'Y') B
+				ON A.user_id = B.user_id
+				WHERE 1 = 1
+				GROUP BY system_cd 
+			) B
+		ON A.system_cd = B.system_cd
+		WHERE A.use_yn = 'Y'
+		AND A.system_cd  != '2000'
+	</sql>
+
+	<select id="getProtocolCondList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.common.CondValueTextDto">
+		SELECT
+			sub_cd value
+		,	sub_cd_nm text
+		,	sub_cd_nm label
+		,	IFNULL(description, '-') description
+		FROM 
+			<include refid="def_table_common_code" />
+		WHERE main_cd = '4000'
+		AND use_yn = 'Y'
+		ORDER BY sub_cd 
+	</select>
+
+	<select id="getStatusCondList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.common.CondValueTextDto">
+		SELECT
+			status_cd value
+		,	status_nm text
+		,	status_nm label
+		,	IFNULL(description, '-') description
+		FROM status_code
+		WHERE status_cd != '6000'
+		AND use_yn = 'Y'
+		ORDER BY status_cd 
+	</select>
+
+	<select id="getManagerCondList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.common.CondValueTextDto">
+		SELECT
+			user_name value
+		,	user_id text
+		,	CONCAT(user_name, '(', user_id, ')') label
+		,	team_name description
+		, phone phone
+		FROM
+			system_manager
+		WHERE 1 = 1
+		<if test = 'condTarget != null and condTarget != "".toString()'>
+			<if test = 'targetValue != null and targetValue != "".toString()'>
+				AND ${condTarget} LIKE CONCAT('%', #{targetValue}, '%')
+			</if>
+		</if>
+	</select>
+
+	<!---->
+	<!---->
+	<!---->
+
+	<select id="getInterfaceCycleCondList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.common.CondValueTextDto" >
+		<!-- SELECT
+			interface_cycle value
+		,	interface_cycle_desc text
+		,	interface_cycle_desc label
+		FROM
+		(
+			SELECT 'MI' interface_cycle, 'MI(분)' interface_cycle_desc FROM DUAL
+			UNION
+			SELECT 'HH' interface_cycle, 'HH(시)' interface_cycle_desc FROM DUAL
+			UNION
+			SELECT 'DD' interface_cycle, 'DD(일)' interface_cycle_desc FROM DUAL
+			UNION
+			SELECT 'WW' interface_cycle, 'WW(주)' interface_cycle_desc FROM DUAL
+			UNION
+			SELECT 'MM' interface_cycle, 'MM(월)' interface_cycle_desc FROM DUAL
+			UNION
+			SELECT 'OD' interface_cycle, 'OD(즉시)' interface_cycle_desc FROM DUAL
+		) A -->
+		
+		SELECT
+			sub_cd value
+		,	sub_cd_nm text
+		,	sub_cd_nm label
+		,	IFNULL(description, '-') description
+		FROM
+			<include refid="def_table_common_code" />
+		WHERE main_cd = '5000'
+		AND use_yn = 'Y'
+		ORDER BY sub_cd 
+	</select>
+
+	<select id="getIpNetCondList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.common.CondValueTextDto">
+		SELECT
+			sub_cd value
+		,	sub_cd_nm text
+		,	sub_cd_nm label
+		,	IFNULL(description, '-') description
+		FROM
+			<include refid="def_table_common_code" />
+		WHERE main_cd = '2000'
+		AND use_yn = 'Y'
+		ORDER BY CASE WHEN REPLACE(sub_cd, 'ip_net_', '') REGEXP '^[0-9]+$' = 1 THEN CAST(REPLACE(sub_cd, 'ip_net_', '') AS UNSIGNED) ELSE 9999 END
+			,	sub_cd
+	</select>
+
+	<select id="getCloudList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.common.CondValueTextDto">
+    SELECT
+      topic_name value
+    , cloud_name text
+		,	cloud_name label
+    , IFNULL(description, '-') description
+    FROM
+      <include refid="com.mobigen.cdev.mapper.mysql.module.datamanages.interfacesource.def_table_noti_topic" />
+  </select>
+	
+</mapper>

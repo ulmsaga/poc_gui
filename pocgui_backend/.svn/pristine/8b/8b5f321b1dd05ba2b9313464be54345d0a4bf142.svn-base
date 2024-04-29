@@ -1,0 +1,23 @@
+package com.mobigen.cdev.datagw.module.provide.interfacesource.repository.mybatis;
+
+import java.util.List;
+import java.util.Map;
+
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideInterfaceAddedFileDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideJsonPropertyDefDto;
+
+public interface ProvideInterfaceSourceRepository {
+  List<ProvideJsonPropertyDefDto> getDataMainJsonPropertyList(Map<String, Object> param);
+  List<?> getDataMainList(Map<String, Object> param);
+  void getDataMainListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh);
+
+  List<ProvideInterfaceAddedFileDto> getInterfaceAddedFileList(Map<String, Object> param);
+
+  String getNewInterfaceIdByGeneratedProcedure(Map<String, Object> param);
+  int mergeInterfaceInfo(Map<String, Object> param);
+  
+  int deleteInterfaceFileInfo(Map<String, Object> param);
+  int insertInterfaceFileInfo(Map<String, Object> param);
+  int updateInterfaceUseYn(Map<String, Object> param);
+}

@@ -1,0 +1,12 @@
+package com.mobigen.cdev.datagw.module.provide.history.repository.mybatis;
+
+import java.util.List;
+import java.util.Map;
+
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.provide.history.dto.ProvideHistoryDto;
+
+public interface ProvideHistoryRepository {
+  List<ProvideHistoryDto> getHistoryList(Map<String, Object> param);
+  void getHistoryListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh);
+}

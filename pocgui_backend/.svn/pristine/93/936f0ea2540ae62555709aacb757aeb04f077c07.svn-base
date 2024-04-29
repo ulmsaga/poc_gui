@@ -1,0 +1,77 @@
+package com.mobigen.cdev.datagw.module.manage.repository.mybatis;
+
+import java.util.List;
+import java.util.Map;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.manage.dto.NmsChargeManageDto;
+import com.mobigen.cdev.datagw.module.manage.dto.NmsInfoManageDto;
+import com.mobigen.cdev.datagw.module.manage.dto.UserInfoManageDto;
+
+@Repository
+public class ManageRepositoryImpl implements ManageRepository {
+
+  @SuppressWarnings({"unused"})
+  private final SqlSessionTemplate sqlSessionTemplateGuiweb;
+  private final SqlSessionTemplate sqlSessionTemplateCollect;
+  private final String namespace = "com.mobigen.cdev.mapper.mysql.module.manage";
+  
+  public ManageRepositoryImpl(SqlSessionTemplate sqlSessionTemplateGuiweb, SqlSessionTemplate sqlSessionTemplateCollect) {
+    this.sqlSessionTemplateGuiweb = sqlSessionTemplateGuiweb;
+    this.sqlSessionTemplateCollect = sqlSessionTemplateCollect;
+  }
+  
+  //
+  @Override
+  public List<UserInfoManageDto> getUserInfoList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getUserInfoList", param);
+  }
+  @Override
+  public void getUserInfoListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh) {
+    sqlSessionTemplateCollect.select(namespace + ".getUserInfoListExcel", param, rh);
+  }
+
+  //
+  @Override
+  public List<NmsInfoManageDto> getNmsInfoList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getNmsInfoList", param);
+  }
+  @Override
+  public List<NmsInfoManageDto> getEditNmsInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getEditNmsInfo", param);
+  }
+  @Override
+  public List<NmsInfoManageDto> getInsertNmsInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getInsertNmsInfo", param);
+  }
+  @Override
+  public List<NmsInfoManageDto> getSelectNmsId(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getSelectNmsId", param);
+  }
+  @Override
+  public void getNmsInfoListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh) {
+    sqlSessionTemplateCollect.select(namespace + ".getNmsInfoListExcel", param, rh);
+  }
+
+  //
+  @Override
+  public int getDeleteNmsChargeManage(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.delete(namespace + ".getDeleteNmsChargeManageList", param);
+  }
+  @Override
+  public int getInsertNmsChargeManage(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.insert(namespace + ".getInsertNmsChargeManageList", param);
+  }
+  @Override
+  public void getNmsChargeManageListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh) {
+    sqlSessionTemplateCollect.select(namespace + ".getNmsChargeManageListExcel", param, rh);
+  }
+  @Override
+  public List<NmsChargeManageDto> getManagerChangeStatus(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getManagerChangeStatus", param);
+  }
+  
+}

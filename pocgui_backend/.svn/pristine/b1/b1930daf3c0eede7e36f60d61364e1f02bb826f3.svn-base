@@ -1,0 +1,306 @@
+package com.mobigen.cdev.datagw.module.collect.history.dto;
+
+import com.mobigen.cdev.datagw.core.base.dto.BasePage;
+
+public class HistoryDto extends BasePage {
+  private static final long serialVersionUID = -58553412674201110L;
+
+  private String collect_hist_id;
+  private String collected_at;
+  private String collect_source_seq;
+
+  private String provide_hist_id;
+  private String provided_at;
+  private String provide_source_seq;
+
+  private String started_at;
+  private String ended_at;
+  private String interface_id;
+  private String system_cd;
+  private String system_nm;
+  private String interface_nm;
+  private String protocol_cd;
+  private String interface_cycle;
+  private String interface_cycle_nm;
+  private String data_id;
+  private String hdfs_dir;
+  private String local_path;
+  private String dest_path;
+  private String filenm;
+  private String file_size;
+  private String host_nm;
+  private String task_log_url;
+  private String target_dt;
+  private String status_cd;
+  private String status_nm;
+  private String description;
+  private String err_msg;
+  private String last_started_by;
+  private String retry;
+  private String retry_desc;
+  private String retry_count;
+  private String sync_id;
+
+  // --
+  // Provide Info
+  // --
+  private String provide_interface_id;
+  private String provide_interface_nm;
+  private String provide_protocol_cd;
+  private String provide_detail_desc;
+  private String provide_db;
+  private String provide_tb;
+  private String provide_run_by;
+  private String provide_provided_to;
+  // --
+  // Provide Info
+  // --
+
+  public String getCollect_hist_id() {
+    return collect_hist_id;
+  }
+  public void setCollect_hist_id(String collect_hist_id) {
+    this.collect_hist_id = collect_hist_id;
+  }
+  public String getCollected_at() {
+    return collected_at;
+  }
+  public void setCollected_at(String collected_at) {
+    this.collected_at = collected_at;
+  }
+  public String getCollect_source_seq() {
+    return collect_source_seq;
+  }
+  public void setCollect_source_seq(String collect_source_seq) {
+    this.collect_source_seq = collect_source_seq;
+  }
+  public String getProvide_hist_id() {
+    return provide_hist_id;
+  }
+  public void setProvide_hist_id(String provide_hist_id) {
+    this.provide_hist_id = provide_hist_id;
+  }
+  public String getProvided_at() {
+    return provided_at;
+  }
+  public void setProvided_at(String provided_at) {
+    this.provided_at = provided_at;
+  }
+  public String getProvide_source_seq() {
+    return provide_source_seq;
+  }
+  public void setProvide_source_seq(String provide_source_seq) {
+    this.provide_source_seq = provide_source_seq;
+  }
+  public String getStarted_at() {
+    return started_at;
+  }
+  public void setStarted_at(String started_at) {
+    this.started_at = started_at;
+  }
+  public String getEnded_at() {
+    return ended_at;
+  }
+  public void setEnded_at(String ended_at) {
+    this.ended_at = ended_at;
+  }
+  public String getInterface_id() {
+    return interface_id;
+  }
+  public void setInterface_id(String interface_id) {
+    this.interface_id = interface_id;
+  }
+  public String getSystem_cd() {
+    return system_cd;
+  }
+  public void setSystem_cd(String system_cd) {
+    this.system_cd = system_cd;
+  }
+  public String getSystem_nm() {
+    return system_nm;
+  }
+  public void setSystem_nm(String system_nm) {
+    this.system_nm = system_nm;
+  }
+  public String getInterface_nm() {
+    return interface_nm;
+  }
+  public void setInterface_nm(String interface_nm) {
+    this.interface_nm = interface_nm;
+  }
+  public String getProtocol_cd() {
+    return protocol_cd;
+  }
+  public void setProtocol_cd(String protocol_cd) {
+    this.protocol_cd = protocol_cd;
+  }
+  public String getInterface_cycle() {
+    return interface_cycle;
+  }
+  public void setInterface_cycle(String interface_cycle) {
+    this.interface_cycle = interface_cycle;
+  }
+  public String getInterface_cycle_nm() {
+    return interface_cycle_nm;
+  }
+  public void setInterface_cycle_nm(String interface_cycle_nm) {
+    this.interface_cycle_nm = interface_cycle_nm;
+  }
+  public String getData_id() {
+    return data_id;
+  }
+  public void setData_id(String data_id) {
+    this.data_id = data_id;
+  }
+  public String getHdfs_dir() {
+    return hdfs_dir;
+  }
+  public void setHdfs_dir(String hdfs_dir) {
+    this.hdfs_dir = hdfs_dir;
+  }
+  public String getLocal_path() {
+    return local_path;
+  }
+  public void setLocal_path(String local_path) {
+    this.local_path = local_path;
+  }
+  public String getDest_path() {
+    return dest_path;
+  }
+  public void setDest_path(String dest_path) {
+    this.dest_path = dest_path;
+  }
+  public String getFilenm() {
+    return filenm;
+  }
+  public void setFilenm(String filenm) {
+    this.filenm = filenm;
+  }
+  public String getFile_size() {
+    return file_size;
+  }
+  public void setFile_size(String file_size) {
+    this.file_size = file_size;
+  }
+  public String getHost_nm() {
+    return host_nm;
+  }
+  public void setHost_nm(String host_nm) {
+    this.host_nm = host_nm;
+  }
+  
+  public String getTarget_dt() {
+    return target_dt;
+  }
+  public void setTarget_dt(String target_dt) {
+    this.target_dt = target_dt;
+  }
+  public String getStatus_cd() {
+    return status_cd;
+  }
+  public void setStatus_cd(String status_cd) {
+    this.status_cd = status_cd;
+  }
+  public String getStatus_nm() {
+    return status_nm;
+  }
+  public void setStatus_nm(String status_nm) {
+    this.status_nm = status_nm;
+  }
+  public String getDescription() {
+    return description;
+  }
+  public void setDescription(String description) {
+    this.description = description;
+  }
+  public String getErr_msg() {
+    return err_msg;
+  }
+  public void setErr_msg(String err_msg) {
+    this.err_msg = err_msg;
+  }
+  public String getLast_started_by() {
+    return last_started_by;
+  }
+  public void setLast_started_by(String last_started_by) {
+    this.last_started_by = last_started_by;
+  }
+  public String getRetry() {
+    return retry;
+  }
+  public void setRetry(String retry) {
+    this.retry = retry;
+  }
+  public String getRetry_desc() {
+    return retry_desc;
+  }
+  public void setRetry_desc(String retry_desc) {
+    this.retry_desc = retry_desc;
+  }
+  public String getRetry_count() {
+    return retry_count;
+  }
+  public void setRetry_count(String retry_count) {
+    this.retry_count = retry_count;
+  }
+  public String getTask_log_url() {
+    return task_log_url;
+  }
+  public void setTask_log_url(String task_log_url) {
+    this.task_log_url = task_log_url;
+  }
+  public String getSync_id() {
+    return sync_id;
+  }
+  public void setSync_id(String sync_id) {
+    this.sync_id = sync_id;
+  }
+  public String getProvide_interface_id() {
+    return provide_interface_id;
+  }
+  public void setProvide_interface_id(String provide_interface_id) {
+    this.provide_interface_id = provide_interface_id;
+  }
+  public String getProvide_interface_nm() {
+    return provide_interface_nm;
+  }
+  public void setProvide_interface_nm(String provide_interface_nm) {
+    this.provide_interface_nm = provide_interface_nm;
+  }
+  public String getProvide_protocol_cd() {
+    return provide_protocol_cd;
+  }
+  public void setProvide_protocol_cd(String provide_protocol_cd) {
+    this.provide_protocol_cd = provide_protocol_cd;
+  }
+  public String getProvide_detail_desc() {
+    return provide_detail_desc;
+  }
+  public void setProvide_detail_desc(String provide_detail_desc) {
+    this.provide_detail_desc = provide_detail_desc;
+  }
+  public String getProvide_db() {
+    return provide_db;
+  }
+  public void setProvide_db(String provide_db) {
+    this.provide_db = provide_db;
+  }
+  public String getProvide_tb() {
+    return provide_tb;
+  }
+  public void setProvide_tb(String provide_tb) {
+    this.provide_tb = provide_tb;
+  }
+  public String getProvide_run_by() {
+    return provide_run_by;
+  }
+  public void setProvide_run_by(String provide_run_by) {
+    this.provide_run_by = provide_run_by;
+  }
+  public String getProvide_provided_to() {
+    return provide_provided_to;
+  }
+  public void setProvide_provided_to(String provide_provided_to) {
+    this.provide_provided_to = provide_provided_to;
+  }
+}

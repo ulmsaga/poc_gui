@@ -1,0 +1,23 @@
+{
+  "groups": [
+    {
+      "name": "file",
+      "type": "com.mobigen.cdev.poc.core.file.component.ConfigFile",
+      "sourceType": "com.mobigen.cdev.poc.core.file.component.ConfigFile"
+    },
+    {
+      "name": "pemdb1.datasource",
+      "type": "javax.sql.DataSource",
+      "sourceType": "com.mobigen.cdev.poc.config.DataSourcePemdb1Config",
+      "sourceMethod": "dataSourcePemdb1()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "file.path",
+      "type": "java.util.Map<java.lang.String,java.lang.Object>",
+      "sourceType": "com.mobigen.cdev.poc.core.file.component.ConfigFile"
+    }
+  ],
+  "hints": []
+}

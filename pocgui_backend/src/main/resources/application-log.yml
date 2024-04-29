@@ -1,0 +1,83 @@
+#default
+
+PRODUCT_NAME: 'BOS-GUI'
+
+---
+#----
+#local
+#----
+
+BASE_DIR: C:\ztemp\${PRODUCT_NAME}
+
+spring:
+  config:
+    activate:
+      on-profile: log-local
+
+server:
+  tomcat:
+    basedir: ${BASE_DIR}
+    accesslog:
+      enabled: true
+      pattern: '"%{yyyy-MM-dd HH:mm:ss}t", "%s", "%r", "%{User-Agent}i", "%{Referer}i", "%a", "%b", (%D ms)'
+      file-date-format: yyyy-MM-dd
+      directory: logs\bak
+      suffix: .log
+      prefix: access_
+
+logging:
+  config: classpath:log4j2/log4j2-local.xml
+---
+#----
+#dev
+#----
+
+# BASE_DIR: /app/eva/service/${PRODUCT_NAME}/temp
+BASE_DIR: C:\ztemp\${PRODUCT_NAME}
+
+spring:
+  config:
+    activate:
+      on-profile: log-dev
+
+server:
+  tomcat:
+    basedir: ${BASE_DIR}
+    accesslog:
+      enabled: true
+      pattern: '"%{yyyy-MM-dd HH:mm:ss}t", "%s", "%r", "%{User-Agent}i", "%{Referer}i", "%a", "%b", (%D ms)'
+      file-date-format: yyyy-MM-dd
+      directory: logs/bak
+      suffix: .log
+      prefix: access_
+
+logging:
+  config: classpath:log4j2/log4j2-dev.xml
+
+
+---
+
+#----
+#prod
+#----
+
+BASE_DIR: /local/${PRODUCT_NAME}/temp
+
+spring:
+  config:
+    activate:
+      on-profile: log-prod
+
+server:
+  tomcat:
+    basedir: ${BASE_DIR}
+    accesslog:
+      enabled: true
+      pattern: '"%{yyyy-MM-dd HH:mm:ss}t", "%s", "%r", "%{User-Agent}i", "%{Referer}i", "%a", "%b", (%D ms)'
+      file-date-format: yyyy-MM-dd
+      directory: logs/bak
+      suffix: .log
+      prefix: access_
+
+logging:
+  config: classpath:log4j2/log4j2.xml

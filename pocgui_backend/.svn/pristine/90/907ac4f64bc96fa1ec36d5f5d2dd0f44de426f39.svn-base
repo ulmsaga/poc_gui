@@ -1,0 +1,99 @@
+package com.mobigen.cdev.datagw.module.provide.history.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.mobigen.cdev.datagw.core.exception.RsRuntimeException;
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.core.sse.emmiter.EventEmitter;
+import com.mobigen.cdev.datagw.core.util.annotation.EnvStatus;
+import com.mobigen.cdev.datagw.module.collect.history.process.WatchCollectRetryFinishedDemon;
+import com.mobigen.cdev.datagw.module.collect.history.process.WatchCollectRetryFinishedDemonAwaken;
+import com.mobigen.cdev.datagw.module.provide.history.dto.ProvideHistoryDto;
+import com.mobigen.cdev.datagw.module.provide.history.repository.mybatis.ProvideHistoryRepository;
+
+@Service
+@Transactional(readOnly = true)
+public class ProvideHistoryServiceImpl implements ProvideHistoryService {
+
+  private final ProvideHistoryRepository provideHistoryRepository;
+  private final Environment env;
+  private final WatchCollectRetryFinishedDemon watchCollectRetryFinishedDemon;
+  private final WatchCollectRetryFinishedDemonAwaken watchCollectRetryFinishedDemonAwaken;
+  @SuppressWarnings("unused")
+  private final EventEmitter eventEmitter;
+
+  private String envStatus;
+
+  @SuppressWarnings("unused")
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  public ProvideHistoryServiceImpl(ProvideHistoryRepository provideHistoryRepository,
+                                   Environment env,
+                                   WatchCollectRetryFinishedDemon watchCollectRetryFinishedDemon,
+                                   WatchCollectRetryFinishedDemonAwaken watchCollectRetryFinishedDemonAwaken,
+                                   EventEmitter eventEmitter) {
+      this.provideHistoryRepository = provideHistoryRepository;
+      this.env = env;
+      this.watchCollectRetryFinishedDemon = watchCollectRetryFinishedDemon;
+      this.watchCollectRetryFinishedDemonAwaken = watchCollectRetryFinishedDemonAwaken;
+      this.eventEmitter = eventEmitter;
+      initialize();
+  }
+  
+  private void initialize() {
+    envStatus = env.getProperty("spring.profiles.active");
+    if ("local".equals(envStatus)) return;
+    boolean isRun = watchCollectRetryFinishedDemon.isRun();
+    if (!isRun) {
+      watchCollectRetryFinishedDemon.setRun(true);
+      Thread demon = new Thread(watchCollectRetryFinishedDemon);
+      boolean isAlive = demon.isAlive();
+      if (!isAlive) demon.start();
+    }
+    isRun = watchCollectRetryFinishedDemonAwaken.isRun();
+    if (!isRun) {
+      watchCollectRetryFinishedDemonAwaken.setRun(true);
+      Thread awakenDemo = new Thread(watchCollectRetryFinishedDemonAwaken);
+      boolean isAwakenAlive = awakenDemo.isAlive();
+      if (!isAwakenAlive) awakenDemo.start();
+    }
+  }
+ 
+  @Override
+  @EnvStatus
+  public List<ProvideHistoryDto> getHistoryList(Map<String, Object> param) {
+    return provideHistoryRepository.getHistoryList(param);
+  }
+
+  @Override
+  @EnvStatus
+  public ExcelDto getHistoryListExcel(Map<String, Object> param) {
+    ExcelDto excelDto = new ExcelDto();
+
+    try {
+      ExcelDefaultExceptionHandler resultHandler = new ExcelDefaultExceptionHandler(param);
+      provideHistoryRepository.getHistoryListExcel(param, resultHandler);
+
+      if("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+      if("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+      if("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+      excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+      excelDto.setFile_name(String.valueOf(param.get("fileName")));
+      excelDto.setTarget_path_key(ExcelDto.FILE_PATH_CREATE_EXCEL);
+      excelDto.setTarget_file(resultHandler.execute());
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.excel.file");
+    }
+
+    return excelDto;
+  }
+}

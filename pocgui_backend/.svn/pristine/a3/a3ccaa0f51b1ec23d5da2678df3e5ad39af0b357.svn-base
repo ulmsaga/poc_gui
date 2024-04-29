@@ -1,0 +1,7 @@
+package com.mobigen.cdev.datagw.module.test.service;
+
+import java.util.Map;
+
+public interface UserManageService {
+	int mergeUserInfoFromTpani(Map<String, Object> param);
+}

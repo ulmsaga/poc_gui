@@ -1,0 +1,21 @@
+package com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto;
+
+import java.util.List;
+
+public class DataManageDefDto {
+  private List<?> dataList;
+  private List<JsonPropertyDefDto> dataPropertyList;
+
+  public List<?> getDataList() {
+    return dataList;
+  }
+  public void setDataList(List<?> dataList) {
+    this.dataList = dataList;
+  }
+  public List<JsonPropertyDefDto> getDataPropertyList() {
+    return dataPropertyList;
+  }
+  public void setDataPropertyList(List<JsonPropertyDefDto> dataPropertyList) {
+    this.dataPropertyList = dataPropertyList;
+  }
+}

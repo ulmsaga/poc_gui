@@ -1,0 +1,111 @@
+package com.mobigen.cdev.datagw.module.datamanages.interfacesource.repository;
+
+import java.util.List;
+import java.util.Map;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.InterfaceAddedFileDto;
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.InterfaceTopicDto;
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.JsonPropertyDefDto;
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.NotiTopicDto;
+
+@Repository
+public class DataManageRepositoryImpl implements DataManageRepository {
+
+  private final SqlSessionTemplate sqlSessionTemplateCollect;
+  @SuppressWarnings("unused")
+  private final SqlSessionTemplate sqlSessionTemplateGuiweb;
+  
+  private final String namespace = "com.mobigen.cdev.mapper.mysql.module.datamanages.interfacesource";
+
+  public DataManageRepositoryImpl(SqlSessionTemplate sqlSessionTemplateCollect, SqlSessionTemplate sqlSessionTemplateGuiweb) {
+    this.sqlSessionTemplateCollect = sqlSessionTemplateCollect;
+    this.sqlSessionTemplateGuiweb = sqlSessionTemplateGuiweb;
+  }
+
+  @Override
+  public List<JsonPropertyDefDto> getDataMainJsonPropertyList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getDataMainJsonPropertyList", param);
+  }
+
+  @Override
+  public List<?> getDataMainList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getDataMainList", param);
+  }
+  
+  @Override
+  public List<JsonPropertyDefDto> getDataDetailJsonPropertyList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getDataDetailJsonPropertyList", param);
+  }
+
+  @Override
+  public List<?> getDataDetailList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getDataDetailList", param);
+  }
+
+  @Override
+  public List<InterfaceTopicDto> getInterfaceTopicList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getInterfaceTopicList", param);
+  }
+  @Override
+  public List<InterfaceAddedFileDto> getInterfaceAddedFileList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getInterfaceAddedFileList", param);
+  }
+  
+  @Override
+  @Deprecated
+  public String getNextInterfaceSeq(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectOne(namespace + ".getNextInterfaceSeq", param);
+  }
+
+  @Override
+  @Deprecated
+  public String mergeSequenceTable(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectOne(namespace + ".mergeSequenceTable", param);
+  }
+
+  @Override
+  public String getNewInterfaceIdByGeneratedProcedure(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectOne(namespace + ".getNewInterfaceIdByGeneratedProcedure", param);
+  }
+
+  @Override
+  public int mergeInterfaceInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.insert(namespace + ".mergeInterfaceInfo", param);
+  }
+
+  @Override
+  public int merginDataSourceInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.insert(namespace + ".merginDataSourceInfo", param);
+  }
+
+  @Override
+  public int deleteInterfaceTopicInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.update(namespace + ".deleteInterfaceTopicInfo", param);
+  }
+  @Override
+  public int insertInterfaceTopicInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.update(namespace + ".insertInterfaceTopicInfo", param);
+  }
+  @Override
+  public int deleteInterfaceFileInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.update(namespace + ".deleteInterfaceFileInfo", param);
+  }
+  @Override
+  public int insertInterfaceFileInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.update(namespace + ".insertInterfaceFileInfo", param);
+  }
+
+  @Override
+  public List<NotiTopicDto> getCloudList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getCloudList", param);
+  }
+
+  @Override
+  public int updateInterfaceUseYn(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.update(namespace + ".updateInterfaceUseYn", param);
+  }
+  
+}

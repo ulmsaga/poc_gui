@@ -1,0 +1,268 @@
+package com.mobigen.cdev.datagw.module.manage.service;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.mobigen.cdev.datagw.core.exception.RsRuntimeException;
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.core.security.annotation.LoginUser;
+import com.mobigen.cdev.datagw.core.security.manage.session.SessionManage;
+import com.mobigen.cdev.datagw.module.manage.dto.NmsChargeManageDto;
+import com.mobigen.cdev.datagw.module.manage.dto.NmsInfoManageDto;
+import com.mobigen.cdev.datagw.module.manage.dto.ResultManageRegDto;
+import com.mobigen.cdev.datagw.module.manage.dto.UserInfoManageDto;
+import com.mobigen.cdev.datagw.module.manage.repository.mybatis.ManageRepository;
+
+@Service
+public class ManageServiceImpl implements ManageService {
+
+  private final ManageRepository manageRepository;
+  private final SessionManage sessionManage;
+
+  public ManageServiceImpl(ManageRepository manageRepository, SessionManage sessionManage) {
+    this.manageRepository = manageRepository;
+    this.sessionManage = sessionManage;
+  }
+  
+  //
+  @Override
+  public List<UserInfoManageDto> getUserInfoList(Map<String, Object> param) {
+    return manageRepository.getUserInfoList(param);
+  }
+  @Override
+  public ExcelDto getUserInfoListExcel(Map<String, Object> param) {
+    ExcelDto excelDto = new ExcelDto();
+
+    try {
+      ExcelDefaultExceptionHandler resultHandler = new ExcelDefaultExceptionHandler(param);
+      manageRepository.getUserInfoListExcel(param, resultHandler);
+
+      if("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+      if("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+      if("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+      excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+      excelDto.setFile_name(String.valueOf(param.get("fileName")));
+      excelDto.setTarget_path_key(ExcelDto.FILE_PATH_CREATE_EXCEL);
+      excelDto.setTarget_file(resultHandler.execute());
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.excel.file");
+    }
+
+    return excelDto;
+  }
+
+  //
+  @Override
+  public List<NmsInfoManageDto> getNmsInfoList(Map<String, Object> param) {
+    return manageRepository.getNmsInfoList(param);
+  }
+  @Override
+  @LoginUser
+  public ResultManageRegDto insertNmsInfo(Map<String, Object> param) {
+    // 
+    ResultManageRegDto regDto = new ResultManageRegDto();
+    int existNmsNameCount = manageRepository.existNmsInfoName(param);
+    if (existNmsNameCount > 0) {
+      regDto.setRetCnt(-1);
+      regDto.setRetMsg(ResultManageRegDto.EXIST_NMS_NAME);
+    } else {
+      int retCnt = manageRepository.insertNmsInfo(param);
+      if (retCnt <= 0) {
+        regDto.setRetCnt(-1);
+        regDto.setRetMsg(ResultManageRegDto.NOT_EXIST_REG);
+      } else {
+        regDto.setRetCnt(retCnt);
+      }
+    }
+
+    return regDto;
+  }
+  @Override
+  @LoginUser
+  public ResultManageRegDto updateNmsInfo(Map<String, Object> param) {
+    // 
+    ResultManageRegDto regDto = new ResultManageRegDto();
+    int existNmsNameCount = manageRepository.existNmsInfoName(param);
+    if (existNmsNameCount > 0) {
+      regDto.setRetCnt(-1);
+      regDto.setRetMsg(ResultManageRegDto.EXIST_NMS_NAME);
+    } else {
+      int retCnt = manageRepository.updateNmsInfo(param);
+      if (retCnt <= 0) {
+        regDto.setRetCnt(-1);
+        regDto.setRetMsg(ResultManageRegDto.NOT_EXIST_REG);
+      } else {
+        regDto.setRetCnt(retCnt);
+      }
+    }
+
+    return regDto;
+  }
+  @Override
+  @LoginUser
+  public ResultManageRegDto deleteNmsInfo(Map<String, Object> param) {
+    ResultManageRegDto regDto = new ResultManageRegDto();
+    int existUseNmsInInf = manageRepository.existNmsInfoInInterface(param);
+    if (existUseNmsInInf > 0) {
+      regDto.setRetCnt(-1);
+      regDto.setRetMsg(ResultManageRegDto.EXIST_USE_INF);
+    } else {
+      int retCnt = manageRepository.deleteNmsManagerMap(param);
+      retCnt = retCnt + manageRepository.deleteNmsInfo(param);
+      if (retCnt <= 0) {
+        regDto.setRetCnt(-1);
+        regDto.setRetMsg(ResultManageRegDto.NOT_EXIST_REG);
+      } else {
+        regDto.setRetCnt(retCnt);
+      }
+    }
+
+    return regDto;
+  }
+
+
+
+  @Override
+  public List<NmsInfoManageDto> getSelectNmsId(Map<String, Object> param) {
+    return manageRepository.getSelectNmsId(param);
+  }
+  @Override
+  public ExcelDto getNmsInfoListExcel(Map<String, Object> param) {
+    ExcelDto excelDto = new ExcelDto();
+
+    try {
+      ExcelDefaultExceptionHandler resultHandler = new ExcelDefaultExceptionHandler(param);
+      manageRepository.getNmsInfoListExcel(param, resultHandler);
+
+      if("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+      if("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+      if("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+      excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+      excelDto.setFile_name(String.valueOf(param.get("fileName")));
+      excelDto.setTarget_path_key(ExcelDto.FILE_PATH_CREATE_EXCEL);
+      excelDto.setTarget_file(resultHandler.execute());
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.excel.file");
+    }
+
+    return excelDto;
+  }
+
+  //
+  /* @Transactional
+  @Override
+  public ResultManageRegDto updateNmsChargeManage(Map<String, Object> param, HttpServletRequest requset, HttpServletResponse response) {
+    ResultManageRegDto regDto = new ResultManageRegDto();
+    
+    try{
+      param.put("regUserId", sessionManage.getUserByContextRepository(requset , response).getUser_id());
+
+      int retCnt = manageRepository.deleteNmsChargeManage(param);
+      retCnt = retCnt + manageRepository.insertNmsChargeManage(param);
+
+      if (retCnt <= 0) {
+        regDto.setRetCnt(-1);
+        regDto.setRetMsg(ResultManageRegDto.NOT_EXIST_APPLY);
+      } else {
+        regDto.setRetCnt(retCnt);
+      }
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.db.transaction");
+    }
+
+    return regDto;
+  }
+  @Override
+  @LoginUser
+  public ResultManageRegDto deleteNmsChargeManage(Map<String, Object> param) {
+    ResultManageRegDto regDto = new ResultManageRegDto();
+    
+    try{
+      int retCnt = manageRepository.deleteNmsChargeManage(param);
+      if (retCnt <= 0) {
+        regDto.setRetCnt(-1);
+        regDto.setRetMsg(ResultManageRegDto.NOT_EXIST_DEL);
+      } else {
+        regDto.setRetCnt(retCnt);
+      }
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.db.transaction");
+    }
+
+    return regDto;
+  } */
+
+
+  @Override
+  @Transactional
+  @SuppressWarnings("unchecked")
+  public ResultManageRegDto regNmsChargeManage(Map<String, Object> param, HttpServletRequest requset, HttpServletResponse response) {
+    ResultManageRegDto regDto = new ResultManageRegDto();
+    
+    try{
+      int retCnt = 0;
+      param.put("userId", sessionManage.getUserByContextRepository(requset , response).getUser_id());
+      List<Map<String, Object>> updatedList = (List<Map<String, Object>>) param.get("updatedList");
+      for (Map<String,Object> data : updatedList) {
+        String applyType = data.get("applyType").toString();
+        param.put("systemCd", data.get("systemCd").toString());
+        
+        retCnt = retCnt + manageRepository.deleteNmsChargeManage(param);
+        if (ResultManageRegDto.APPLY_ADD.equals(applyType)) {
+          List<String> userIdList = (List<String>) data.get("userIdList");
+          for (String user : userIdList) {
+            param.put("chargeId", user);
+            retCnt = retCnt + manageRepository.insertNmsChargeManage(param);
+          }
+        }
+      }
+
+      if (retCnt <= 0) {
+        regDto.setRetCnt(-1);
+        regDto.setRetMsg(ResultManageRegDto.NOT_EXIST_APPLY);
+      } else {
+        regDto.setRetCnt(retCnt);
+      }
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.db.transaction");
+    }
+
+    return regDto;
+  }
+
+  @Override
+  public ExcelDto getNmsChargeManageListExcel(Map<String, Object> param) {
+    ExcelDto excelDto = new ExcelDto();
+
+    try {
+      ExcelDefaultExceptionHandler resultHandler = new ExcelDefaultExceptionHandler(param);
+      manageRepository.getNmsChargeManageListExcel(param, resultHandler);
+
+      if("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+      if("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+      if("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+      excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+      excelDto.setFile_name(String.valueOf(param.get("fileName")));
+      excelDto.setTarget_path_key(ExcelDto.FILE_PATH_CREATE_EXCEL);
+      excelDto.setTarget_file(resultHandler.execute());
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.excel.file");
+    }
+
+    return excelDto;
+  }
+  @Override
+  public List<NmsChargeManageDto> getManagerChangeStatus(Map<String, Object> param) {
+    return manageRepository.getManagerChangeStatus(param);
+  }
+}

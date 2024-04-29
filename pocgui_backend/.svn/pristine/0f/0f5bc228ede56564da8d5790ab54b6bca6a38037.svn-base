@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.mysql.module.collect.interfacesource">
+  <sql id="def_table_interface">
+    <choose>
+      <when test = 'envStatus eq "dev".toString()'>collect_interface_dev</when>
+      <when test = 'envStatus eq "prod".toString()'>collect_interface7</when>
+      <otherwise>collect_interface7</otherwise>
+    </choose>
+  </sql>
+  <sql id="def_table_source">
+    <choose>
+      <when test = 'envStatus eq "dev".toString()'>collect_source_dev</when>
+      <when test = 'envStatus eq "prod".toString()'>collect_source4</when>
+      <otherwise>collect_source4</otherwise>
+    </choose>
+  </sql>
+  <sql id="def_table_proto_info_meta">proto_info_meta</sql>
+  <sql id="def_column_proto_info">proto_info</sql>
+  <sql id="def_table_system_code">system_code</sql>
+  <sql id="def_table_sequence_table">sequence_table</sql>
+  <sql id="def_table_noti_topic">noti_topic</sql>
+  <sql id="def_table_interface_topic_map">
+    <choose>
+      <when test = 'envStatus eq "dev".toString()'>interface_topic_map_dev</when>
+      <when test = 'envStatus eq "prod".toString()'>interface_topic_map</when>
+      <otherwise>interface_topic_map</otherwise>
+    </choose>
+  </sql>
+  <sql id="def_table_interface_added_files">interface_added_files</sql>
+
+  <!-- Collect Data Main Property -->
+  <select id="getDataMainJsonPropertyList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.collect.interfacesource.dto.JsonPropertyDefDto">
+    SELECT
+      CONCAT(REPLACE(protocol_cd, 'SFTP', 'FTP'), '__', json_key) field
+    ,	json_key header
+    , json_key json_key
+    , key_name key_name
+    ,	key_desc
+    ,	validator
+    , data_type
+    , display_attribute
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.minWidth', '200') minWith
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.textAlign', 'left') textAlign
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.width', '200') width
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.suppressSizeToFit', 'true') suppressSizeToFit
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.defaultEmpty', 'false') defaultEmpty
+    <!-- useType : MAIN_SEARCH (실제 PARAM은 안넘김. 의미상.)--> 
+    <!-- (기본 조회) 시 STP는 FTP와 합쳐서 같이 관리 -->
+    <!-- FTP와 SFTP Property가 1개 차이이기 때문에 메인화면에 Property를 따로 컬럼으로 보여주면 Grid 컬럼수가 너무 많아 짐 -->
+    ,	CASE 
+        WHEN A.protocol_cd = 'FTP' OR A.protocol_cd = 'SFTP' THEN
+          <if test='searchType eq "VIEW".toString()'>
+            CONCAT(', CASE WHEN A.protocol_cd = ''FTP'' OR A.protocol_cd = ''SFTP'' THEN A.<include refid="def_column_proto_info" /> -&gt;&gt; ''$.', json_key, ''' ELSE '''' END FTP__', json_key)
+          </if>
+          <if test='searchType eq "EXCEL".toString()'>
+            CONCAT(', CASE WHEN A.protocol_cd = ''FTP'' OR A.protocol_cd = ''SFTP'' THEN A.<include refid="def_column_proto_info" /> -&gt;&gt; ''$.', json_key, ''' ELSE '''' END ftp__', json_key)
+          </if>
+        ELSE
+          <if test='searchType eq "VIEW".toString()'>
+            CONCAT(', CASE WHEN A.protocol_cd = ''', A.protocol_cd ,''' THEN A.<include refid="def_column_proto_info" /> -&gt;&gt; ''$.', json_key, ''' ELSE '''' END ', A.protocol_cd, '__', json_key)
+          </if>
+          <if test='searchType eq "EXCEL".toString()'>
+            CONCAT(', CASE WHEN A.protocol_cd = ''', A.protocol_cd ,''' THEN A.<include refid="def_column_proto_info" /> -&gt;&gt; ''$.', json_key, ''' ELSE '''' END ', LOWER(A.protocol_cd), '__', json_key)
+          </if>
+      END json_columns
+    FROM
+      <include refid="def_table_proto_info_meta" /> A
+    WHERE protocol_cd IN (	
+      SELECT
+        DISTINCT
+        <if test = 'selectedBothFtp eq "Y".toString()'>
+          REPLACE(protocol_cd, 'SFTP', 'FTP') protocol_cd
+        </if>
+        <if test = 'selectedBothFtp eq "N".toString()'>
+          protocol_cd
+        </if>
+      FROM
+        <include refid="def_table_interface" />
+      WHERE 1 = 1
+      <!--COND-->
+        <!-- NMS -->
+        <if test = 'nmsList != null and nmsList.size != 0' >
+          AND system_cd IN <foreach item="item" index="index" collection="nmsList" open="(" separator="," close=")">#{item}</foreach>
+        </if>
+        <!-- PROTOCOL -->
+        <!-- useType : MAIN_SEARCH (실제 PARAM은 안넘김. 의미상.)--> 
+        <!-- (기본 조회) 시 STP는 FTP와 합쳐서 같이 관리 -->
+        <!-- FTP와 SFTP Property가 1개 차이이기 때문에 메인화면에 Property를 따로 컬럼으로 보여주면 Grid 컬럼수가 너무 많아 짐 -->
+        <if test = 'protocolList != null and protocolList.size != 0' >
+          AND protocol_cd IN
+          <foreach item="item" index="index" collection="protocolList" open="(" separator="," close=")">
+            #{item}
+          </foreach>
+        </if>
+        <!-- INTERFACE_CYCLE -->
+        <if test = 'interfaceCycleList != null and interfaceCycleList.size != 0' >
+          AND interface_cycle IN <foreach item="item" index="index" collection="interfaceCycleList" open="(" separator="," close=")">#{item}</foreach>
+        </if>
+        <!-- INTERFACE_ID -->
+        <if test = 'interfaceId != null and interfaceId neq "".toString()'>
+          <choose>
+            <when test = 'compareIdType eq "equal".toString()'>AND interface_id = #{interfaceId}</when>
+            <when test = 'compareIdType eq "like".toString()'>AND interface_id LIKE CONCAT('%', #{interfaceId} ,'%')</when>
+            <otherwise>AND interface_id LIKE CONCAT('%', #{interfaceId} ,'%')</otherwise>
+          </choose>
+        </if>
+        <!-- USE_YN -->
+        <if test = 'useYnList != null and useYnList.size != 0' >
+          AND use_yn IN <foreach item="item" index="index" collection="useYnList" open="(" separator="," close=")">#{item}</foreach>
+        </if>
+      <!--COND-->
+      )
+      AND table_nm = #{tableNm}
+      ORDER BY 
+        CASE protocol_cd WHEN 'FTP' THEN 1
+          WHEN 'SFTP' THEN 2
+          WHEN 'DBCONN' THEN 3
+          WHEN 'DISTCP' THEN 4
+          ELSE 99 END
+      , display_order 
+  </select>
+
+  <!-- Collect Data Main -->
+  <select id="getDataMainList" parameterType="map" resultType="java.util.HashMap">
+    <include refid="sqlGetDataMainList" />
+  </select>
+  
+  <sql id="sqlGetDataMainList">
+    SELECT
+      IFNULL(A.use_yn, 'N') use_yn
+    , 'collect' interface_type
+    , A.system_cd
+    ,	B.system_nm
+    ,	A.interface_id
+    ,	A.interface_nm
+    ,	A.protocol_cd
+    ,	A.interface_cycle
+    , C.interface_cycle_nm
+    ,	A.job_schedule_exp
+    ,	A.detail_desc
+    ,	A.ip_net
+    <foreach item="item" index="index" collection="jsonColumnList" open="" separator="" close="">
+      ${item}
+    </foreach>
+    FROM
+      <include refid="def_table_interface" /> A
+      LEFT OUTER JOIN
+      <include refid="def_table_system_code" /> B
+      ON A.system_cd  = B.system_cd
+      LEFT OUTER JOIN
+      <include refid="com.mobigen.cdev.mapper.mysql.module.common.def_common_interface_cycle" /> C
+      ON A.interface_cycle = C.interface_cycle
+    WHERE 1 = 1
+    <!--COND-->
+      <!-- NMS -->
+      <if test = 'nmsList != null and nmsList.size != 0' >
+        AND A.system_cd IN <foreach item="item" index="index" collection="nmsList" open="(" separator="," close=")">#{item}</foreach>
+      </if>
+      <!-- PROTOCOL -->
+      <if test = 'protocolList != null and protocolList.size != 0' >
+        AND A.protocol_cd IN <foreach item="item" index="index" collection="protocolList" open="(" separator="," close=")">#{item}</foreach>
+      </if>
+      <!-- INTERFACE_CYCLE -->
+      <if test = 'interfaceCycleList != null and interfaceCycleList.size != 0' >
+        AND A.interface_cycle IN <foreach item="item" index="index" collection="interfaceCycleList" open="(" separator="," close=")">#{item}</foreach>
+      </if>
+      <!-- INTERFACE_ID -->
+      <if test = 'interfaceId != null and interfaceId neq "".toString()'>
+        
+      </if>
+      <if test = 'interfaceId != null and interfaceId neq "".toString()'>
+        <choose>
+          <when test = 'compareIdType eq "equal".toString()'>AND A.interface_id = #{interfaceId}</when>
+          <when test = 'compareIdType eq "like".toString()'>AND A.interface_id LIKE CONCAT('%', #{interfaceId} ,'%')</when>
+          <otherwise>AND A.interface_id LIKE CONCAT('%', #{interfaceId} ,'%')</otherwise>
+        </choose>
+      </if>
+      <!-- USE_YN -->
+      <if test = 'useYnList != null and useYnList.size != 0' >
+        AND A.use_yn IN <foreach item="item" index="index" collection="useYnList" open="(" separator="," close=")">#{item}</foreach>
+      </if>
+    <!--COND-->
+    ORDER BY A.interface_id, B.system_nm
+  </sql>
+
+  <!-- Collect Data Detail Property -->
+  <select id="getDataDetailJsonPropertyList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.collect.interfacesource.dto.JsonPropertyDefDto">
+    SELECT
+      A.json_key header
+    , A.json_key json_key
+    , A.key_name key_name
+    , A.key_desc
+    , A.validator
+    , A.data_type
+    , A.display_attribute
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.minWidth', '200') minWith
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.textAlign', 'left') textAlign
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.width', '200') width
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.suppressSizeToFit', 'true') suppressSizeToFit
+    ,	IFNULL(A.display_attribute -&gt;&gt; '$.defaultEmpty', 'false') defaultEmpty
+    <choose>
+      <when test = 'protocolCd eq "FTP".toString() or protocolCd eq "SFTP".toString()'>
+        , CONCAT('FTP', '__', A.json_key) field
+        , CONCAT(', A.<include refid="def_column_proto_info" /> -&gt;&gt; ''$.', json_key, ''' FTP__', json_key) json_columns
+      </when>
+      <otherwise>
+        , CONCAT(#{protocolCd}, '__', A.json_key) field
+        , CONCAT(', A.<include refid="def_column_proto_info" /> -&gt;&gt; ''$.', json_key, ''' ', #{protocolCd} ,'__', json_key) json_columns
+      </otherwise>
+    </choose>
+    FROM <include refid="def_table_proto_info_meta" /> A 
+    WHERE 1 = 1
+    AND table_nm = #{tableNm}
+    AND protocol_cd = #{protocolCd}
+    ORDER BY display_order 
+  </select>
+
+  <select id="getDataDetailList" parameterType="map" resultType="java.util.HashMap">
+    SELECT
+      collect_source_seq
+      <!-- <if test='interfaceType eq "collect".toString()'>collect_source_seq</if> -->
+      <!-- <if test='interfaceType eq "provide".toString()'>provide_source_seq</if> -->
+      <!-- , #{interfaceType} interface_type -->
+    , interface_id
+    , data_id
+    <foreach item="item" index="index" collection="jsonColumnList" open="" separator="" close="">
+      ${item}
+    </foreach>
+    , hdfs_dir
+    ,	DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') created_at
+    , created_by
+    , B.user_name created_by_desc
+    ,	DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') updated_at
+    , updated_by
+    , C.user_name updated_by_desc
+    FROM 
+      <include refid="def_table_source" /> A
+    LEFT OUTER JOIN (SELECT user_id, CONCAT(user_name, '(', user_id, ' ', insa_team_name, ')') user_name  FROM guiweb.cm_user) B ON A.created_by = B.user_id
+    LEFT OUTER JOIN (SELECT user_id, CONCAT(user_name, '(', user_id, ' ', insa_team_name, ')') user_name  FROM guiweb.cm_user) C ON A.updated_by = C.user_id
+    WHERE 1 = 1
+    AND interface_id = #{interfaceId}
+  </select>
+
+  <!-- @Deprecated 사용 안함 -->
+  <select id="getNextInterfaceSeq" parameterType="map" resultType="String">
+    SELECT
+      IFNULL(seq_value, 0) + 1 next_seq_key
+    FROM
+      <include refid="def_table_sequence_table" />
+    WHERE 1 = 1
+    <!-- AND seq_key = 'C-CEM-DISTCP-OD-' -->
+    AND seq_key = #{seq_key}
+  </select>
+
+  <!-- @Deprecated 사용 안함 -->
+  <insert id="mergeSequenceTable" parameterType="map">
+    INSERT INTO <include refid="def_table_sequence_table" />
+    (
+      seq_key
+    , seq_value
+    )
+    VALUES
+    (
+      #{seq_key}
+    , #{seq_value}
+    )
+    ON DUPLICATE KEY
+    UPDATE seq_key = #{seq_key}
+
+    <selectKey keyProperty = "seq_key" resultType = "String" order="AFTER">
+      SELECT
+        CONCAT(seq_key, LPAD(seq_value, 4, '0'))
+      FROM
+        <include refid="def_table_sequence_table" />
+    </selectKey>
+  </insert>
+
+  <select id="getNewInterfaceIdByGeneratedProcedure" parameterType="map" resultType="String">
+    CALL sp_generate_new_interface_id(#{seq_key})
+  </select>
+
+  <insert id="mergeInterfaceInfo" parameterType="map">
+    <if test = 'applyType eq "NEW".toString() or applyType eq "COPY".toString()'>
+      <!-- INSERT -->
+      INSERT INTO <include refid="def_table_interface" />
+      (
+        interface_id
+      , system_cd
+      , interface_nm
+      , protocol_cd
+      , interface_cycle
+      , job_schedule_exp
+      , detail_desc
+      , ip_net
+      , proto_info
+      , use_yn
+      , created_at
+      , updated_at
+      , created_by
+      , updated_by
+      )
+      VALUES
+      (
+        #{interface_id}
+      , #{system_cd}
+      , #{interface_nm}
+      , #{protocol_cd}
+      , #{interface_cycle}
+      , #{job_schedule_exp}
+      , #{detail_desc}
+      , #{ip_net}
+      , #{proto_info}
+      , #{use_yn}
+      , SYSDATE()
+      , SYSDATE()
+      , #{userId}
+      , #{userId}
+      )
+    </if>
+    <if test = 'applyType eq "MOD".toString()'>
+      <!-- UPDATE -->
+      UPDATE <include refid="def_table_interface" /> SET
+        system_cd = #{system_cd}
+      , interface_nm = #{interface_nm}
+      , protocol_cd = #{protocol_cd}
+      , interface_cycle = #{interface_cycle}
+      , job_schedule_exp = #{job_schedule_exp}
+      , detail_desc = #{detail_desc}
+      , ip_net = #{ip_net}
+      , proto_info = #{proto_info}
+      , use_yn = #{use_yn}
+      , updated_at = SYSDATE()
+      , updated_by = #{userId}
+      WHERE interface_id = #{interface_id}
+    </if>
+    <if test = 'applyType eq "DEL".toString()'>
+      DELETE FROM
+        <include refid="def_table_interface" />
+      WHERE interface_id = #{interface_id}
+    </if>
+  </insert>
+  <insert id="merginDataSourceInfo" parameterType="map">
+    <if test = 'applyType eq "DEL".toString()'>
+      DELETE FROM <include refid="def_table_source" />
+      WHERE interface_id = #{interface_id}
+    </if>
+    <if test = 'applyType neq "DEL".toString()'>
+      <if test = 'editType eq "NEW".toString()'>
+        INSERT INTO <include refid="def_table_source" />
+        (
+          interface_id
+        , proto_info
+        , hdfs_dir
+        , created_at
+        , updated_at
+        , created_by
+        , updated_by
+        )
+        VALUES
+        (
+          #{interface_id}
+        , #{proto_info}
+        , #{hdfs_dir}
+        , SYSDATE()
+        , SYSDATE()
+        , #{userId}
+        , #{userId}
+        )
+      </if>
+      <if test = 'editType eq "MOD".toString()'>
+        UPDATE <include refid="def_table_source" /> SET
+          interface_id = #{interface_id}
+        , proto_info = #{proto_info}
+        , hdfs_dir = #{hdfs_dir}
+        , updated_at = SYSDATE()
+        , updated_by = #{userId}
+        WHERE 1 = 1
+        <if test='interfaceType eq "collect".toString()'>
+          AND collect_source_seq = #{collect_source_seq}
+        </if>
+        <if test='interfaceType eq "provide".toString()'>
+          AND provide_source_seq = #{provide_source_seq}
+        </if>
+      </if>
+      <if test = 'editType eq "DEL".toString()'>
+        DELETE FROM <include refid="def_table_source" />
+        WHERE 1 = 1
+        <if test='interfaceType eq "collect".toString()'>
+          AND collect_source_seq = #{collect_source_seq}
+        </if>
+        <if test='interfaceType eq "provide".toString()'>
+          AND provide_source_seq = #{provide_source_seq}
+        </if>
+      </if>
+    </if>
+  </insert>
+
+  <update id="updateInterfaceUseYn" parameterType="map">
+    UPDATE
+      <include refid="def_table_interface" />
+    SET
+      use_yn = #{use_yn}
+    , updated_at = SYSDATE()
+    , updated_by = #{userId}
+    WHERE 1 = 1
+    AND interface_id = #{interface_id}
+  </update>
+
+  <delete id="deleteInterfaceTopicInfo" parameterType="map">
+    DELETE FROM <include refid="def_table_interface_topic_map" />
+    WHERE 1 = 1
+    <if test = 'applyType neq "DEL".toString()'>
+      <!-- AND interface_type = #{interfaceType} -->
+      AND interface_id = #{interface_id}
+      AND topic_name = #{topic_name}
+    </if>
+    <if test = 'applyType eq "DEL".toString()'>
+      <!-- AND interface_type = #{interfaceType} -->
+      AND interface_id = #{interface_id}
+    </if>
+  </delete>
+  <insert id="insertInterfaceTopicInfo" parameterType="map">
+    INSERT INTO <include refid="def_table_interface_topic_map" />
+    (
+      <!-- interface_type -->
+      interface_id
+    , topic_name
+    , created_at
+    , updated_at
+    , created_by
+    , updated_by
+    )
+    VALUES
+    (
+      <!-- #{interfaceType} -->
+      #{interface_id}
+    , #{topic_name}
+    , SYSDATE()
+    , SYSDATE()
+    , #{userId}
+    , #{userId}
+    )
+  </insert>
+  <delete id="deleteInterfaceFileInfo" parameterType="map">
+    DELETE FROM <include refid="def_table_interface_added_files" />
+    WHERE 1 = 1
+    <if test = 'applyType neq "DEL".toString()'>
+      AND added_file_seq = #{added_file_seq}
+    </if>
+    <if test = 'applyType eq "DEL".toString()'>
+      <!-- AND interface_type = #{interfaceType} -->
+      AND interface_id = #{interface_id}
+    </if>
+
+  </delete>
+  <insert id="insertInterfaceFileInfo" parameterType="map">
+    INSERT INTO <include refid="def_table_interface_added_files" />
+    (
+      <!-- interface_type -->
+      interface_id
+    , client_file_name
+    , file_path
+    , file_name
+    , file_size
+    , updated_at
+    , updated_by
+    )
+    VALUES
+    (
+      <!-- #{interfaceType} -->
+      #{interface_id}
+    , #{client_file_name}
+    , #{file_path}
+    , #{file_name}
+    , #{file_size}
+    , SYSDATE()
+    , #{userId}
+    )
+  </insert>
+
+  <select id="getCloudList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.collect.notification.dto.NotiTopicDto">
+    SELECT
+      topic_name
+    , cloud_name
+    , description
+    FROM
+      <include refid="def_table_noti_topic" />
+  </select>
+
+  <select id="getInterfaceTopicList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.collect.interfacesource.dto.InterfaceTopicDto">
+    SELECT
+      interface_id
+    ,	A.topic_name
+    ,	B.cloud_name cloud_name
+    , 'Y' check_yn
+    FROM 
+      <include refid="def_table_interface_topic_map" /> A
+      LEFT OUTER JOIN 
+      <include refid="def_table_noti_topic" /> B 
+      ON A.topic_name  = B.topic_name
+    WHERE 1 = 1
+    <!-- AND A.interface_type = #{interfaceType} -->
+    AND A.interface_id = #{interfaceId}
+  </select>
+
+  <select id="getInterfaceAddedFileList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.collect.interfacesource.dto.InterfaceAddedFileDto">
+    SELECT 
+      added_file_seq
+    <!-- , interface_type -->
+    ,	interface_id
+    ,	client_file_name
+    ,	file_path
+    ,	file_name
+    ,	file_size
+    , (
+        SELECT
+          CASE 
+		   			WHEN COUNT(*) = 0 THEN ''
+		   			WHEN COUNT(*) = 1 THEN SUBSTRING_INDEX(GROUP_CONCAT(client_file_name), ',', 1)
+		   			WHEN COUNT(*) &gt; 1 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(client_file_name), ',', 1), ' 외 ', COUNT(*) - 1, '건') 
+		   		END
+		    FROM
+          <include refid="def_table_interface_added_files" />
+        WHERE interface_id  = A.interface_id
+        GROUP BY interface_id
+    ) file_desc
+    FROM
+      <include refid="def_table_interface_added_files" /> A
+    WHERE 1 = 1
+    <!-- AND interface_type = #{interfaceType} -->
+    AND interface_id  = #{interfaceId}
+  </select>
+</mapper>

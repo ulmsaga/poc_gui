@@ -1,0 +1,61 @@
+package com.mobigen.cdev.datagw.module.collect.history.process;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Component
+public class WatchCollectRetryFinishedDemonAwaken implements Runnable {
+
+  private final WatchCollectRetryFinishedDemon retryWatchFinishedDemon;
+  private volatile boolean isRun = false;
+  private volatile int demonProcessFailCnt = 0;
+  private final int WAIT_THRESHOLD_CNT = 10;
+  private final long THREAD_SLEEP_TIMEOUT = 20 * 1000L;
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  public WatchCollectRetryFinishedDemonAwaken(WatchCollectRetryFinishedDemon retryWatchFinishedDemon) {
+    this.retryWatchFinishedDemon = retryWatchFinishedDemon;
+  }
+
+  public boolean isRun() {
+    return isRun;
+  }
+  public void setRun(boolean isRun) {
+      this.isRun = isRun;
+  }
+
+  @Override
+  public void run() {
+    try {
+      while(isRun) {
+          Thread.currentThread();
+          Thread.sleep(THREAD_SLEEP_TIMEOUT);
+
+          if (!retryWatchFinishedDemon.isRun()) {
+              demonProcessFailCnt++;
+              retryWatchFinishedDemon.setRun(true);
+              Thread demon = new Thread(retryWatchFinishedDemon);
+              boolean demonIsAlive = demon.isAlive();
+              if(!demonIsAlive) demon.start();
+              
+              if(demonProcessFailCnt > WAIT_THRESHOLD_CNT){
+                  logger.info("Retry Finished Collect Watch Demon was shutdown {} times by exception.", demonProcessFailCnt);
+              }
+          }
+      }
+    } catch (Exception e) {
+      isRun=false;
+
+      logger.error("==========================");
+      logger.error("DEMON AWAKEN");
+      logger.error("catch exception !!! : {}", isRun);
+      logger.error("Exception: {}", e);
+      logger.error("==========================");
+
+      logger.info("Retry Finished Collect Watch Awaken demon is dead by exception");
+      throw new RuntimeException(e);
+     }
+    
+  }
+}

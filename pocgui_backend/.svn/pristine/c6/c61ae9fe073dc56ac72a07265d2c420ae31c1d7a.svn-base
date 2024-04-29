@@ -1,0 +1,62 @@
+package com.mobigen.cdev.datagw.module.datamanages.nmsinfo.controller;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.mobigen.cdev.datagw.core.base.dto.RsResultDto;
+import com.mobigen.cdev.datagw.module.datamanages.nmsinfo.service.NmsInfoManageService;
+
+@RestController
+@RequestMapping("datamanages")
+public class NmsInfoManageController {
+
+  private final NmsInfoManageService nmsInfoManageService;
+
+  public NmsInfoManageController(NmsInfoManageService nmsInfoManageService) {
+    this.nmsInfoManageService = nmsInfoManageService;
+  }
+
+  @PostMapping(value = "/getNmsInfoList", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> getNmsInfoList(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    result.setRs(nmsInfoManageService.getNmsInfoList(param));
+    return ResponseEntity.ok(result);
+  }
+
+  @PostMapping(value = "/getEditNmsInfo", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> getEditNmsInfo(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    result.setRs(nmsInfoManageService.getEditNmsInfo(param));
+    return ResponseEntity.ok(result);
+  }
+
+  @PostMapping(value = "/getInsertNmsInfo", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> getInsertNmsInfo(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    result.setRs(nmsInfoManageService.getInsertNmsInfo(param));
+    return ResponseEntity.ok(result);
+  }
+
+  @PostMapping(value = "/getSelectNmsId", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> getSelectNmsId(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    result.setRs(nmsInfoManageService.getSelectNmsId(param));
+    return ResponseEntity.ok(result);
+  }
+
+  @PostMapping(value = "/getNmsInfoListExcel", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getNmsInfoListExcel(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(nmsInfoManageService.getNmsInfoListExcel(param));
+		return ResponseEntity.ok(result);
+	}
+}

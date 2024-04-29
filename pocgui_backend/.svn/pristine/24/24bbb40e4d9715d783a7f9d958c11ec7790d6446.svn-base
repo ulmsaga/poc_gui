@@ -1,0 +1,239 @@
+package com.mobigen.cdev.datagw.module.collect.notification.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.collections4.map.HashedMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.mobigen.cdev.datagw.core.base.dto.RsResultDto;
+import com.mobigen.cdev.datagw.core.exception.RsRuntimeException;
+import com.mobigen.cdev.datagw.core.util.common.FileLog;
+import com.mobigen.cdev.datagw.module.collect.interfacesource.dto.InterfaceDto;
+import com.mobigen.cdev.datagw.module.collect.history.service.CollectHistoryService;
+
+// @CrossOrigin(origins = "*", allowCredentials="true", allowedHeaders="*")
+@RestController
+@RequestMapping("notification")
+public class NotificationController {
+
+  private final CollectHistoryService collectHistoryService;
+  private final Environment env;
+
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
+  
+
+  public NotificationController(CollectHistoryService collectHistoryService, Environment env) {
+    this.collectHistoryService = collectHistoryService;
+    this.env = env;
+  }
+
+  // GET -> POST 변경 요청
+  // histId -> histIdList
+  @SuppressWarnings("unchecked")
+  @PostMapping(value = "/retryProcFinished", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> notiRetryProcFinished (@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+		try {
+			logger.info("=============================================================");
+      logger.info("Notification Retry Process FINISHED!!!!!!!!!!");
+      logger.info("Check Param Valid =====");
+      logger.info("[1] interfaceId");
+
+      if (param.get("interfaceId") == null) {
+        result.setResult(RsResultDto.RESULT_FAIL);
+        result.setErrorMessage("interfaceId is null.");
+      } else {
+        if (!(param.get("interfaceId") instanceof String)) {
+          result.setResult(RsResultDto.RESULT_FAIL);
+          result.setErrorMessage("Type of interfaceId is invalid.");
+        } else {
+          if ("".equals(param.get("interfaceId").toString())) {
+            result.setResult(RsResultDto.RESULT_FAIL);
+            result.setErrorMessage("interfaceId is '' (empty)");
+          } else {
+            if (!InterfaceDto.PREFIX_COLLECT.equals(param.get("interfaceId").toString().substring(0, 1)) &&
+                !InterfaceDto.PREFIX_PROVIDE.equals(param.get("interfaceId").toString().substring(0, 1))) {
+              result.setResult(RsResultDto.RESULT_FAIL);
+              result.setErrorMessage("interfaceId is invalid. (must started 'C' or 'P')");
+            }
+          }
+        }
+      }
+      if (result.getResult() == RsResultDto.RESULT_FAIL && !"".equals(result.getErrorMessage())) {
+        return ResponseEntity.ok(result); 
+      }
+
+      logger.info("interfaceId: {}", param.get("interfaceId").toString());
+      logger.info("[2] histIdList");
+
+      if (param.get("histIdList") == null) {
+        result.setResult(RsResultDto.RESULT_FAIL);
+        result.setErrorMessage("histIdList is null.");
+      } else {
+         if (!(param.get("histIdList") instanceof List)) {
+          result.setResult(RsResultDto.RESULT_FAIL);
+          result.setErrorMessage("Type of histIdList is invalid.");
+         } else {
+          if (((List<String>) param.get("histIdList")).size() < 1 ) {
+            result.setResult(RsResultDto.RESULT_FAIL);
+            result.setErrorMessage("histIdList size is " + ((List<String>) param.get("histIdList")).size() + ".");
+          }
+         }
+      }
+
+      if (result.getResult() == RsResultDto.RESULT_FAIL && !"".equals(result.getErrorMessage())) {
+        return ResponseEntity.ok(result); 
+      }
+      
+      logger.info("histIdList: {}", param.get("histIdList"));
+
+      logger.info("Check Collection / Provide And Call sendRetryHistoryList() =====");
+      if (InterfaceDto.PREFIX_COLLECT.equals(param.get("interfaceId").toString().substring(0, 1))) {
+        param.put("interfaceType", InterfaceDto.INTERFACE_TYPE_COLLECT);
+      } else if (InterfaceDto.PREFIX_PROVIDE.equals(param.get("interfaceId").toString().substring(0, 1))) {
+        param.put("interfaceType", InterfaceDto.INTERFACE_TYPE_PROVIDE);
+      }
+
+      logger.info("Finish sendRetryHistoryList() =====");
+      logger.info("=============================================================");
+
+			result.setRs(collectHistoryService.sendRetryHistoryList(param));
+		} catch (Exception e) {
+			throw new RsRuntimeException(e);
+		}
+		return ResponseEntity.ok(result);
+  }
+
+  @SuppressWarnings("unchecked")
+  @PostMapping(value = "/taskCompletionNotifier", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> taskCompletionNotifier (@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    // --------------------------------------
+    // For File Log
+    FileLog f = FileLog.getInstance();
+    String logType = "taskCompletionNotifier";
+    String sepChar = "|^|";
+    StringBuilder sb = new StringBuilder();
+    boolean allowFileLog = false;
+    if ("Y".equals(env.getProperty("dgw.config.log.allow-task-complete-noti"))) allowFileLog = true;
+    // --------------------------------------
+
+    sb.append("\r\n");
+    sb.append("==================================================================================================================");
+    sb.append("\r\n");
+
+    try {
+      // --------------------------------------
+      // param : {type: "", hist_id: []}
+      // --------------------------------------
+      if (param.get("type") == null) {
+        result.setResult(RsResultDto.RESULT_FAIL);
+        result.setErrorCause("type is null");
+        result.setErrorMessage("type is null");
+
+        sb.append("invalid :: ").append(param.get("type is null"));
+        sb.append("\r\n");
+        sb.append("==================================================================================================================");
+        sb.append("\r\n");
+        sb.append("\r\n");
+
+        return ResponseEntity.ok(result);
+      }
+
+      Map<String, Object> condParam = new HashedMap<String, Object>();
+      String interfaceType = param.get("type").toString();
+      if (!InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType) && !InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+        result.setResult(RsResultDto.RESULT_FAIL);
+        result.setErrorCause("value of type is invalid. ('collect' or 'provide' required) ");
+        result.setErrorMessage("value of type is invalid. ('collect' or 'provide' required) ");
+
+        sb.append("invalid :: ").append(param.get("value of type is invalid. ('collect' or 'provide' required) "));
+        sb.append("\r\n");
+        sb.append("==================================================================================================================");
+        sb.append("\r\n");
+        sb.append("\r\n");
+
+        return ResponseEntity.ok(result);
+      }
+
+      List<String> histIdList = (List<String>) param.get("hist_id_list");
+      if (histIdList == null) {
+        result.setResult(RsResultDto.RESULT_FAIL);
+        result.setErrorCause("hist_id_list is null.");
+        result.setErrorMessage("hist_id_list is null.");
+
+        sb.append("invalid :: ").append(param.get("hist_id_list is null."));
+        sb.append("\r\n");
+        sb.append("==================================================================================================================");
+        sb.append("\r\n");
+        sb.append("\r\n");
+
+        return ResponseEntity.ok(result);
+      }
+
+      if (histIdList.size() == 0) {
+        result.setResult(RsResultDto.RESULT_FAIL);
+        result.setErrorCause("hist_id_list is not exist. (size = 0)");
+        result.setErrorMessage("hist_id_list is not exist. (size = 0)");
+
+        sb.append("invalid :: ").append(param.get("hist_id_list is not exist. (size = 0)"));
+        sb.append("\r\n");
+        sb.append("==================================================================================================================");
+        sb.append("\r\n");
+        sb.append("\r\n");
+
+        return ResponseEntity.ok(result);
+      }
+
+      condParam.put("interfaceType", interfaceType);
+      condParam.put("histIdDataType", "list");
+      condParam.put("histIdList", histIdList);
+      
+      sb.append("type : ").append(interfaceType).append(sepChar);
+      sb.append("hist_id_list : ");
+      for (String tmp: histIdList) {
+          if (histIdList.size() - 1 == histIdList.indexOf(tmp)) {
+            sb.append(tmp);
+          } else {
+            sb.append(tmp).append(",");
+          }
+      }
+      sb.append(sepChar);
+      
+      int ret = collectHistoryService.sendCompletionHistoryList(condParam);
+      result.setRs(ret);
+      
+      sb.append("rs : ").append(ret).append(sepChar);
+      sb.append("\r\n");
+      sb.append("==================================================================================================================");
+      sb.append("\r\n");
+      sb.append("\r\n");
+
+      if (allowFileLog) f.writeLog(sb.toString(), logType);
+      // --------------------------------------
+    } catch (Exception e) {
+      sb.append("Exception :: " + e.toString());
+      sb.append("\r\n");
+      sb.append("==================================================================================================================");
+      sb.append("\r\n");
+      sb.append("\r\n");
+      if (allowFileLog) f.writeLog(sb.toString(), logType);
+      throw new RsRuntimeException(e);
+    }
+
+    return ResponseEntity.ok(result);
+  }
+
+}

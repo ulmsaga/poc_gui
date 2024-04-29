@@ -1,0 +1,106 @@
+package com.mobigen.cdev.datagw.module.common.repository.mybatis;
+
+import java.util.List;
+import java.util.Map;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.common.dto.common.CondValueTextDto;
+import com.mobigen.cdev.datagw.module.common.dto.menu.MenuInfoDto;
+import com.mobigen.cdev.datagw.module.common.dto.user.UserInfoDto;
+
+@Repository
+public class CommonRepositoryImpl implements CommonRepository {
+
+    private final SqlSessionTemplate sqlSessionTemplateGuiweb;
+    private final SqlSessionTemplate sqlSessionTemplateCollect;
+    private final SqlSessionTemplate sqlSessionTemplatePemdb1;
+    private final String namespace = "com.mobigen.cdev.mapper.mysql.module.common";
+    private final String namespace_oracle = "com.mobigen.cdev.mapper.oracle.module.common";
+
+    @Autowired
+    public CommonRepositoryImpl(SqlSessionTemplate sqlSessionTemplateGuiweb, SqlSessionTemplate sqlSessionTemplateCollect, SqlSessionTemplate sqlSessionTemplatePemdb1) {
+        this.sqlSessionTemplateGuiweb = sqlSessionTemplateGuiweb;
+        this.sqlSessionTemplateCollect = sqlSessionTemplateCollect;
+        this.sqlSessionTemplatePemdb1 = sqlSessionTemplatePemdb1;
+    }
+
+    @Override
+    public List<UserInfoDto> getUserList(Map<String, Object> param) {
+        return sqlSessionTemplateGuiweb.selectList(namespace + ".getUserList", param);
+    }
+
+    @Override
+    public void getUserListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler resultHandler) {
+        sqlSessionTemplateGuiweb.select(namespace + ".getUserListExcel", param, resultHandler);
+    }
+
+    @Override
+    public List<UserInfoDto> getUserCollectList(Map<String, Object> param) {
+        return sqlSessionTemplateCollect.selectList(namespace + ".getUserList", param);
+    }
+
+	@Override
+	public List<UserInfoDto> getUserPemdb1List(Map<String, Object> param) {
+		return sqlSessionTemplatePemdb1.selectList(namespace_oracle + ".getUserList", param);
+	}
+    
+    @Override
+    public List<MenuInfoDto> getUserMenuInfoList(Map<String, Object> param) {
+    	return sqlSessionTemplateGuiweb.selectList(namespace + ".getUserMenuInfoList", param);
+    }
+    
+    @Override
+    public MenuInfoDto getDefaultMenuInfo(Map<String, Object> param) {
+        return sqlSessionTemplateGuiweb.selectOne(namespace + ".getDefaultMenuInfo", param);
+    }
+
+    @Override
+    public List<MenuInfoDto> getMenuInfoList(Map<String, Object> param) {
+    	return sqlSessionTemplateGuiweb.selectList(namespace + ".getMenuInfoList", param);
+    }
+    
+    @Override
+    public List<CondValueTextDto> getNmsCondList(Map<String, Object> param) {
+        return sqlSessionTemplateCollect.selectList(namespace + ".getNmsCondList", param);
+    }
+
+    @Override
+    public List<CondValueTextDto> getProtocolCondList(Map<String, Object> param) {
+        return sqlSessionTemplateCollect.selectList(namespace + ".getProtocolCondList", param);
+    }
+
+    @Override
+    public List<CondValueTextDto> getStatusCondList(Map<String, Object> param) {
+        return sqlSessionTemplateCollect.selectList(namespace + ".getStatusCondList", param);
+    }
+
+    @Override
+    public List<CondValueTextDto> getManagerCondList(Map<String, Object> param) {
+        return sqlSessionTemplateCollect.selectList(namespace + ".getManagerCondList", param);
+    }
+
+    //
+    //
+    //
+    //
+
+    @Override
+    public List<CondValueTextDto> getInterfaceCycleCondList(Map<String, Object> param) {
+        return sqlSessionTemplateCollect.selectList(namespace + ".getInterfaceCycleCondList", param);
+    }
+
+    @Override
+    public List<CondValueTextDto> getIpNetCondList(Map<String, Object> param) {
+        return sqlSessionTemplateCollect.selectList(namespace + ".getIpNetCondList", param);
+    }
+
+    @Override
+    public List<CondValueTextDto> getCloudList(Map<String, Object> param) {
+        return sqlSessionTemplateCollect.selectList(namespace + ".getCloudList", param);
+    }
+
+}

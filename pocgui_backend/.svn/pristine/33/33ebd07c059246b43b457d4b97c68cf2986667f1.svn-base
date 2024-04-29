@@ -1,0 +1,9 @@
+package com.mobigen.cdev.datagw.module.test.repository;
+
+import java.util.List;
+
+import com.mobigen.cdev.datagw.module.common.dto.user.UserInfoDto;
+
+public interface UserManageRepository {
+	int mergeUserInfoFromTpani(List<UserInfoDto> userInfoDtoList);
+}

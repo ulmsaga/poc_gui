@@ -1,0 +1,32 @@
+package com.mobigen.cdev.datagw.module.provide.history.repository.mybatis;
+
+import java.util.List;
+import java.util.Map;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.provide.history.dto.ProvideHistoryDto;
+
+@Repository
+public class ProvideHistoryRepositoryImpl implements ProvideHistoryRepository {
+
+  private final SqlSessionTemplate sqlSessionTemplateCollect;
+  private final String namespace = "com.mobigen.cdev.mapper.mysql.module.provide.history";
+
+  public ProvideHistoryRepositoryImpl(SqlSessionTemplate sqlSessionTemplateCollect) {
+    this.sqlSessionTemplateCollect = sqlSessionTemplateCollect;
+  }
+  
+  @Override
+  public List<ProvideHistoryDto> getHistoryList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getHistoryList", param);
+  }
+
+  @Override
+  public void getHistoryListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh) {
+    sqlSessionTemplateCollect.select(namespace + ".getHistoryListExcel", param, rh);
+  }
+
+}

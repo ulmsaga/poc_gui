@@ -1,0 +1,65 @@
+package com.mobigen.cdev.datagw.module.provide.interfacesource.repository.mybatis;
+
+import java.util.List;
+import java.util.Map;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideInterfaceAddedFileDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideJsonPropertyDefDto;
+
+@Repository
+public class ProvideInterfaceSourceRepositoryImpl implements ProvideInterfaceSourceRepository {
+
+  private final SqlSessionTemplate sqlSessionTemplateCollect;
+  private final String namespace = "com.mobigen.cdev.mapper.mysql.module.provide.interfacesource";
+
+  public ProvideInterfaceSourceRepositoryImpl(SqlSessionTemplate sqlSessionTemplateCollect) {
+    this.sqlSessionTemplateCollect = sqlSessionTemplateCollect;
+  }
+
+  @Override
+  public List<ProvideJsonPropertyDefDto> getDataMainJsonPropertyList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getDataMainJsonPropertyList", param);
+  }
+
+  @Override
+  public List<?> getDataMainList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getDataMainList", param);
+  }
+
+  @Override
+  public void getDataMainListExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh) {
+    sqlSessionTemplateCollect.select(namespace + ".getDataMainList", param, rh);
+  }
+
+  @Override
+  public List<ProvideInterfaceAddedFileDto> getInterfaceAddedFileList(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectList(namespace + ".getInterfaceAddedFileList", param);
+  }
+
+  @Override
+  public String getNewInterfaceIdByGeneratedProcedure(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.selectOne(namespace + ".getNewInterfaceIdByGeneratedProcedure", param);
+  }
+
+  @Override
+  public int mergeInterfaceInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.update(namespace + ".mergeInterfaceInfo", param);
+  }
+
+  @Override
+  public int deleteInterfaceFileInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.delete(namespace + ".deleteInterfaceFileInfo", param);
+  }
+  @Override
+  public int insertInterfaceFileInfo(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.insert(namespace + ".insertInterfaceFileInfo", param);
+  }
+  @Override
+  public int updateInterfaceUseYn(Map<String, Object> param) {
+    return sqlSessionTemplateCollect.update(namespace + ".updateInterfaceUseYn", param);
+  }
+}

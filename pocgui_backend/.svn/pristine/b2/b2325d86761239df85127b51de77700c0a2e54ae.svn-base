@@ -1,0 +1,9 @@
+package com.mobigen.cdev.datagw.module.common.repository.jpa.guiweb;
+
+import com.mobigen.cdev.datagw.module.common.entity.guiweb.CmUserEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CmUserRepository extends JpaRepository<CmUserEntity, String> {
+}

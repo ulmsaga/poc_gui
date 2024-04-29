@@ -1,0 +1,24 @@
+spring:
+  profiles:
+    active: local
+
+    group:
+      local:
+        - db-local
+        - config-local
+        - log-local
+      dev:
+        - db-dev
+        - config-dev
+        - log-dev
+      prod:
+        - db-prod
+        - config-prod
+        - log-prod
+    include:
+      - db
+      - config
+      - log
+      
+log4jdbc:
+  location: /log4j2/log4jdbc.log4j2.properties

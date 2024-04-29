@@ -1,0 +1,94 @@
+package com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto;
+
+import com.mobigen.cdev.datagw.core.base.dto.BaseObject;
+
+public class DataSourceDto extends BaseObject {
+  private static final long serialVersionUID = 1342997722340660049L;
+
+  private String collect_source_seq;
+  private String provide_source_seq;
+  private String source_seq;
+  private String interface_id;
+  private String old_id;
+  private String data_id;
+  private String proto_info;
+  private String hdfs_dir;
+  private String created_at;
+  private String updated_at;
+  private String created_by;
+  private String updated_by;
+
+  public String getCollect_source_seq() {
+    return collect_source_seq;
+  }
+  public void setCollect_source_seq(String collect_source_seq) {
+    this.collect_source_seq = collect_source_seq;
+  }
+  public String getProvide_source_seq() {
+    return provide_source_seq;
+  }
+  public void setProvide_source_seq(String provide_source_seq) {
+    this.provide_source_seq = provide_source_seq;
+  }
+  public String getSource_seq() {
+    return source_seq;
+  }
+  public void setSource_seq(String source_seq) {
+    this.source_seq = source_seq;
+  }
+  public String getInterface_id() {
+    return interface_id;
+  }
+  public void setInterface_id(String interface_id) {
+    this.interface_id = interface_id;
+  }
+  public String getOld_id() {
+    return old_id;
+  }
+  public void setOld_id(String old_id) {
+    this.old_id = old_id;
+  }
+  public String getData_id() {
+    return data_id;
+  }
+  public void setData_id(String data_id) {
+    this.data_id = data_id;
+  }
+  public String getProto_info() {
+    return proto_info;
+  }
+  public void setProto_info(String proto_info) {
+    this.proto_info = proto_info;
+  }
+  public String getHdfs_dir() {
+    return hdfs_dir;
+  }
+  public void setHdfs_dir(String hdfs_dir) {
+    this.hdfs_dir = hdfs_dir;
+  }
+  public String getCreated_at() {
+    return created_at;
+  }
+  public void setCreated_at(String created_at) {
+    this.created_at = created_at;
+  }
+  public String getUpdated_at() {
+    return updated_at;
+  }
+  public void setUpdated_at(String updated_at) {
+    this.updated_at = updated_at;
+  }
+  public String getCreated_by() {
+    return created_by;
+  }
+  public void setCreated_by(String created_by) {
+    this.created_by = created_by;
+  }
+  public String getUpdated_by() {
+    return updated_by;
+  }
+  public void setUpdated_by(String updated_by) {
+    this.updated_by = updated_by;
+  }
+  
+}

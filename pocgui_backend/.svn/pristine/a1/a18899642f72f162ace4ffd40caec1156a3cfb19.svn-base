@@ -1,0 +1,90 @@
+package com.mobigen.cdev.datagw.module.test.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.sql.DataSource;
+
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.dao.DataAccessException;
+
+import com.mobigen.cdev.datagw.core.applicationcontext.ApplicationContextProvider;
+import com.mobigen.cdev.datagw.module.test.dto.EduBoardDto;
+import com.mobigen.cdev.datagw.module.test.repository.ExceptionTestRepository;
+import com.mobigen.cdev.datagw.module.test.repository.ExceptionTestRepositoryImpl;
+
+@SpringBootTest
+@SuppressWarnings("unused")
+@Disabled
+class ExceptionTestServiceImplTest {
+	private final Environment env;
+    private final DataSource dataSourceGuiweb;
+
+    private ExceptionTestRepository exceptionTestRepository;
+
+    @Autowired
+    public ExceptionTestServiceImplTest(Environment env, DataSource dataSourceGuiweb) {
+        this.env = env;
+        this.dataSourceGuiweb = dataSourceGuiweb;
+    }
+
+    @BeforeEach
+    void setExceptionTestRepositoryForTest() throws Exception {
+        // Sql Time out을 발생 시키기 위해 mybatis-config-test.xml로 변경하여 defaultStatementTimeout = "1" (1sec)로 설정
+        SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
+        Resource mybatisConfig = ApplicationContextProvider.getApplicationContext().getResource("classpath:mybatis/mybatis-config-test.xml");
+        Resource[] resource = new PathMatchingResourcePatternResolver().getResources("classpath:mybatis/mysql/**/*.xml");
+
+        factoryBean.setDataSource(dataSourceGuiweb);
+        factoryBean.setConfigLocation(mybatisConfig);
+        factoryBean.setMapperLocations(resource);
+
+        SqlSessionFactory sqlSessionFactoryGuiweb = factoryBean.getObject();
+        assert sqlSessionFactoryGuiweb != null;
+        SqlSessionTemplate sqlSessionTemplateGuiweb = new SqlSessionTemplate(sqlSessionFactoryGuiweb);
+        exceptionTestRepository = new ExceptionTestRepositoryImpl(sqlSessionTemplateGuiweb);
+    }
+
+    @Test
+    @Disabled
+    @DisplayName("SQL QUERY TIMEOUT 오류 발생 시 MessageSource와 연계되는 오류 메세지 테스트")
+    void getBoardListForTimeOut() {
+        Map<String, Object> param = new HashMap<>();
+        int unionCnt = 50;
+        List<String> unionList = new ArrayList<>();
+        for (int i=0; i<unionCnt; i++) {
+            unionList.add("C" + i);
+        }
+        param.put("unionList", unionList);
+
+        String expectedMessageKey = "java.sql.SQLTimeoutException";
+        String resultMessageKey = "";
+        try {
+            List<EduBoardDto> eduBoardDtoList = exceptionTestRepository.getBoardListForTimeOut(param);
+        } catch (DataAccessException e) {
+            SQLException sqlException = (SQLException) e.getCause();
+            String cause = sqlException.toString().trim().split(":")[0];
+            if (cause.contains("SQLTimeoutException")) {
+                resultMessageKey = "java.sql.SQLTimeoutException";
+            }
+        } finally {
+            assertThat(resultMessageKey).isEqualTo(expectedMessageKey);
+        }
+    }
+}

@@ -1,0 +1,327 @@
+package com.mobigen.cdev.datagw.module.historymanages.history.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.mobigen.cdev.datagw.core.exception.RsRuntimeException;
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.core.sse.emmiter.EventEmitter;
+import com.mobigen.cdev.datagw.core.util.annotation.EnvStatus;
+import com.mobigen.cdev.datagw.module.common.dto.user.UserInfoDto;
+import com.mobigen.cdev.datagw.module.datamanages.interfacesource.dto.InterfaceDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.dto.HistoryDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.dto.RetryCountDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.dto.RetryDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.dto.CompleteEventDto;
+import com.mobigen.cdev.datagw.module.historymanages.history.process.RetryWatchFinishedDemon;
+import com.mobigen.cdev.datagw.module.historymanages.history.process.RetryWatchFinishedDemonAwaken;
+import com.mobigen.cdev.datagw.module.historymanages.history.repository.mybatis.HistoryRepository;
+
+@Service
+@Transactional(readOnly = true)
+public class HistoryServiceImpl implements HistoryService {
+
+  private final HistoryRepository historyRepository;
+  private final Environment env;
+  private final RetryWatchFinishedDemon retryWatchFinishedDemon;
+  private final RetryWatchFinishedDemonAwaken retryWatchFinishedDemonAwaken;
+  private final EventEmitter eventEmitter;
+
+  private String envStatus;
+
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  public HistoryServiceImpl(HistoryRepository historyRepository, 
+            Environment env,
+            RetryWatchFinishedDemon retryWatchFinishedDemon,
+            RetryWatchFinishedDemonAwaken retryWatchFinishedDemonAwaken, 
+            EventEmitter eventEmitter) {
+      this.historyRepository = historyRepository;
+      this.env = env;
+      this.retryWatchFinishedDemon = retryWatchFinishedDemon;
+      this.retryWatchFinishedDemonAwaken = retryWatchFinishedDemonAwaken;
+      this.eventEmitter = eventEmitter;
+      initialize();
+  }
+  
+  private void initialize() {
+    envStatus = env.getProperty("spring.profiles.active");
+    if ("local".equals(envStatus)) return;
+    boolean isRun = retryWatchFinishedDemon.isRun();
+    if (!isRun) {
+      retryWatchFinishedDemon.setRun(true);
+      Thread demon = new Thread(retryWatchFinishedDemon);
+      boolean isAlive = demon.isAlive();
+      if (!isAlive) demon.start();
+    }
+    isRun = retryWatchFinishedDemonAwaken.isRun();
+    if (!isRun) {
+      retryWatchFinishedDemonAwaken.setRun(true);
+      Thread awakenDemo = new Thread(retryWatchFinishedDemonAwaken);
+      boolean isAwakenAlive = awakenDemo.isAlive();
+      if (!isAwakenAlive) awakenDemo.start();
+    }
+  }
+ 
+  @Override
+  @EnvStatus
+  public List<HistoryDto> getHistoryList(Map<String, Object> param) {
+    return historyRepository.getHistoryList(param);
+  }
+
+  @Override
+  @EnvStatus
+  public ExcelDto getHistoryListExcel(Map<String, Object> param) {
+    ExcelDto excelDto = new ExcelDto();
+
+    try {
+      ExcelDefaultExceptionHandler resultHandler = new ExcelDefaultExceptionHandler(param);
+      historyRepository.getHistoryListExcel(param, resultHandler);
+
+      if("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+      if("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+      if("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+      excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+      excelDto.setFile_name(String.valueOf(param.get("fileName")));
+      excelDto.setTarget_file_path(resultHandler.execute());
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.excel.file");
+    }
+
+    return excelDto;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  @Transactional(transactionManager = "dataSourceTransactionManagerCollect")
+  public int regForRetry(Map<String, Object> param) {
+    int ret = 0;
+    int forceFinishedCnt = 0;
+    List<Map<String, Object>> list = (List<Map<String, Object>>) param.get("selectedList");
+    try {
+
+      UserInfoDto userInfoDto = (UserInfoDto) param.get("userInfoDto");
+      StringBuilder sbLastStartedBy = new StringBuilder();
+      sbLastStartedBy.append(userInfoDto.getUser_name()).append("(").append(userInfoDto.getUser_id()).append(" ").append(userInfoDto.getInsa_team_name()).append(")");
+
+      List<String> histIdList = new ArrayList<String>();
+      String interfaceType = InterfaceDto.INSERFACE_TYPE_DEFAULT;
+      if (param.get("interfaceType").toString() != null) interfaceType = param.get("interfaceType").toString();
+      for (Map<String,Object> map : list) {
+        map.put("envStatus", envStatus);
+        map.put("userId", param.get("userId").toString());
+        map.put("interfaceType", interfaceType);
+        map.put("statusCd", RetryDto.STATUS_CD_PROCESS);
+        /*
+         * -------------------------------------------------------------------------------------------------------------
+         * Find Not Finished And Force Terminate And Get Last Retry Count (START)
+         */
+        RetryCountDto retryCountDto = historyRepository.getRetryCount(map);
+        // int notFinishedRetryCount = historyRepository.getNotFinishedRetryCount(map);
+        int notFinishedRetryCount = retryCountDto.getNot_finished_tot_retry_count();
+        int lastRetryCount = retryCountDto.getLast_retry_count();
+        map.put("retry_count", lastRetryCount);
+
+        if (notFinishedRetryCount > 0) {
+          map.put("statusCdForceTerminated", RetryDto.STATUS_CD_FORCE_TERMINATED);
+          map.put("errMsgForceTerminated", RetryDto.ERR_MSG_FORCE_TERMINATED);
+          forceFinishedCnt = forceFinishedCnt + historyRepository.updateRetryForceTerminate(map);
+          if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+            logger.debug("updateRetryForceTerminate : {}", map.get("collect_hist_id").toString());
+          } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+            logger.debug("updateRetryForceTerminate : {}", map.get("provide_hist_id").toString());
+          }
+        }
+        /*
+         * Find Not Finished And Force Terminate And Get Last Retry Count (END)
+         * -------------------------------------------------------------------------------------------------------------
+         */
+
+        ret = ret + historyRepository.insertRetry(map);
+        logger.debug("retryIdSeq : {}", map.get("retry_id_seq").toString());
+        ret = ret + historyRepository.updateHistForRetry(map);
+
+        // Demon Retry List add
+        retryWatchFinishedDemon.addRetry(map);
+
+        if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+          // histId.append(map.get("collect_hist_id").toString()).append(",");
+          histIdList.add(map.get("collect_hist_id").toString());
+        } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+          // histId.append(map.get("provide_hist_id").toString()).append(",");
+          histIdList.add(map.get("provide_hist_id").toString());
+        }
+      }
+
+      // retryWatchFinishedDemon.addMsgMap(interfaceType, historyEventList);
+      // eventEmitter.sendData(historyEventList, interfaceType);
+
+      Map<String, Object> sendParam = new HashMap<String, Object>();
+      sendParam.put("interfaceType", interfaceType);
+      // sendParam.put("histId", histId.toString());
+      sendParam.put("histIdList", histIdList);
+      ret = sendRetryHistoryList(sendParam);
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.rsRuntimeException");
+    }
+    return ret;
+  }
+  @Override
+  @SuppressWarnings("unchecked")
+  @Async("threadPoolTaskExecutor")
+  public void runCommandForRetry(Map<String, Object> param) {
+    try {
+      //
+      /* for (int i = 0; i < 30; i++) {
+        Thread.sleep(1000);
+        if (i == 0 || i == 29) logger.debug("thread test : {}", i);
+      } */
+      List<Map<String, Object>> list = (List<Map<String, Object>>) param.get("selectedList");
+      String interfaceType = InterfaceDto.INSERFACE_TYPE_DEFAULT;
+      if (param.get("interfaceType").toString() != null) interfaceType = param.get("interfaceType").toString();
+      StringBuilder sb = new StringBuilder();
+      String command = env.getProperty("airflow.script.retry");
+      sb.append("{\"files\":[");
+      for (Map<String,Object> map : list) {
+        sb.append("\"");
+        sb.append(map.get("interface_id").toString()).append(",");
+        if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+          sb.append(map.get("collect_hist_id").toString()).append(",");
+          sb.append(map.get("collect_source_seq").toString()).append(",");
+        } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+          sb.append(map.get("provide_hist_id").toString()).append(",");
+          sb.append(map.get("provide_source_seq").toString()).append(",");
+        }
+        
+        if (map.get("target_dt") == null) {
+          sb.append("").append(",");
+        } else {
+          sb.append(map.get("target_dt").toString()).append(",");
+        }
+        if (map.get("protocol_cd") == null) {
+          sb.append("").append(",");
+        } else {
+          sb.append(map.get("protocol_cd").toString()).append(",");
+        }
+        if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+          if (map.get("collected_at") == null) {
+            sb.append("").append(",");
+          } else {
+            sb.append(map.get("collected_at").toString()).append(",");
+          }
+        } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+          if (map.get("provided_at") == null) {
+            sb.append("").append(",");
+          } else {
+            sb.append(map.get("provided_at").toString()).append(",");
+          }
+        }
+        if (map.get("retry_id_seq") == null) {
+          sb.append("").append(",");
+        } else {
+          sb.append(map.get("retry_id_seq").toString()).append(",");
+        }
+        if (map.get("filenm") == null) {
+          sb.append("").append(",");
+        } else {
+          sb.append(map.get("filenm").toString()).append(",");
+        }
+        sb.append("\",");
+      }
+      String tmp = sb.toString().substring(0, sb.toString().length() - 1);
+      sb.setLength(0);
+      sb.append(tmp);
+      sb.append("]}");
+
+      tmp = sb.toString();
+      sb.setLength(0);
+      tmp = tmp.replaceAll("(\r\n|\r|\n|\n\r)", "");
+      tmp = tmp.replaceAll(" ", "");
+      tmp = new String(tmp.getBytes(), "utf-8");
+      sb.append(command).append(" ").append(tmp);
+      
+      logger.debug("=================================================================");
+      logger.debug("utf-8 Encoding");
+      logger.debug(sb.toString());
+
+      if ((!"local".equals(envStatus)) && (!"dev".equals(envStatus))) {
+        Process process = Runtime.getRuntime().exec(sb.toString());
+        logger.info("process : {}", process);
+      }
+      logger.debug("=================================================================");
+     } catch (Exception e) {
+      throw new RsRuntimeException("error.common.rsRuntimeException");
+    }
+  }
+  @Override
+  @EnvStatus
+  public List<RetryDto> getRetryHistoryList(Map<String, Object> param) {
+    return historyRepository.getRetryHistoryList(param);
+  }
+  @Override
+  @EnvStatus
+  public String getHistoryStatusTime(Map<String, Object> param) {
+    return historyRepository.getHistoryStatusTime(param);
+  }
+
+  @Override
+  @EnvStatus
+  @SuppressWarnings("unchecked")
+  public int sendRetryHistoryList(Map<String, Object> param) {
+    String interfaceType = param.get("interfaceType").toString();
+    // String[] strArr = param.get("histId").toString().replaceAll(" ", "").split(",");
+    List<String> histIdList = (List<String>) param.get("histIdList");
+    if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+      param.put("histIdDataType", "list");
+      param.put("collectHistIdList", histIdList);
+    } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+        param.put("histIdDataType", "list");
+        param.put("provideHistIdList", histIdList);
+    }
+
+    List<CompleteEventDto> completeEventList = historyRepository.getHistoryListByHistId(param);
+
+    retryWatchFinishedDemon.addMsgMap(interfaceType, completeEventList);
+    eventEmitter.sendData(completeEventList, interfaceType);
+    return completeEventList.size();
+  }
+
+  @Override
+  @EnvStatus
+  @SuppressWarnings("unchecked")
+  public int sendCompletionHistoryList(Map<String, Object> param) {
+    if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(param.get("interfaceType").toString())) {
+      param.put("collectHistIdList", (List<String>) param.get("histIdList"));
+    } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(param.get("interfaceType").toString())) {
+      param.put("collectHistIdList", (List<String>) param.get("histIdList"));
+    }
+    List<CompleteEventDto> completeEventList = historyRepository.getHistoryListByHistId(param);
+
+    // --------------------------------------
+    // For Log
+    logger.debug("==============================");
+    logger.debug("sendCompletionHistoryList");
+    for (CompleteEventDto dto : completeEventList) {
+      if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(param.get("interfaceType").toString())) {
+        logger.debug("interface_id : {}, hist_id : {}, ended_at: {}", dto.getInterface_id(), dto.getCollect_hist_id(), dto.getEnded_at());
+      }
+    }
+    logger.debug("==============================");
+    // --------------------------------------
+
+    retryWatchFinishedDemon.addMsgMap(param.get("interfaceType").toString(), completeEventList);
+    eventEmitter.sendData(completeEventList, param.get("interfaceType").toString());
+    return completeEventList.size();
+  }
+}

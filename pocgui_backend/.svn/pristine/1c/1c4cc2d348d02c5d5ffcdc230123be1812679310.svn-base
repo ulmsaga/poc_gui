@@ -1,0 +1,397 @@
+package com.mobigen.cdev.datagw.module.collect.interfacesource.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.mobigen.cdev.datagw.core.exception.RsRuntimeException;
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.core.file.dto.FileDto;
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.core.file.manage.service.FileManageService;
+import com.mobigen.cdev.datagw.core.security.manage.session.SessionManage;
+import com.mobigen.cdev.datagw.core.util.annotation.EnvStatus;
+import com.mobigen.cdev.datagw.module.collect.interfacesource.dto.DataManageDefDto;
+import com.mobigen.cdev.datagw.module.collect.interfacesource.dto.InterfaceAddedFileDto;
+import com.mobigen.cdev.datagw.module.collect.interfacesource.dto.InterfaceDto;
+import com.mobigen.cdev.datagw.module.collect.interfacesource.dto.InterfaceTopicDto;
+import com.mobigen.cdev.datagw.module.collect.interfacesource.dto.JsonPropertyDefDto;
+import com.mobigen.cdev.datagw.module.collect.notification.dto.NotiTopicDto;
+import com.mobigen.cdev.datagw.module.collect.interfacesource.dto.ResultDataRegDto;
+import com.mobigen.cdev.datagw.module.collect.interfacesource.repository.mybatis.CollectInterfaceSourceRepository;
+
+@Service
+@Transactional(readOnly = true)
+public class CollectInterfaceSourceServiceImpl implements CollectInterfaceSourceService {
+  private final CollectInterfaceSourceRepository collectInterfaceSourceRepository;
+  private final SessionManage sessionManage;
+  private final Environment env;
+  private final FileManageService fileManageService;
+
+  private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  public CollectInterfaceSourceServiceImpl(CollectInterfaceSourceRepository collectInterfaceSourceRepository, SessionManage sessionManage, Environment env, FileManageService fileManageService) {
+    this.collectInterfaceSourceRepository = collectInterfaceSourceRepository;
+    this.sessionManage = sessionManage;
+    this.env = env;
+    this.fileManageService = fileManageService;
+  }
+  
+  @Override
+  @EnvStatus
+  public DataManageDefDto getDataMainList(Map<String, Object> param) {
+    DataManageDefDto dataMainDefDto = new DataManageDefDto();
+    List<JsonPropertyDefDto> jsonPropertyList = getDataMainJsonPropertyList(param);
+    List<String> jsonColumnList = new ArrayList<>();
+    for (JsonPropertyDefDto jsonPropertyDefDto : jsonPropertyList) {
+      jsonColumnList.add(jsonPropertyDefDto.getJson_columns());
+    }
+    param.put("jsonColumnList", jsonColumnList);
+    List<?> dataMainList = collectInterfaceSourceRepository.getDataMainList(param);
+
+    dataMainDefDto.setDataPropertyList(jsonPropertyList);
+    dataMainDefDto.setDataList(dataMainList);
+    return dataMainDefDto;
+  }
+
+  @Override
+  @EnvStatus
+  public ExcelDto getDataMainListExcel(Map<String, Object> param) {
+    ExcelDto excelDto = new ExcelDto();
+
+    try {
+      ExcelDefaultExceptionHandler resultHandler = new ExcelDefaultExceptionHandler(param);
+      //
+      param.put("searchType", "EXCEL");
+      List<JsonPropertyDefDto> jsonPropertyList = getDataMainJsonPropertyList(param);
+      List<String> jsonColumnList = new ArrayList<>();
+      for (JsonPropertyDefDto jsonPropertyDefDto : jsonPropertyList) {
+        jsonColumnList.add(jsonPropertyDefDto.getJson_columns());
+      }
+      param.put("jsonColumnList", jsonColumnList);
+      collectInterfaceSourceRepository.getDataMainListExcel(param, resultHandler);
+      //
+
+      if("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+      if("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+      if("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+      excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+      excelDto.setFile_name(String.valueOf(param.get("fileName")));
+      excelDto.setTarget_path_key(ExcelDto.FILE_PATH_CREATE_EXCEL);
+      excelDto.setTarget_file(resultHandler.execute());
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.excel.file");
+    }
+
+    return excelDto;
+  }
+
+  @Override
+  @EnvStatus
+  public DataManageDefDto getDataDetailList(Map<String, Object> param) {
+    DataManageDefDto dataDetailDefDto = new DataManageDefDto();
+    List<JsonPropertyDefDto> jsonPropertyList = getDataDetailJsonPropertyList(param);
+    List<String> jsonColumnList = new ArrayList<>();
+    for (JsonPropertyDefDto jsonPropertyDefDto : jsonPropertyList) {
+      jsonColumnList.add(jsonPropertyDefDto.getJson_columns());
+    }
+    param.put("jsonColumnList", jsonColumnList);
+    List<?> dataDetailList = collectInterfaceSourceRepository.getDataDetailList(param);
+
+    dataDetailDefDto.setDataPropertyList(jsonPropertyList);
+    dataDetailDefDto.setDataList(dataDetailList);
+    return dataDetailDefDto;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  @EnvStatus
+  public List<JsonPropertyDefDto> getDataMainJsonPropertyList(Map<String, Object> param) {
+    String selectedBothFtp = "N";
+    boolean isFtp = false;
+    boolean isSftp = false;
+
+    if (param.get("searchType") == null) param.put("searchType", "VIEW");
+    if (param.get("protocolList") != null) {
+      List<String> protocolList = (List<String>) param.get("protocolList");
+      if (protocolList.size() == 0) {
+        isSftp = true;
+        isFtp = true;
+      } else {
+        for (String protocolCd : protocolList) {
+          if ("SFTP".equals(protocolCd)) {
+            isSftp = true;
+          }
+          if ("FTP".equals(protocolCd)) {
+            isFtp = true;
+          }
+        }
+      }
+    }
+    if (isFtp && isSftp) selectedBothFtp = "Y";
+    param.put("selectedBothFtp", selectedBothFtp);
+    return collectInterfaceSourceRepository.getDataMainJsonPropertyList(param);
+  }
+
+  @Override
+  @EnvStatus
+  public List<JsonPropertyDefDto> getDataDetailJsonPropertyList(Map<String, Object> param) {
+    return collectInterfaceSourceRepository.getDataDetailJsonPropertyList(param);
+  }
+
+  @Override
+  @EnvStatus
+  public List<InterfaceTopicDto> getInterfaceTopicList(Map<String, Object> param) {
+    return collectInterfaceSourceRepository.getInterfaceTopicList(param);
+  }
+
+  @Override
+  @EnvStatus
+  public List<InterfaceAddedFileDto> getInterfaceAddedFileList(Map<String, Object> param) {
+    return collectInterfaceSourceRepository.getInterfaceAddedFileList(param);
+  }
+  
+  @Override
+  @SuppressWarnings("unchecked")
+  @Transactional(transactionManager = "dataSourceTransactionManagerCollect")
+  public ResultDataRegDto regDataInfo(Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    // ---------------------------------------------------------------------
+    // DELETE 전용 :: applyType == "DEL"
+    // ## NEW, NEW(COPY), MODIFY를 같이 처리 했으나 
+    // ## FILE 업로드 기능이 추가 됨에 따라
+    // ## DEL을 제외한 Action은 regCollectDataInfoWithAddedFiles 에서 처리
+    // ## interfaceType 추가 ("collect", "provide")
+    // ---------------------------------------------------------------------
+
+    ResultDataRegDto resultDataRegDto = new ResultDataRegDto();
+    int retCnt = 0;
+
+    String userId = sessionManage.getUserByContextRepository(request, response).getUser_id();
+    String envStatus = env.getProperty("spring.profiles.active");
+
+    String interfaceType = InterfaceDto.INSERFACE_TYPE_DEFAULT;
+    Map<String, Object> mainParam = (Map<String, Object>) param.get("interfaceInfo");
+    String applyType = param.get("applyType").toString();
+    
+    mainParam.put("userId", userId);
+    mainParam.put("envStatus", envStatus);
+    if (param.get("interfaceType") != null) interfaceType = param.get("interfaceType").toString();
+    mainParam.put("interfaceType", interfaceType);
+    mainParam.put("applyType", applyType);
+
+    // -------------------------
+    // TOPIC
+    retCnt = retCnt + collectInterfaceSourceRepository.deleteInterfaceTopicInfo(mainParam);
+    // FILE
+    retCnt = retCnt + collectInterfaceSourceRepository.deleteInterfaceFileInfo(mainParam);
+    // INTERFACE MAIN
+    retCnt = retCnt + collectInterfaceSourceRepository.mergeInterfaceInfo(mainParam);
+    // DATA SOURCE
+    retCnt = retCnt + collectInterfaceSourceRepository.merginDataSourceInfo(mainParam);
+    // -------------------------
+
+    // -------------------------
+    // FOR RESPOSE
+    resultDataRegDto.setInterfaceType(interfaceType);
+    resultDataRegDto.setInterface_id(mainParam.get("interface_id").toString());
+    resultDataRegDto.setApplyType(applyType);
+    resultDataRegDto.setRetCnt(retCnt);
+    // -------------------------
+
+    return resultDataRegDto;
+  }
+
+  @Override
+  @Transactional(transactionManager = "dataSourceTransactionManagerCollect")
+  public ResultDataRegDto regDataInfoWithAddedFiles(
+      String interfaceType,
+      String applyType,
+      Map<String, Object> paramInterface,
+      List<Map<String, Object>> paramDataSourceList,
+      List<Map<String, Object>> paramDelTopicList, List<Map<String, Object>> paramAddTopicList,
+      List<Map<String, Object>> paramDelFileList, List<Map<String, Object>> paramAddFileList, MultipartFile[] paramFiles,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    // ---------------------------------------------------------------------
+    // INSERT, UPDATE 전용 :: applyType == "NEW", "COPY", "MOD"
+    // ## FILE 업로드 기능이 추가 됨에 따라
+    // ## DEL을 제외한 Action은 이곳 에서 처리
+    // ## DEL은 regCollectDataInfo 에서 처리
+    // ---------------------------------------------------------------------
+    ResultDataRegDto resultDataRegDto = new ResultDataRegDto();
+    int retCnt = 0;
+
+    String userId = sessionManage.getUserByContextRepository(request, response).getUser_id();
+    String envStatus = env.getProperty("spring.profiles.active");
+
+    //-----------------
+    //
+    Map<String, Object> mainParam = paramInterface;
+    List<Map<String, Object>> detailParamList = paramDataSourceList;
+    String newInterfaceId = "";
+
+    mainParam.put("userId", userId);
+    mainParam.put("envStatus", envStatus);
+    mainParam.put("interfaceType", interfaceType);
+    mainParam.put("applyType", applyType);
+    
+    // -----------
+    // INTERFACE MAIN
+    if (ResultDataRegDto.APPLY_TYPE_NEW.equals(applyType) || ResultDataRegDto.APPLY_TYPE_COPY.equals(applyType)) {
+      StringBuilder sb = new StringBuilder();
+      if (InterfaceDto.INTERFACE_TYPE_COLLECT.equals(interfaceType)) {
+        sb.append("C-");
+      } else if (InterfaceDto.INTERFACE_TYPE_PROVIDE.equals(interfaceType)) {
+        sb.append("P-");
+      }
+      sb.append(mainParam.get("system_nm").toString()).append("-");
+      sb.append(mainParam.get("protocol_cd").toString()).append("-");
+      sb.append(mainParam.get("interface_cycle").toString()).append("-");
+      mainParam.put("seq_key", sb.toString());
+      newInterfaceId = collectInterfaceSourceRepository.getNewInterfaceIdByGeneratedProcedure(mainParam);
+      mainParam.put("interface_id", newInterfaceId);
+    }
+    retCnt = collectInterfaceSourceRepository.mergeInterfaceInfo(mainParam);
+    // INTERFACE MAIN END
+    // -----------
+
+    // -----------
+    // DATA SOURCE
+    for (Map<String,Object> detailParam : detailParamList) {
+      detailParam.put("userId", userId);
+      detailParam.put("envStatus", envStatus);
+      detailParam.put("interfaceType", interfaceType);
+      detailParam.put("applyType", applyType);
+      logger.debug("editType : {}", detailParam.get("editType").toString());
+      detailParam.put("interface_id", mainParam.get("interface_id").toString());
+      retCnt = retCnt + collectInterfaceSourceRepository.merginDataSourceInfo(detailParam);
+    }
+    // DATA SOURCE END
+    // -----------
+
+    // -----------
+    // TOPICS
+    if (paramDelTopicList != null && paramDelTopicList.size() > 0) {
+      for (Map<String, Object> paramDelTopic : paramDelTopicList) {
+        paramDelTopic.put("envStatus", envStatus);
+        paramDelTopic.put("interfaceType", interfaceType);
+        paramDelTopic.put("applyType", applyType);
+        retCnt = retCnt + collectInterfaceSourceRepository.deleteInterfaceTopicInfo(paramDelTopic);
+      }
+    }
+    if (paramAddTopicList != null && paramAddTopicList.size() > 0) {
+      for (Map<String, Object> paramAddTopic : paramAddTopicList) {
+        paramAddTopic.put("envStatus", envStatus);
+        paramAddTopic.put("interfaceType", interfaceType);
+        paramAddTopic.put("applyType", applyType);
+        if (ResultDataRegDto.APPLY_TYPE_NEW.equals(applyType) || ResultDataRegDto.APPLY_TYPE_COPY.equals(applyType)) {
+          paramAddTopic.put("interface_id", newInterfaceId);
+        }
+        retCnt = retCnt + collectInterfaceSourceRepository.insertInterfaceTopicInfo(paramAddTopic);
+      }
+    }
+    // TOPICS END
+    // -----------
+
+    // -----------
+    // FILES
+    if (paramDelFileList != null && paramDelFileList.size() > 0) {
+      for (Map<String, Object> paramDelFile : paramDelFileList) {
+        paramDelFile.put("interfaceType", interfaceType);
+        paramDelFile.put("applyType", applyType);
+        retCnt = retCnt + collectInterfaceSourceRepository.deleteInterfaceFileInfo(paramDelFile);
+      }
+    }
+
+    if (paramFiles != null && paramFiles.length > 0 ) {
+      List<FileDto> retAddedFileList = fileManageService.updateMultipartFiles(paramFiles);
+      if (retAddedFileList.size() > 0 && paramAddFileList.size() > 0) {
+        for (FileDto fileDto : retAddedFileList) {
+          for (Map<String, Object> paramAddFile : paramAddFileList) {
+            if (fileDto.getClient_file_name().equals(paramAddFile.get("client_file_name").toString())) {
+              paramAddFile.put("file_path", fileDto.getTarget_file_path());
+              paramAddFile.put("file_name", fileDto.getFile_name());
+              paramAddFile.put("userId", userId);
+              paramAddFile.put("interfaceType", interfaceType);
+              paramAddFile.put("applyType", applyType);
+              if (ResultDataRegDto.APPLY_TYPE_NEW.equals(applyType) || ResultDataRegDto.APPLY_TYPE_COPY.equals(applyType)) {
+                paramAddFile.put("interface_id", newInterfaceId);
+              }
+              retCnt = retCnt + collectInterfaceSourceRepository.insertInterfaceFileInfo(paramAddFile);
+              continue;
+            }
+          }
+        }
+      }
+    }
+    // FILES END
+    // -----------
+
+    // -------------------------
+    // FOR RESPOSE
+    Map<String, Object> searchParam = new HashMap<>();
+    searchParam.put("interfaceType", interfaceType);
+    searchParam.put("interfaceId", mainParam.get("interface_id").toString());
+    searchParam.put("protocolCd", mainParam.get("protocol_cd").toString());
+    searchParam.put("tableNm", interfaceType + "_interface");
+    resultDataRegDto.setInterfaceType(interfaceType);
+    resultDataRegDto.setInterface_id(mainParam.get("interface_id").toString());
+    resultDataRegDto.setApplyType(applyType);
+    
+    // resultDataRegDto.setMainDataPackage(getDataMainList(searchParam));
+    resultDataRegDto.setSearchMainParam(searchParam);
+
+    Map<String, Object> searchDetailParam = new HashMap<>(searchParam);
+    searchDetailParam.put("tableNm", interfaceType + "_source");
+    // resultDataRegDto.setDetailDataPackage(getDataDetailList(searchDetailParam));
+    resultDataRegDto.setSearchDetailParam(searchDetailParam);
+
+    resultDataRegDto.setRetCnt(retCnt);
+    // -------------------------
+
+    return resultDataRegDto;
+  }
+
+  @Override
+  @EnvStatus
+  public List<NotiTopicDto> getCloudList(Map<String, Object> param) {
+    return collectInterfaceSourceRepository.getCloudList(param);
+  }
+
+  @Override
+  @EnvStatus
+  public ResultDataRegDto updateInterfaceUseYn(Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    ResultDataRegDto resultDataRegDto = new ResultDataRegDto();
+
+    String interfaceType = InterfaceDto.INSERFACE_TYPE_DEFAULT;
+    String interfaceId = "";
+    
+    if (param.get("interface_type") !=null) interfaceType = param.get("interface_type").toString();
+    if (param.get("interface_id") != null) interfaceId = param.get("interface_id").toString();
+
+    String userId = sessionManage.getUserByContextRepository(request, response).getUser_id();
+    String envStatus = env.getProperty("spring.profiles.active");
+
+    param.put("userId", userId);
+    param.put("envStatus", envStatus);
+
+    int retCnt = collectInterfaceSourceRepository.updateInterfaceUseYn(param);
+    resultDataRegDto.setInterfaceType(interfaceType);
+    resultDataRegDto.setRetCnt(retCnt);
+    resultDataRegDto.setInterface_id(interfaceId);
+    
+    return resultDataRegDto;
+  }
+}

@@ -1,0 +1,213 @@
+package com.mobigen.cdev.datagw.core.security.dto;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+
+public class UserDto implements UserDetails {
+    private static final long serialVersionUID = -4855814495743785060L;
+
+    public static final int AUTH_PASSED_STATUS = 1;
+    public static final int AUTH_NOT_AUTHENTICATED_STATUS = 0;
+    public static final int AUTH_FAILED_STATUS = -1;
+
+    // User Info
+    private String user_id;
+    private String user_name;
+    private String password;
+    
+    // User Info (부가정보)
+    private String phone;
+    private String email;
+    private String insa_team_id;
+    private String insa_team_name;
+    
+    // User Grade (권한관련)
+    private String admin_lv;
+    private String module_a_lv;
+    private String module_b_lv;
+    private String module_c_lv;
+    private String module_his_lv;
+    private String module_dat_lv;
+    private String module_set_lv;
+    
+    // AuthenticationStatus (1차, 2차 인증)
+    private int firstAuthenticationStatus = AUTH_NOT_AUTHENTICATED_STATUS;
+    private int secondaryAuthenticationStatus = AUTH_NOT_AUTHENTICATED_STATUS;
+    
+    private String authFailMsg = "";
+
+    private Collection<? extends GrantedAuthority> authorities;
+
+    public String getUser_id() {
+        return user_id;
+    }
+
+    public void setUser_id(String user_id) {
+        this.user_id = user_id;
+    }
+
+    public String getUser_name() {
+        return user_name;
+    }
+
+    public void setUser_name(String user_name) {
+        this.user_name = user_name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getInsa_team_id() {
+		return insa_team_id;
+	}
+
+	public void setInsa_team_id(String insa_team_id) {
+		this.insa_team_id = insa_team_id;
+	}
+
+	public String getInsa_team_name() {
+		return insa_team_name;
+	}
+
+	public void setInsa_team_name(String insa_team_name) {
+		this.insa_team_name = insa_team_name;
+	}
+
+	public String getAdmin_lv() {
+		return admin_lv;
+	}
+
+	public void setAdmin_lv(String admin_lv) {
+		this.admin_lv = admin_lv;
+	}
+
+	public String getModule_a_lv() {
+		return module_a_lv;
+	}
+
+	public void setModule_a_lv(String module_a_lv) {
+		this.module_a_lv = module_a_lv;
+	}
+
+	public String getModule_b_lv() {
+		return module_b_lv;
+	}
+
+	public void setModule_b_lv(String module_b_lv) {
+		this.module_b_lv = module_b_lv;
+	}
+
+	public String getModule_c_lv() {
+		return module_c_lv;
+	}
+
+	public void setModule_c_lv(String module_c_lv) {
+		this.module_c_lv = module_c_lv;
+	}
+
+	public String getModule_his_lv() {
+        return module_his_lv;
+    }
+
+    public void setModule_his_lv(String module_his_lv) {
+        this.module_his_lv = module_his_lv;
+    }
+    
+    public String getModule_dat_lv() {
+        return module_dat_lv;
+    }
+
+    public void setModule_dat_lv(String module_dat_lv) {
+        this.module_dat_lv = module_dat_lv;
+    }
+
+    public String getModule_set_lv() {
+        return module_set_lv;
+    }
+
+    public void setModule_set_lv(String module_set_lv) {
+        this.module_set_lv = module_set_lv;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+    
+    public int getFirstAuthenticationStatus() {
+		return firstAuthenticationStatus;
+	}
+
+	public void setFirstAuthenticationStatus(int firstAuthenticationStatus) {
+		this.firstAuthenticationStatus = firstAuthenticationStatus;
+	}
+
+	public String getAuthFailMsg() {
+		return authFailMsg;
+	}
+
+	public void setAuthFailMsg(String authFailMsg) {
+		this.authFailMsg = authFailMsg;
+	}
+
+	public int getSecondaryAuthenticationStatus() {
+        return secondaryAuthenticationStatus;
+    }
+
+    public void setSecondaryAuthenticationStatus(int secondaryAuthenticationStatus) {
+        this.secondaryAuthenticationStatus = secondaryAuthenticationStatus;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return this.authorities;
+    }
+
+    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.user_name;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return false;
+    }
+}

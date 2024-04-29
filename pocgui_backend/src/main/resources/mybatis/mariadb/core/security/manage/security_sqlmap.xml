@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mobigen.cdev.mapper.mariadb.core.security.manage">
+	
+	<sql id = "def_table_cm_sms_authontication">
+		cm_sms_authontication
+	</sql>
+
+    <sql id = "def_table_cm_exception_sms_auth">
+        cm_exception_sms_auth
+    </sql>
+	
+    <select id = "getSmsReqId" parameterType="map" resultType="string">
+        SELECT
+            IFNULL(req_id, '') req_id
+        FROM
+            <include refid = "def_table_cm_sms_authontication" />
+        WHERE 1 = 1
+        AND user_id = #{userId}
+        AND public_key = #{publicKey}
+        AND sms_code = #{smsCode}
+        AND send_sms_time &gt;= DATE_ADD(SYSDATE(), INTERVAL -5 MINUTE)
+    </select>
+    
+    <insert id = "insertSmsAuthManage" parameterType="map">
+        INSERT INTO <include refid = "def_table_cm_sms_authontication" />
+        (
+        	req_id
+		,	user_id
+        ,   auth_type
+        ,   auth_reason_desc
+        ,   menu_code
+        ,   public_key
+        ,   sms_code
+        ,   send_sms_time
+        ,   auth_passed_time
+        ,   auth_flow_stage
+        ,   auth_result_flag
+        ,   update_time
+        )
+        SELECT
+        	(
+				SELECT
+				  CASE IFNULL(MAX(req_id) , '')
+				    WHEN '' THEN 
+				      CONCAT(DATE_FORMAT(SYSDATE(), '%Y%m%d'), '0001')
+				    ELSE
+				      CONCAT(SUBSTR(MAX(req_id), 1, 8), LPAD(SUBSTR(MAX(req_id), 9) + 1, 4, '0'))
+				  END req_id
+				FROM
+                    <include refid = "def_table_cm_sms_authontication" />
+                WHERE SUBSTR(req_id, 1, 8) = DATE_FORMAT(SYSDATE(), '%Y%m%d')
+        	)
+        ,	#{userId}
+        ,   #{authType}
+        ,   #{authReasonDesc}
+        ,   #{refMenuCode}
+        ,   #{publicKey}
+        ,   #{smsCode}
+        ,   SYSDATE()
+        ,   null
+        ,   #{authFlowStage}
+        ,   #{authResultFlag}
+        ,   SYSDATE()
+    </insert>
+    
+    <update id="updateSmsAuthManage" parameterType="map">
+        UPDATE <include refid = "def_table_cm_sms_authontication" /> SET
+            auth_flow_stage = #{authFlowStage}
+        <if test = 'authFlowStage eq "2".toString()'>
+        ,   auth_passed_time = SYSDATE()
+        ,   auth_result_flag = '1'
+        </if>
+        WHERE REQ_ID= #{reqId}
+    </update>
+    
+    <update id="updateLastLoginTime" parameterType="map">
+		UPDATE cm_user SET
+			last_login_time = SYSDATE()
+		WHERE user_id = #{userId}
+	</update>
+
+    <select id="getAllowExceptionSecondCerti" parameterType="map" resultType="com.mobigen.cdev.poc.core.security.dto.ExceptionSecondCertiDto">
+        <!-- SMS 인증 제외 처리 -->
+        <!-- UL : 무제한 기간 SMS POPUP 안나옴 -->
+        <!-- 마지막 인증 후 MIN ~ YEAR + VALUE 기간 동안 SMS POPUP 안나옴 -->
+        SELECT
+            CASE
+                <!-- SMS 인증 사용 유무 -->
+                (select config_value from cm_main_config where config_type = 'use_sms_auth')
+            WHEN 'N'
+                <!-- 사용 안할 경우 2차 인증 그대로 통과 'Y' -->
+                THEN 'Y'
+            ELSE
+                <!-- 사용 할 경우에는 예외 처리자 등록 여부 확인 -->
+                CASE COUNT(*)
+                    WHEN 0 THEN 'N'
+                    ELSE
+                        CASE expire_cond
+                            WHEN 'UL' THEN 'Y'
+                            ELSE
+                                CASE
+                                    WHEN
+                                        (
+                                            SELECT
+                                                MAX(auth_passed_time)
+                                            FROM
+                                                <include refid="def_table_cm_sms_authontication" />
+                                            WHERE user_id = #{userId}
+                                        )
+                                        &gt;=
+                                        (
+                                            CASE
+                                                WHEN expire_cond = 'MIN' OR expire_cond = 'MINUTE' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value MINUTE)
+                                                WHEN expire_cond = 'HOUR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value HOUR)
+                                                WHEN expire_cond = 'DAY' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value DAY)
+                                                WHEN expire_cond = 'WEEK' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value WEEK)
+                                                WHEN expire_cond = 'MON' OR expire_cond = 'MONTH' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value MONTH)
+                                                WHEN expire_cond = 'YEAR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value YEAR)
+                                            END
+                                        )
+                                    THEN 'Y'
+                                    ELSE 'N'
+                                END
+                        END
+                END
+            END allow_exception
+        ,	expire_cond
+        ,	expire_value
+        ,	CASE 
+                WHEN expire_cond = 'MIN' OR expire_cond = 'MINUTE' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value MINUTE)
+                WHEN expire_cond = 'HOUR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value HOUR)
+                WHEN expire_cond = 'DAY' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value DAY)
+                WHEN expire_cond = 'WEEK' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value WEEK)
+                WHEN expire_cond = 'MON' OR expire_cond = 'MONTH' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value MONTH)
+                WHEN expire_cond = 'YEAR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value YEAR)
+            END compare_time
+        FROM
+            <include refid="def_table_cm_exception_sms_auth" />
+        WHERE 1 = 1
+        AND user_id  = #{userId}
+        AND use_yn = 'Y'
+    </select>
+</mapper>

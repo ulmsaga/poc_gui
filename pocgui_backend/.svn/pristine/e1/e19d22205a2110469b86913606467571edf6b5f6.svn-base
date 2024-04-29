@@ -1,0 +1,33 @@
+package com.mobigen.cdev.datagw.module.test.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.mobigen.cdev.datagw.module.common.dto.user.UserInfoDto;
+import com.mobigen.cdev.datagw.module.common.repository.mybatis.CommonRepository;
+import com.mobigen.cdev.datagw.module.test.repository.UserManageRepository;
+
+@Service
+public class UserManageServiceImpl implements UserManageService {
+
+	private final CommonRepository commonRepository;
+	private final UserManageRepository userManageRepository;
+	
+	@Autowired
+	public UserManageServiceImpl(CommonRepository commonRespoiRepository, UserManageRepository userManageRepository) {
+		this.commonRepository = commonRespoiRepository;
+		this.userManageRepository = userManageRepository;
+	}
+	
+	@Override
+	public int mergeUserInfoFromTpani(Map<String, Object> param) {
+		param.put("userId", "ALL");
+		param.put("checkUserPassYn", "N");
+		List<UserInfoDto> userInfoDtoList = commonRepository.getUserPemdb1List(param);
+		return userManageRepository.mergeUserInfoFromTpani(userInfoDtoList);
+	}
+
+}

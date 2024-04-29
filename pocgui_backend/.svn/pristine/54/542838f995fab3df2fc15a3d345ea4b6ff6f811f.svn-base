@@ -1,0 +1,197 @@
+package com.mobigen.cdev.datagw.module.test.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mobigen.cdev.datagw.core.base.dto.RsResultDto;
+import com.mobigen.cdev.datagw.core.security.dto.ResultSmsAuthDto;
+import com.mobigen.cdev.datagw.core.security.util.sha.SHAUtil;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.assertj.core.api.Assertions;
+import org.json.JSONObject;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Disabled
+class ExceptionTestControllerTest {
+
+    private final MockMvc mockMvc;
+    private MockHttpSession session;
+
+    @Autowired
+    public ExceptionTestControllerTest(MockMvc mockMvc) {
+        this.mockMvc = mockMvc;
+    }
+
+    /* 
+    @BeforeEach
+    void loginAuth() throws Throwable {
+        String userId = "PTN1889130";
+        String userPass = "33333";
+
+        session = new MockHttpSession();
+        mockMvc.perform(
+                        MockMvcRequestBuilders.get("/login/loginAuth?userId=" + userId + "&userPwdEx=" + userPass).session(session))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+    */
+
+    @BeforeEach
+    @DisplayName("DataGW에서 사용 할 Login 인증 TEST")
+    public void loginProcTest() throws Exception {
+    	
+    	// given
+    	String userId = "PTN1889130";
+    	String userPwdEx = "!ckdtprl10!";
+    	String userPwd = userId + userPwdEx;
+    	    	
+    	userPwdEx = SHAUtil.sha512(userPwdEx);
+    	userPwd = SHAUtil.sha512(userPwd);
+    	
+    	// when
+    	session = new MockHttpSession();
+    	
+    	MvcResult result = 
+			mockMvc.perform(
+				// MockMvcRequestBuilders.get("/login/loginProc")
+				MockMvcRequestBuilders.get("/login/loginAuth")
+				.param("userId", userId)
+				.param("userPwdEx", userPwdEx)
+				.param("userPwd", userPwd)
+				.session(session)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+    	
+    	String content = result.getResponse().getContentAsString();
+    	
+		JSONObject jsonObject = new JSONObject(content);
+		String rsResult = jsonObject.getString("result");
+		    	
+		String publicKey = "xd0f9sdjfe";
+		String authType = "LOGIN";
+		String refMenuCode = "LOGIN";
+						
+		Assertions.assertThat(rsResult).isEqualTo("1");
+		
+		result = 
+			mockMvc.perform(
+				MockMvcRequestBuilders.get("/login/sendSmsAuthenticationCode")
+				.param("publicKey", publicKey)
+				.param("authType", authType)
+				.param("refMenuCode", refMenuCode)
+				.session(session)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+		
+		content = result.getResponse().getContentAsString();
+		jsonObject = new JSONObject(content);
+		
+		JSONObject resultRs = jsonObject.getJSONObject("rs");
+		String smsCode = resultRs.getString("smsCode");
+		
+		System.out.println("SMS Code : " + smsCode);
+		
+		result = 
+				mockMvc.perform(
+					MockMvcRequestBuilders.get("/login/verifyAuthenticationCode")
+					.param("publicKey", publicKey)
+					.param("smsCode", smsCode)
+					.session(session)
+				)
+				.andExpect(status().isOk())
+				.andReturn();
+		
+		content = result.getResponse().getContentAsString();
+		jsonObject = new JSONObject(content);
+		resultRs = jsonObject.getJSONObject("rs");
+		
+		
+		// then
+		Assertions.assertThat(resultRs.getString("authFlowStage")).isEqualTo(ResultSmsAuthDto.STAGE_AUTH_PASSED);
+		
+    }
+
+    @Test
+    @Disabled
+    @DisplayName("SQL TIME외의 다른 Exception 발생 시 MessageSource와 연계되는 오류 메세지 테스트")
+    void sqlExceptionTest() throws Exception {
+        // given
+        String messageKey = "java.sql.SQLException";
+
+        // when
+        MvcResult mvcResult = mockMvc.perform(
+                        MockMvcRequestBuilders.get("/test/sqlExceptionTest").session(session))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String content = mvcResult.getResponse().getContentAsString();
+        RsResultDto resultDto = objectMapper.readValue(content, RsResultDto.class);
+        String resultMessageKey = resultDto.getMessageKey();
+        System.out.println("resultMessageKey = " + resultMessageKey);
+
+        // then
+        assertThat(resultMessageKey).isEqualTo(messageKey);
+    }
+
+    @Test
+    @DisplayName("Try Catch 문 없이 Runtime 오류 발생 시 MessageSource와 연계되는 오류 메세지 테스트")
+    void notTryCatchRuntimeException() throws Exception {
+        // given
+        String messageKey = "error.common.globalException";
+
+        // when
+        MvcResult mvcResult = mockMvc.perform(
+                MockMvcRequestBuilders.get("/test/defaultException?param=exception").session(session)
+        ).andExpect(status().isOk()).andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String content = mvcResult.getResponse().getContentAsString();
+        RsResultDto resultDto = objectMapper.readValue(content, RsResultDto.class);
+        String resultMessageKey = resultDto.getMessageKey();
+
+        System.out.println("resultMessageKey = " + resultMessageKey);
+
+        // then
+        assertThat(resultMessageKey).isEqualTo(messageKey);
+    }
+
+    @Test
+    @DisplayName("Runtime 오류 발생 시 MessageSource와 연계되는 오류 메세지 테스트")
+    void runtimeException() throws Exception {
+        // given
+        String messageKey = "error.common.globalException";
+
+        // when
+        MvcResult mvcResult = mockMvc.perform(
+                MockMvcRequestBuilders.get("/test/rsRuntimeException?param=exception").session(session)
+        ).andExpect(status().isOk()).andReturn();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String content = mvcResult.getResponse().getContentAsString();
+        RsResultDto resultDto = objectMapper.readValue(content, RsResultDto.class);
+        String resultMessageKey = resultDto.getMessageKey();
+
+        System.out.println("resultMessageKey = " + resultMessageKey);
+
+        // then
+        assertThat(resultMessageKey).isEqualTo(messageKey);
+    }
+
+}

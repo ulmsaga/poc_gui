@@ -1,0 +1,111 @@
+package com.mobigen.cdev.datagw.module.historymanages.history.dto;
+
+import com.mobigen.cdev.datagw.core.base.dto.BaseObject;
+
+public class RetryDto extends BaseObject {
+  private static final long serialVersionUID = 3039708335517433840L;
+  
+  public static final String STATUS_CD_PROCESS = "6001";
+  public static final String STATUS_CD_FORCE_TERMINATED = "6012";
+  public static final String ERR_MSG_FORCE_TERMINATED = "사용자의 요청으로 강제 종료 하였습니다.";
+
+  private String rownum;
+  private String retry_id_seq;
+  private String collect_hist_id;
+  private String provide_hist_id;
+  private String started_at;
+  private String ended_at;
+  private String status_cd;
+  private String status_nm;
+  private String err_msg;
+  private String started_by;
+  private String started_by_desc;
+  private String retry_flag;
+  private String retry_desc;
+  private String task_log_url;
+
+  public String getRownum() {
+    return rownum;
+  }
+  public void setRownum(String rownum) {
+    this.rownum = rownum;
+  }
+  public String getRetry_id_seq() {
+    return retry_id_seq;
+  }
+  public void setRetry_id_seq(String retry_id_seq) {
+    this.retry_id_seq = retry_id_seq;
+  }
+  public String getCollect_hist_id() {
+    return collect_hist_id;
+  }
+  public void setCollect_hist_id(String collect_hist_id) {
+    this.collect_hist_id = collect_hist_id;
+  }
+  public String getProvide_hist_id() {
+    return provide_hist_id;
+  }
+  public void setProvide_hist_id(String provide_hist_id) {
+    this.provide_hist_id = provide_hist_id;
+  }
+  public String getStatus_cd() {
+    return status_cd;
+  }
+  public void setStatus_cd(String status_cd) {
+    this.status_cd = status_cd;
+  }
+  public String getStatus_nm() {
+    return status_nm;
+  }
+  public void setStatus_nm(String status_nm) {
+    this.status_nm = status_nm;
+  }
+  public String getErr_msg() {
+    return err_msg;
+  }
+  public void setErr_msg(String err_msg) {
+    this.err_msg = err_msg;
+  }
+  public String getStarted_by() {
+    return started_by;
+  }
+  public void setStarted_by(String started_by) {
+    this.started_by = started_by;
+  }
+  public String getStarted_by_desc() {
+    return started_by_desc;
+  }
+  public void setStarted_by_desc(String started_by_desc) {
+    this.started_by_desc = started_by_desc;
+  }
+  public String getStarted_at() {
+    return started_at;
+  }
+  public void setStarted_at(String started_at) {
+    this.started_at = started_at;
+  }
+  public String getEnded_at() {
+    return ended_at;
+  }
+  public void setEnded_at(String ended_at) {
+    this.ended_at = ended_at;
+  }
+  public String getRetry_flag() {
+    return retry_flag;
+  }
+  public void setRetry_flag(String retry_flag) {
+    this.retry_flag = retry_flag;
+  }
+  public String getRetry_desc() {
+    return retry_desc;
+  }
+  public void setRetry_desc(String retry_desc) {
+    this.retry_desc = retry_desc;
+  }
+  public String getTask_log_url() {
+    return task_log_url;
+  }
+  public void setTask_log_url(String task_log_url) {
+    this.task_log_url = task_log_url;
+  }
+}

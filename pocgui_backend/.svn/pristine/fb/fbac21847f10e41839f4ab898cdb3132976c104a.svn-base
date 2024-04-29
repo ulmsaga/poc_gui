@@ -1,0 +1,136 @@
+package com.mobigen.cdev.datagw.module.login.controller;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Map;
+
+import org.assertj.core.api.Assertions;
+import org.json.JSONObject;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mobigen.cdev.datagw.core.base.dto.RsResultDto;
+import com.mobigen.cdev.datagw.core.security.dto.ResultSmsAuthDto;
+import com.mobigen.cdev.datagw.core.security.util.sha.SHAUtil;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Disabled
+public class LoginControllerTest {
+    private final MockMvc mockMvc;
+
+    @Autowired
+    public LoginControllerTest(MockMvc mockMvc) {
+        this.mockMvc = mockMvc;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    @DisplayName("MockMVC를 이용한 Login 인증 TEST")
+    public void loginAuthTest() throws Exception {
+
+        MvcResult result =
+                mockMvc.perform(
+                        MockMvcRequestBuilders.get("/login/loginAuth?userId=PTN1889130&userPwdEx=33333"))
+                        .andExpect(status().isOk())
+                        .andReturn();
+
+        ObjectMapper mapper = new ObjectMapper();
+        String content = result.getResponse().getContentAsString();
+        RsResultDto resultDto = mapper.readValue(content, RsResultDto.class);
+        Map<String, Object> resultMap = (Map<String, Object>) resultDto.getRs();
+        Map<String, Object> mapUserInfoDto = (Map<String, Object>) resultMap.get("userInfoDto");
+
+        String userId = mapUserInfoDto.get("user_id").toString();
+        System.out.println("userId = " + userId);
+        Assertions.assertThat(userId).isEqualTo("PTN1889130");
+    }
+    
+    @Test
+    @DisplayName("DataGW에서 사용 할 Login 인증 TEST")
+    public void loginProcTest() throws Exception {
+    	
+    	// given
+    	String userId = "PTN1889130";
+    	String userPwdEx = "!ckdtprl10!";
+    	String userPwd = userId + userPwdEx;
+    	    	
+    	userPwdEx = SHAUtil.sha512(userPwdEx);
+    	userPwd = SHAUtil.sha512(userPwd);
+    	
+    	// when
+    	MockHttpSession session = new MockHttpSession();
+    	
+    	// LoginPolicy가 TangoSSO 방식일 경우 loginProc
+    	// 아닐경우 loginAuth (약식)
+    	MvcResult result = 
+			mockMvc.perform(
+				MockMvcRequestBuilders.get("/login/loginAuth")
+				// MockMvcRequestBuilders.get("/login/loginProc")
+				.param("userId", userId)
+				.param("userPwdEx", userPwdEx)
+				.param("userPwd", userPwd)
+				.session(session)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+    	
+    	String content = result.getResponse().getContentAsString();
+    	
+		JSONObject jsonObject = new JSONObject(content);
+		String rsResult = jsonObject.getString("result");
+		    	
+		String publicKey = "xd0f9sdjfe";
+		String authType = "LOGIN";
+		String refMenuCode = "LOGIN";
+						
+		Assertions.assertThat(rsResult).isEqualTo("1");
+		
+		result = 
+			mockMvc.perform(
+				MockMvcRequestBuilders.get("/login/sendSmsAuthenticationCode")
+				.param("publicKey", publicKey)
+				.param("authType", authType)
+				.param("refMenuCode", refMenuCode)
+				.session(session)
+			)
+			.andExpect(status().isOk())
+			.andReturn();
+		
+		content = result.getResponse().getContentAsString();
+		jsonObject = new JSONObject(content);
+		
+		JSONObject resultRs = jsonObject.getJSONObject("rs");
+		String smsCode = resultRs.getString("smsCode");
+		
+		System.out.println("SMS Code : " + smsCode);
+		
+		result = 
+				mockMvc.perform(
+					MockMvcRequestBuilders.get("/login/verifyAuthenticationCode")
+					.param("publicKey", publicKey)
+					.param("smsCode", smsCode)
+					.session(session)
+				)
+				.andExpect(status().isOk())
+				.andReturn();
+		
+		content = result.getResponse().getContentAsString();
+		jsonObject = new JSONObject(content);
+		resultRs = jsonObject.getJSONObject("rs");
+		
+		
+		// then
+		Assertions.assertThat(resultRs.getString("authFlowStage")).isEqualTo(ResultSmsAuthDto.STAGE_AUTH_PASSED);
+		
+    }
+}

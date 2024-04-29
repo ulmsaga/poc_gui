@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.oracle.module.common">
+	<select id="getUserList" parameterType="map" resultType="com.mobigen.cdev.datagw.module.common.dto.user.UserInfoDto">
+		<include refid="sqlUserList"/>
+	</select>
+	
+	<select id="getUserListExcel" parameterType="map" resultType="java.util.HashMap">
+		<include refid="sqlUserList"></include>
+	</select>
+
+	<sql id="sqlUserList">
+		SELECT
+			USER_ID
+		,	USER_NAME
+		,	USER_PASS PASSWORD
+		,	PHONE
+		,	EMAIL
+		,	INSA_TEAM_ID
+		,	INSA_TEAM_NAME
+		,	USER_AUTH ADMIN_LV
+		,	CEM_USER_LV MODULE_HIS_LV
+		,	NT_USER_LV MODULE_DAT_LV
+		,	APP_USER_LV MODULE_SET_LV
+		,	CASE USE_FLAG WHEN '1' THEN 'Y' WHEN '0' THEN 'N' ELSE 'N' END USE_YN
+		, 	PASS_CHANGEDATE
+		,	LAST_EDIT_TIME
+		,	LAST_LOGIN_TIME
+		,	UPDATE_DATE UPDATE_TIME
+		,	UPDATE_USER
+		FROM
+		CM_USER
+		WHERE 1 = 1
+		<if test = 'userId != null and userId neq ""'>
+			<if test = 'userId neq "ALL".toString()'>
+				AND USER_ID = #{userId}
+			</if>
+		</if>
+		<choose>
+			<when test = 'checkUserPassYn eq "Y".toString()'>AND USER_PASS = #{userPwdEx}</when>
+			<when test = 'checkUserPassYn eq "N".toString()'>AND 1 = 1</when>
+			<otherwise>AND USER_PASS = #{userPwdEx}</otherwise>
+		</choose>
+	</sql>
+	
+	<insert id="insertTransactionTest" parameterType="map">
+		INSERT INTO CU_PGW_TYPE_INFO_TEST
+		(
+			PGW_ID
+		,	IMS_DATA_FLAG
+		)
+		VALUES 
+		(
+			#{pgwId}
+		,	#{imsDataFlag}
+		)
+	</insert>
+
+</mapper>

@@ -1,0 +1,71 @@
+package com.mobigen.cdev.datagw.module.datamanages.nmsinfo.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.mobigen.cdev.datagw.core.exception.RsRuntimeException;
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.core.file.excel.handler.ExcelDefaultExceptionHandler;
+import com.mobigen.cdev.datagw.module.datamanages.nmsinfo.dto.NmsChargeManageDto;
+import com.mobigen.cdev.datagw.module.datamanages.nmsinfo.repository.mybatis.NmsChargeManageRepository;
+
+@Service
+public class NmsChargeManageServiceImpl implements NmsChargeManageService {
+
+  private final NmsChargeManageRepository nmsChargeManageRepository;
+
+  public NmsChargeManageServiceImpl(NmsChargeManageRepository nmsChargeManageRepository) {
+    this.nmsChargeManageRepository = nmsChargeManageRepository;
+  }
+
+  @Transactional
+  @Override
+  public int getUpdateNmsChargeManage(Map<String, Object> param) {
+    try{
+      int deleteList = nmsChargeManageRepository.getDeleteNmsChargeManage(param);
+      int insertList = nmsChargeManageRepository.getInsertNmsChargeManage(param);
+
+      int result = deleteList + insertList;
+
+      return result;
+    } catch (Exception e) {
+      throw new RuntimeException("트랜잭션 롤백이 필요한 예외가 발생했습니다. " ,e);
+    }
+  }
+
+  @Override
+  public int getDeleteNmsChargeManage(Map<String, Object> param) {
+      return nmsChargeManageRepository.getDeleteNmsChargeManage(param);
+  }
+  
+  @Override
+  public ExcelDto getNmsChargeManageListExcel(Map<String, Object> param) {
+    ExcelDto excelDto = new ExcelDto();
+
+    try {
+      ExcelDefaultExceptionHandler resultHandler = new ExcelDefaultExceptionHandler(param);
+      nmsChargeManageRepository.getNmsChargeManageListExcel(param, resultHandler);
+
+      if("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+      if("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+      if("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+      excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+      excelDto.setFile_name(String.valueOf(param.get("fileName")));
+      excelDto.setTarget_file_path(resultHandler.execute());
+    } catch (Exception e) {
+      throw new RsRuntimeException("error.common.excel.file");
+    }
+
+    return excelDto;
+  }
+
+  @Override
+  public List<NmsChargeManageDto> getManagerChangeStatus(Map<String, Object> param) {
+    return nmsChargeManageRepository.getManagerChangeStatus(param);
+  }
+
+}

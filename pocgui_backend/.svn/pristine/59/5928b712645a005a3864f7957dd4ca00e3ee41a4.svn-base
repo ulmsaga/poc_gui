@@ -1,0 +1,7 @@
+package com.mobigen.cdev.datagw.core.file.dto;
+
+import com.mobigen.cdev.datagw.core.base.dto.BaseExcel;
+
+public class ExcelDto extends BaseExcel {
+    private static final long serialVersionUID = 1171601140471302123L;
+}

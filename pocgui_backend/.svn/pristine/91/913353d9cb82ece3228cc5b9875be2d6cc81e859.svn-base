@@ -1,0 +1,27 @@
+package com.mobigen.cdev.datagw.module.provide.interfacesource.service;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideDataManageDefDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideInterfaceAddedFileDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideJsonPropertyDefDto;
+import com.mobigen.cdev.datagw.module.provide.interfacesource.dto.ProvideResultDataRegDto;
+
+public interface ProvideInterfaceSourceService {
+  ProvideDataManageDefDto getDataMainList(Map<String, Object> param);
+  ExcelDto getDataMainListExcel(Map<String, Object> param);
+  List<ProvideJsonPropertyDefDto> getDataMainJsonPropertyList(Map<String, Object> param);
+
+  List<ProvideInterfaceAddedFileDto> getInterfaceAddedFileList(Map<String, Object> param);
+
+  ProvideResultDataRegDto regDataInfo(Map<String, Object> param, HttpServletRequest request, HttpServletResponse response);
+  ProvideResultDataRegDto regDataInfoWithAddedFiles(String interfaceType, String applyType, Map<String, Object> paramInterface, List<Map<String, Object>> paramDataSourceList, List<Map<String, Object>> paramDelTopicList, List<Map<String, Object>> paramAddTopicList, List<Map<String, Object>> paramDelFileList, List<Map<String, Object>> paramAddFileList, MultipartFile[] paramFiles, HttpServletRequest request, HttpServletResponse response);
+  ProvideResultDataRegDto updateInterfaceUseYn(Map<String, Object> param, HttpServletRequest request, HttpServletResponse response);  
+}

@@ -1,0 +1,12 @@
+package com.mobigen.cdev.datagw.module.provide.history.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.mobigen.cdev.datagw.core.file.dto.ExcelDto;
+import com.mobigen.cdev.datagw.module.provide.history.dto.ProvideHistoryDto;
+
+public interface ProvideHistoryService {
+  List<ProvideHistoryDto> getHistoryList(Map<String, Object> param);
+  ExcelDto getHistoryListExcel(Map<String, Object> param);
+}

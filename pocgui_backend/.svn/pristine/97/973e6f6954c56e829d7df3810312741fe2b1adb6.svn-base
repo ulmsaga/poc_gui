@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.mysql.core.paging">
+  <sql id="pagingPreSQL">
+    WITH TMP AS
+		(
+			SELECT
+				@ROWNUM:=@ROWNUM+1 row_num
+			,	MAINSQL.*
+			FROM
+			(
+  </sql>
+  <sql id="pagingPostSQL">
+      ) MAINSQL
+			WHERE (@ROWNUM:=0) = 0
+		)
+		SELECT
+			PAGEINFO.*
+		,	MAININFO.*
+		FROM
+			(
+				SELECT * FROM TMP
+        <!-- -->
+        <!-- LIMIT 100, 100 -->
+        <!-- LIMIT (currPage - 1) * pagePerCount, pagePerCount -->
+        <!-- -->
+        WHERE 1 = 1
+				AND row_num &gt;  FN_UI_START_FOR_LIST(${currPage}, ${pagePerCount})
+				AND row_num &lt;= FN_UI_START_FOR_LIST(${currPage}, ${pagePerCount}) + ${pagePerCount}
+			) MAININFO
+		,	(
+				SELECT
+					COUNT(*) tot_count
+				,	CEILING(COUNT(*) / ${pagePerCount}) page_count
+				,	${pagePerCount} page_per_count
+				,	${currPage} curr_page
+				<!--
+				, CASE
+						WHEN ${currPage} &lt;= 5 THEN ${currPage}
+						ELSE
+							CASE
+								WHEN ${currPage} mod 5 = 0 THEN ${currPage} mod 5 + 1
+								WHEN ${currPage} = CEILING(COUNT(*) / ${pagePerCount}) THEN 5
+								ELSE ${currPage} mod 5
+							END
+					END curr_page_btn_num
+				-->	
+				,	${currPage} - ${pageGroupStart} + 1 curr_page_btn_num
+				<!-- ,	CASE WHEN ${currPage} &lt; 5 THEN 1 ELSE (${currPage}) - (${currPage} mod 5) END curr_page_group_start -->
+				<!-- , CASE WHEN CEILING(COUNT(*) / ${pagePerCount}) &lt; 5 THEN ${currPage} ELSE (${currPage} + 1) - (${currPage} mod 5) + 4 END curr_page_group_end -->
+				,	${pageGroupStart} curr_page_group_start
+				,	CASE WHEN CEILING(COUNT(*) / ${pagePerCount}) &gt;= ${pageGroupStart} + 4 THEN ${pageGroupStart} + 4 ELSE CEILING(COUNT(*) / ${pagePerCount}) END curr_page_group_end
+				,	1 first_page_group_start
+				<!-- ,	CASE WHEN CEILING(COUNT(*) / ${pagePerCount}) &lt;= 5 THEN 5 ELSE CEILING(COUNT(*) / ${pagePerCount}) END first_page_group_end -->
+				,	CASE WHEN CEILING(COUNT(*) / 100) &gt;= 5 THEN 5 ELSE CEILING(COUNT(*) / 100) END first_page_group_end
+				,	CASE WHEN CEILING(COUNT(*) / ${pagePerCount}) &gt;= 5 THEN CEILING(COUNT(*) / ${pagePerCount}) - 4 ELSE CEILING(COUNT(*) / ${pagePerCount}) END last_page_group_start
+				,	CEILING(COUNT(*) / ${pagePerCount}) last_page_group_end
+				FROM TMP
+			) PAGEINFO
+  </sql>
+</mapper>

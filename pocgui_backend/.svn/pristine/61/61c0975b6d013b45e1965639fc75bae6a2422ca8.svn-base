@@ -1,0 +1,156 @@
+package com.mobigen.cdev.datagw.module.manage.controller;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.mobigen.cdev.datagw.core.base.dto.RsResultDto;
+import com.mobigen.cdev.datagw.module.manage.dto.ResultManageRegDto;
+import com.mobigen.cdev.datagw.module.manage.service.ManageService;
+
+@RestController
+@RequestMapping("manage")
+public class ManageController {
+
+  private final ManageService manageService;
+
+  public ManageController(ManageService manageService) {
+    this.manageService = manageService;
+  }
+  
+  //
+  @PostMapping(value = "/getUserInfoList", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> getUserInfoList(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    result.setRs(manageService.getUserInfoList(param));
+    return ResponseEntity.ok(result);
+  }
+  @PostMapping(value = "/getUserInfoListExcel", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getUserInfoListExcel(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(manageService.getUserInfoListExcel(param));
+		return ResponseEntity.ok(result);
+	}
+
+  //
+  @PostMapping(value = "/getNmsInfoList", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> getNmsInfoList(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    result.setRs(manageService.getNmsInfoList(param));
+    return ResponseEntity.ok(result);
+  }
+  @PostMapping(value = "/getSelectNmsId", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> getSelectNmsId(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    result.setRs(manageService.getSelectNmsId(param));
+    return ResponseEntity.ok(result);
+  }
+  @PostMapping(value = "/getNmsInfoListExcel", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getNmsInfoListExcel(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(manageService.getNmsInfoListExcel(param));
+		return ResponseEntity.ok(result);
+	}
+
+  @PostMapping(value = "/insertNmsInfo", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> insertNmsInfo(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    //
+    ResultManageRegDto regDto = manageService.insertNmsInfo(param);
+    if (regDto.getRetCnt() == -1) {
+      result.setErrorMessage(regDto.getRetMsg());
+    }
+    //
+    result.setRs(regDto.getRetCnt());
+    return ResponseEntity.ok(result);
+  }
+
+  @PostMapping(value = "/updateNmsInfo", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> updateNmsInfo(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    //
+    ResultManageRegDto regDto = manageService.updateNmsInfo(param);
+    if (regDto.getRetCnt() == -1) {
+      result.setErrorMessage(regDto.getRetMsg());
+    }
+    //
+    result.setRs(regDto.getRetCnt());
+    return ResponseEntity.ok(result);
+  }
+
+  @PostMapping(value = "/deleteNmsInfo", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> deleteNmsInfo(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+    RsResultDto result = new RsResultDto();
+    //
+    ResultManageRegDto regDto = manageService.deleteNmsInfo(param);
+    if (regDto.getRetCnt() == -1) {
+      result.setErrorMessage(regDto.getRetMsg());
+    }
+    //
+    result.setRs(regDto.getRetCnt());
+    return ResponseEntity.ok(result);
+  }
+  
+
+  //
+ /*  @PostMapping(value = "/updateNmsChargeManage", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> uppdateNmsChargeManage(@RequestBody Map<String, Object> param, HttpServletRequest requset, HttpServletResponse response){
+    RsResultDto result = new RsResultDto();
+    //
+    ResultManageRegDto regDto = manageService.updateNmsChargeManage(param, requset, response);
+    if (regDto.getRetCnt() == -1) {
+      result.setErrorMessage(regDto.getRetMsg());
+    }
+    //
+    result.setRs(regDto.getRetCnt());
+    return ResponseEntity.ok(result);
+  }
+  @PostMapping(value = "/deleteNmsChargeManage", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> deleteNmsChargeManage(@RequestBody Map<String, Object> param, HttpServletRequest requset, HttpServletResponse response){
+    RsResultDto result = new RsResultDto();
+    //
+    ResultManageRegDto regDto = manageService.deleteNmsChargeManage(param);
+    if (regDto.getRetCnt() == -1) {
+      result.setErrorMessage(regDto.getRetMsg());
+    }
+    //
+    result.setRs(regDto.getRetCnt());
+    return ResponseEntity.ok(result);
+  } */
+
+  @PostMapping(value = "/regNmsChargeManage", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> regNmsChargeManage(@RequestBody Map<String, Object> param, HttpServletRequest requset, HttpServletResponse response){
+    RsResultDto result = new RsResultDto();
+    //
+    ResultManageRegDto regDto = manageService.regNmsChargeManage(param, requset, response);
+    if (regDto.getRetCnt() == -1) {
+      result.setErrorMessage(regDto.getRetMsg());
+    }
+    //
+    result.setRs(regDto.getRetCnt());
+    return ResponseEntity.ok(result);
+  }
+
+
+  @PostMapping(value = "/getNmsChargeManageListExcel", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<RsResultDto> getNmsChargeManageListExcel(@RequestBody Map<String, Object> param, HttpServletRequest request, HttpServletResponse response) {
+		RsResultDto result = new RsResultDto();
+		result.setRs(manageService.getNmsChargeManageListExcel(param));
+		return ResponseEntity.ok(result);
+	}
+  @PostMapping(value = "/getManagerChangeStatus", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<RsResultDto> getManagerChangeStatus(@RequestBody Map<String, Object> param, HttpServletRequest requset, HttpServletResponse response){
+    RsResultDto result = new RsResultDto();
+    result.setRs(manageService.getManagerChangeStatus(param));
+    return ResponseEntity.ok(result);
+  }
+  
+}
