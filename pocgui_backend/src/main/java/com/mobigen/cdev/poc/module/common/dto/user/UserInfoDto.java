@@ -15,6 +15,9 @@ public class UserInfoDto extends UserDto {
 	private String update_time;
 	private String update_user;
 
+
+	private List<UserRoleDto> userRoleList;
+
 	private List<MenuInfoDto> menuList;
 
 	public String getUse_yn() {
@@ -60,4 +63,11 @@ public class UserInfoDto extends UserDto {
 		this.menuList = menuList;
 	}
 
+	public List<UserRoleDto> getUserRoleList() {
+		return userRoleList;
+	}
+
+	public void setUserRoleList(List<UserRoleDto> userRoleList) {
+		this.userRoleList = userRoleList;
+	}
 }

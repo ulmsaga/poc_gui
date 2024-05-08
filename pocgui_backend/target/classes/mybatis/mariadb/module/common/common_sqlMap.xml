@@ -98,7 +98,24 @@
 		,	UPDATE_TIME = values(update_time)
 		,	UPDATE_USER = values(update_user)
 	</sql>
-	
+
+	<select id="getUserRoleList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.user.UserRoleDto">
+		select
+			A.user_id
+		,	A.user_name
+		,	B.role_id
+		,	C.role_id
+		,	C.role_name
+		,	C.role_desc
+		from cm_user A
+			left outer join cm_user_role B
+			on A.user_id = B.user_id
+			left outer join cm_role C
+			on B.role_id  = C.role_id
+		where A.user_id  = #{userId}
+	</select>
+
+
 	<select id="getDefaultMenuInfo" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.menu.MenuInfoDto">
 		<!--
 		<include refid="sqlRecursiveMenuInfo"/>

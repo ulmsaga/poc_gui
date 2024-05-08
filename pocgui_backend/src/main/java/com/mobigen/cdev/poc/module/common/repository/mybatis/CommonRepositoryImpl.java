@@ -3,6 +3,7 @@ package com.mobigen.cdev.poc.module.common.repository.mybatis;
 import com.mobigen.cdev.poc.core.file.excel.handler.ExcelDefaultExceptionHandler;
 import com.mobigen.cdev.poc.module.common.dto.menu.MenuInfoDto;
 import com.mobigen.cdev.poc.module.common.dto.user.UserInfoDto;
+import com.mobigen.cdev.poc.module.common.dto.user.UserRoleDto;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -54,6 +55,9 @@ public class CommonRepositoryImpl implements CommonRepository {
     public List<MenuInfoDto> getMenuInfoList(Map<String, Object> param) {
     	return sqlSessionTemplatePemdb1.selectList(namespace + ".getMenuInfoList", param);
     }
-    
 
+    @Override
+    public List<UserRoleDto> getUserRoleList(Map<String, Object> param) {
+        return sqlSessionTemplatePemdb1.selectList(namespace + ".getUserRoleList", param);
+    }
 }

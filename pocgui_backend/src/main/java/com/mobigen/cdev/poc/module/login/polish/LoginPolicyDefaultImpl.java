@@ -3,7 +3,9 @@ package com.mobigen.cdev.poc.module.login.polish;
 import com.mobigen.cdev.poc.core.security.dto.UserDto;
 import com.mobigen.cdev.poc.core.security.util.rsa.RSAUtil;
 import com.mobigen.cdev.poc.core.security.util.sha.SHAUtil;
+import com.mobigen.cdev.poc.module.common.dto.menu.MenuInfoDto;
 import com.mobigen.cdev.poc.module.common.dto.user.UserInfoDto;
+import com.mobigen.cdev.poc.module.common.dto.user.UserRoleDto;
 import com.mobigen.cdev.poc.module.common.repository.mybatis.CommonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -65,10 +67,12 @@ public class LoginPolicyDefaultImpl implements LoginPolicy {
         UserInfoDto ret = new UserInfoDto();
         param.put("checkUserPassYn", "Y");
         List<UserInfoDto> userList = commonRepository.getUserList(param);
-        // List<MenuInfoDto> menuList = commonRepository.getUserMenuInfoList(param);
+        List<MenuInfoDto> menuList = commonRepository.getUserMenuInfoList(param);
+        List<UserRoleDto> userRoleList = commonRepository.getUserRoleList(param);
         if (userList.size() == 1) {
             ret = userList.get(0);
-            // ret.setMenuList(menuList);
+            ret.setMenuList(menuList);
+            ret.setUserRoleList(userRoleList);
         }
         return ret;
     }

@@ -1,7 +1,8 @@
 import React, { lazy } from "react";
-import { LoginLayout } from "../layout";
+import { LoginLayout } from "layout";
+import Loadable from "components/Loadable"
 
-const Login = lazy(() => import("../pages/authentication/login"));
+const Login = Loadable(lazy(() => import("../pages/authentication/login")));
 
 const LoginRouter = {
   path: '/',

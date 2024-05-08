@@ -1,6 +1,7 @@
 // material-ui
 import { styled } from '@mui/material/styles';
-import LinearProgress from '@mui/material/LinearProgress';
+import LoadingLayer from './layer/LoadingLayer';
+// import { CircularProgress } from '@mui/material';
 
 // loader style
 const LoaderWrapper = styled('div')(({ theme }) => ({
@@ -18,7 +19,8 @@ const LoaderWrapper = styled('div')(({ theme }) => ({
 
 const Loader = () => (
   <LoaderWrapper>
-    <LinearProgress color="primary" />
+    {/* <CircularProgress color="primary" /> */}
+    <LoadingLayer isLoading={true} />
   </LoaderWrapper>
 );
 

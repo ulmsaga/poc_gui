@@ -1,0 +1,48 @@
+@charset "utf-8";
+
+/* base */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {display:block}
+body {line-height:1}
+ol, ul {list-style:none}
+blockquote, q {quotes:none}
+blockquote:before, blockquote:after,
+q:before, q:after {content:'';content:none}
+table {border-collapse:collapse;border-spacing:0}
+
+
+/* HTML5 새 요소 초기화 */
+article, aside, figure, figure img, figcaption, hgroup, footer, header, nav, section, video, object {display:block}
+
+
+/* round 요소 */
+.mu-list,.mu-prompt,.mu-confirm,.mu-progress,.mu-popup-menu,.mu-popup-menu > li > ul,.mu-popup-menu > li > ul > li > ul,.mu-area,.mu-search-group,.mu-round,.mu-input,.mu-btn,.mu-selectbox > .mu-value,.mu-selectbox > .mu-list,.mu-pagination > button,.mu-pagination a,.mu-tab-vertical > li > a,.mu-alert,.mu-paging > a,.mu-paging > button,.mu-panel{border-radius:4px}
+
+
+/* 아래부터 추가되는 엘리먼트는 .mu- 가 붙습니다. */
+/*section{padding:10px}*/
+.mu-box-wrap{display:table;width:100%;height:100%;table-layout:fixed;border-spacing:10px}/*border-collapse:collapse;*//*border-collapse:separate;*/
+.mu-box-wrap .mu-box-row{display:table-row}
+.mu-box-wrap .mu-box-cell{display:table-cell;border:1px solid #c7cddb;vertical-align:top}
+.mu-box-wrap .mu-box-wrap .mu-box-cell{border-spacing:10px}
+
+/* Layout */
+html, body{width:100%;height:100%}
+/* body{;background-color:#2c323c} */
+body{background-color:#2c323c}
+body,h1,h2,h3,h4,h5,h6,input,button,textarea,select{line-height:1.5;font:12px '맑은 고딕',Malgun Gothic,'돋움',Dotum,Verdana,Arial,AppleGothic,sans-serif;}
+em{font-style:normal}
