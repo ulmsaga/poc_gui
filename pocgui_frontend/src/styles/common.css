@@ -24,21 +24,35 @@ blockquote:before, blockquote:after,
 q:before, q:after {content:'';content:none}
 table {border-collapse:collapse;border-spacing:0}
 
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../assets/fonts/fontawesome-webfont.eot?v=4.3.0');
+  src: url('../assets/fonts/fontawesome-webfont.eot?#iefix&v=4.3.0') format('embedded-opentype'), url('../assets/fonts/fontawesome-webfont.woff2?v=4.3.0') format('woff2'), url('../assets/fonts/fontawesome-webfont.woff?v=4.3.0') format('woff'), url('../assets/fonts/fontawesome-webfont.ttf?v=4.3.0') format('truetype'), url('../assets/fonts/fontawesome-webfont.svg?v=4.3.0#fontawesomeregular') format('svg');
+  src: url(https://example.com/MaterialIcons-Regular.eot);
+  src: local('Material Icons'),
+    local('MaterialIcons-Regular'),
+    url(https://example.com/MaterialIcons-Regular.woff2) format('woff2'),
+    url(https://example.com/MaterialIcons-Regular.woff) format('woff'),
+    url(https://example.com/MaterialIcons-Regular.ttf) format('truetype');
+  font-weight: normal;
+  font-style: normal
+}
+
+/* base */
+body,h1,h2,h3,h4,h5,h6,input,button,textarea,select{font:12px '돋움',Dotum,Verdana,Arial,AppleGothic,sans-serif;line-height:1.5;color:#010101}
+*, *:before, *:after{box-sizing:border-box;-webkit-box-sizing:border-box;-moz-box-sizing:border-box}
+.hide-text{overflow:hidden;text-indent:100%;white-space:nowrap}
+button{cursor:pointer}
+a{text-decoration:none;color:#010101}
+a:hover{color:#999}
+pre{overflow:auto;font-family:Consolas, 'Liberation Mono', Courier, monospace}
+code{font-family:Consolas, 'Liberation Mono', Courier, monospace}
+strong{font-weight:bold}
+em{font-style:italic}
+.mu-ellipsis{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
 /* HTML5 새 요소 초기화 */
 article, aside, figure, figure img, figcaption, hgroup, footer, header, nav, section, video, object {display:block}
-
-
-/* round 요소 */
-.mu-list,.mu-prompt,.mu-confirm,.mu-progress,.mu-popup-menu,.mu-popup-menu > li > ul,.mu-popup-menu > li > ul > li > ul,.mu-area,.mu-search-group,.mu-round,.mu-input,.mu-btn,.mu-selectbox > .mu-value,.mu-selectbox > .mu-list,.mu-pagination > button,.mu-pagination a,.mu-tab-vertical > li > a,.mu-alert,.mu-paging > a,.mu-paging > button,.mu-panel{border-radius:4px}
-
-
-/* 아래부터 추가되는 엘리먼트는 .mu- 가 붙습니다. */
-/*section{padding:10px}*/
-.mu-box-wrap{display:table;width:100%;height:100%;table-layout:fixed;border-spacing:10px}/*border-collapse:collapse;*//*border-collapse:separate;*/
-.mu-box-wrap .mu-box-row{display:table-row}
-.mu-box-wrap .mu-box-cell{display:table-cell;border:1px solid #c7cddb;vertical-align:top}
-.mu-box-wrap .mu-box-wrap .mu-box-cell{border-spacing:10px}
 
 /* Layout */
 html, body{width:100%;height:100%}

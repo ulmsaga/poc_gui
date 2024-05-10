@@ -11,7 +11,7 @@ const MiddleModuleTitle = () => {
 
   return (
     <div style={{ marginLeft: titleLeftMargin }} >
-      <Typography variant="h2">{title}</Typography>
+      <Typography variant="h3">{title}</Typography>
     </div>
   );
 }

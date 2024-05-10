@@ -8,6 +8,11 @@ import { PersistGate } from 'redux-persist/integration/react';
 import rootReducer  from './store';
 // style
 import 'styles/common.css';
+import 'material-icons/css/material-icons.css';
+import 'react-virtualized/styles.css';
+import 'react-virtualized-tree/lib/main.css';
+import 'ag-grid-community/styles/ag-grid.css';
+import "ag-grid-community/styles/ag-theme-quartz.css";
 
 import App from './App';
 import { configureStore } from '@reduxjs/toolkit';
