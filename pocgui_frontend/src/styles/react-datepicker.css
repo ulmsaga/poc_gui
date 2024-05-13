@@ -1,0 +1,10 @@
+/* Datepicker */ /* 0.5px solid #9fa2a7 */
+.mx-datepicker-label{display:inline-block; vertical-align: middle; height: 26px; padding-top: 2px; font: 12px;}
+
+.react-datepicker__input-container input[type="text"]{display:inline-block;padding:0 8px;background:#fff;border:0.5px solid #9fa2a7;line-height:100%;color:#262626;height: 26px; width: 100%; font:12px '맑은 고딕';text-align: left;}
+.react-datepicker__input-container input[type="text"]:hover{border: 1px solid #2684ff}
+.react-datepicker-ignore-onclickoutside{vertical-align:middle;}
+.react-datepicker-ignore-onclickoutside{display:inline-block;padding:0 8px;background:#2f323e;border:0.5px solid #9fa2a7;line-height:100%;color:#fff}
+.react-datepicker-ignore-onclickoutside:hover{border-color:#96999e;outline:0}
+.react-datepicker-ignore-onclickoutside:active,.react-datepicker-ignore-onclickoutside:focus{border-color:#96999e;outline:0}
+.react-datepicker-ignore-onclickoutsidet[disabled],.react-datepicker-ignore-onclickoutside[readonly]{border-color:#6c7077;background-color:#3b4451}
