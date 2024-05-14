@@ -34,6 +34,7 @@ function GridMain ({rowData, columnDefs, defaultColDef, style, className, rowSel
     }, 100);
   }, [rowData]);
   const onGridReady = useCallback(() => {
+    if (getGridCurrApi === undefined) return;
     getGridCurrApi(gridRef.current.api);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -115,17 +116,17 @@ function GridMain ({rowData, columnDefs, defaultColDef, style, className, rowSel
   )
 }
 
-GridMain.defaultProps = {
-  className: 'ag-theme-balham-dark',
-  style: {height: 600, width: '100%'},
-  rowSelection: 'multiple',
-  suppressRowClickSelection: false,
-  isRowSelectable: false,
-  getGridCurrApi: () => {},
-  getSelectedData: () => {},
-  onCellDoubleClicked: () => {},
-  stopEditingWhenCellsLoseFocus: false,
-  useContextMenu: false
-}
+// GridMain.defaultProps = {
+//   className: 'ag-theme-balham-dark',
+//   style: {height: 600, width: '100%'},
+//   rowSelection: 'multiple',
+//   suppressRowClickSelection: false,
+//   isRowSelectable: false,
+//   getGridCurrApi: () => {},
+//   getSelectedData: () => {},
+//   onCellDoubleClicked: () => {},
+//   stopEditingWhenCellsLoseFocus: false,
+//   useContextMenu: false
+// }
 
 export default GridMain

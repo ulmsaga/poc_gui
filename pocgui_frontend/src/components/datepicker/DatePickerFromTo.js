@@ -45,14 +45,14 @@ function DatePickerFromTo ({selectedDate, onChangeDate, isRange, showTimeSelect,
   )
 }
 
-DatePickerFromTo.defaultProps = {
-  selectedDate: {startDate: new Date(), endDate: new Date()},
-  isRange: false,
-  /* format: 'yyyy-MM-dd HH:mm:00' */
-  format: 'yyyy-MM-dd',
-  showTimeSelect: false,
-  timeIntervals: 5,
-  useMaxDate: true
-}
+// DatePickerFromTo.defaultProps = {
+//   selectedDate: {startDate: new Date(), endDate: new Date()},
+//   isRange: false,
+//   /* format: 'yyyy-MM-dd HH:mm:00' */
+//   format: 'yyyy-MM-dd',
+//   showTimeSelect: false,
+//   timeIntervals: 5,
+//   useMaxDate: true
+// }
 
 export default DatePickerFromTo

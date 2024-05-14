@@ -22,7 +22,7 @@ const MainLayout = () => {
   const dispatch = useDispatch();
 
   const { drawerOpen } = useSelector((state) => state.drawer);
-  console.log(matchDownLG)
+  // console.log(matchDownLG)
 
   // drawer toggler
   const [open, setOpen] = useState(drawerOpen);

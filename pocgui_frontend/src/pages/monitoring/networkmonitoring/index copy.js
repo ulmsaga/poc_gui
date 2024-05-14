@@ -1,16 +1,16 @@
-import { Box, Button, Grid, Stack } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { Box, Button, FormControl, Grid, MenuItem, OutlinedInput, Select, Stack } from "@mui/material";
+import React, { useEffect, useMemo, useState } from "react";
+import UnstableFastTree from "components/virtualized-tree/UnstableFastTree";
 // import { renderers } from "components/virtualized-tree/renderers/index.js";
-// import TreeState from "components/virtualized-tree/state/TreeState";
-// import Expandable from "components/virtualized-tree/renderers/Expandable";
+import TreeState from "components/virtualized-tree/state/TreeState";
+import Expandable from "components/virtualized-tree/renderers/Expandable";
 import { DatePickerFromTo } from "components/datepicker";
 import { add } from "date-fns";
+import { AutoCompleteGroup, AutoCompleteCheck, AutoCompleteEquip } from "components/autocomplete";
 import GridMain from "components/grid/GridMain";
 import { TypoLabel } from "components/label";
 import useMessage from "hooks/useMessage";
-import { callTypeList, mmeList, nodeTypeList, periodList } from "data/common";
-import SelectBox from "components/select/SelectBox";
-import { AutoCompleteCheck, AutoCompleteGroup } from "components/autocomplete";
+import { callTypeList } from "data/common";
 
 
 // const [Expandable, Deletable, Favorite] = renderers;
@@ -53,33 +53,37 @@ export const constructTree = (maxDeepness, maxNumberOfChildren, minNumOfNodes, d
 
 const NetworkMonitoring = () => {
   
-  // const MIN_NUMBER_OF_PARENTS = 50;/
-  // const MAX_NUMBER_OF_CHILDREN = 1000;
-  // const MAX_DEEPNESS = 2;
+  const MIN_NUMBER_OF_PARENTS = 50;
+  const MAX_NUMBER_OF_CHILDREN = 1000;
+  const MAX_DEEPNESS = 2;
 
   
-  // const Nodes = constructTree(MAX_DEEPNESS, MAX_NUMBER_OF_CHILDREN, MIN_NUMBER_OF_PARENTS);
+  const Nodes = constructTree(MAX_DEEPNESS, MAX_NUMBER_OF_CHILDREN, MIN_NUMBER_OF_PARENTS);
   
   
-  // const [state, setState] = useState({ nodes: TreeState.createFromTree(Nodes) });
+  const [state, setState] = useState({ nodes: TreeState.createFromTree(Nodes) });
 
   // console.log('NetworkMonitoring', state.nodes);
 
   
 
-  // const handleChange = ( nodes ) => {
-  //   setState( { nodes: nodes } )
-  // };
+  const handleChange = ( nodes ) => {
+    setState( { nodes: nodes } )
+  };
 
-  // const TreeComp = ({ style, node, nodes, ...rest }) => {
-  //   return (
-  //     <div style={ style }>
-  //       <Expandable node={node} {...rest} onChange={ handleChange }>
-  //         {node.name}
-  //       </Expandable>
-  //     </div>
-  //   );
-  // };
+
+  const TreeComp = ({ style, node, nodes, ...rest }) => {
+    // style.marginLeft = 0;
+    // console.log('node : ', node);
+    // console.log('style : ', style);
+    return (
+      <div style={ style }>
+        <Expandable node={node} {...rest} onChange={ handleChange }>
+          {node.name}
+        </Expandable>
+      </div>
+    );
+  };
 
   //const treeStyle={ height: 20, left: 0, position: 'absolute', top: 0, width: '100%', userSelect: 'none', marginLeft: 0};
 
@@ -112,7 +116,9 @@ const NetworkMonitoring = () => {
     }
   };
 
-  
+  const [period, setPeriod] = useState('1M');
+  const [searchTarget1, setSearchTarget1] = useState('MME');
+  const [searchTarget2, setSearchTarget2] = useState('-');
 
   // const callTypes = useMemo(() => [{value: 'ATTACH', label: 'ATTACH'}, {value: 'SRMO', label: 'SRMO'}], []);
 
@@ -126,74 +132,7 @@ const NetworkMonitoring = () => {
     alert(ret);
   };
 
-  
-
-  
-  // Period
-  const [period, setPeriod] = useState('1M');
-
-  // Node1 Type, Node2 Type
-  const [searchTarget1, setSearchTarget1] = useState({ value : 'MME', label: 'MME', node: 'MME' });
-  const [searchTarget2, setSearchTarget2] = useState({ value: '-', label: '-', node: '-' });
-  const [node2TypeList, setNode2TypeList] = useState([{ value: '-', label: '-', node: '-' }]);
-
-  const [selectedNode1, setSelectedNode1] = useState([]);
-  const [selectedNode2, setSelectedNode2] = useState([]);
-  const [node1List, setNode1List] = useState([]);
-  const [node2List, setNode2List] = useState([]);
-
-  const node1TypeChange = (e) => {
-    setSearchTarget1(e.target);
-    getNode2TypeList(e.target);
-
-    if (e.target.node === 'MME') {
-      setNode1List([...mmeList]);
-    } else if (e.target.node === 'ENB') {
-      setNode1List([]);
-    } else {
-      setNode1List([]);
-    }
-  };
-  
-  const getNode2TypeList = (node1Type) => {
-    nodeTypeList.forEach((item) => {
-      if (item.value === node1Type.value) {
-        setNode2TypeList(item.linkTypeList);
-        setSearchTarget2(item.linkTypeList[0]);
-        getNode2List(item.linkTypeList[0]);
-        return true;
-      }
-    });
-  };
-
-  const node2TypeChange = (e) => {
-    setSearchTarget2(e.target);
-    getNode2List(e.target);
-  };
-
-  const getNode2List = (target) => {
-    if (target.node === 'MME') {
-      setNode2List([...mmeList]);
-    } else {
-      setNode2List([]);
-    }
-  };
-
-  const onChangeNode1 = (selected) => {
-    setSelectedNode1(selected);
-  };
-  const onChangeNode2 = (selected) => {
-    setSelectedNode2(selected);
-  };
-    
-  // Call Type
-  const [ selectedCallTypes, setSelectedCallTypes ] = useState([...callTypeList]);
-  const onChangeCallTypeList = (selected) => {
-    setSelectedCallTypes(selected);
-  };
-
   useEffect(() => {
-    setNode1List([...mmeList]);
     // setState({ nnodes: TreeState.createFromTree(Nodes) });
     // console.log('NetworkMonitoring useEffect', state.nodes);
     setRowData([
@@ -207,8 +146,15 @@ const NetworkMonitoring = () => {
       { field: "price" },
       { field: "electric" }
     ]);
+    console.log(callTypeList);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Call Type
+  const [ selectedCallTypes, setSelectedCallTypes ] = useState([]);
+  const onChangeCallTypeList = (selected) => {
+    setSelectedCallTypes(selected);
+  };
 
   return (
     <Grid sx={{ width: '100%', height: 'calc(100vh - 70px)', flexGrow: 1, paddingTop: '3px' }} container spacing={0.5}>
@@ -241,7 +187,22 @@ const NetworkMonitoring = () => {
                 <Stack direction={'row'} spacing={0.2} sx={{ verticalAlign: 'middle' }}>
                   {/* <Typography variant="body2" paddingTop={0.5} paddingLeft={0.6} width={80} sx={{ textAlign: 'center', border: '0.5px solid #9fa2a7', background: '#f5f7f7', borderRadius: '0px' }}>조회기간</Typography> */}
                   <TypoLabel label={'조회기간'} />
-                  <SelectBox options={ periodList } value={ period } onChange={(e) => { setPeriod(e.target.value) }}/>
+                  <Stack direction={'row'} sx={{ verticalAlign: 'middle' }}>
+                    <FormControl sx={{ verticalAlign: 'middle', minWidth: 100, minHeight: 26 }} >
+                      <Select
+                        id="selectPeriod"
+                        value={ period }
+                        displayEmpty
+                        inputProps={{ 'aria-label': 'Without label' }}
+                        onChange={(e) => { setPeriod(e.target.value) }}
+                        sx={{ borderRadius: '0px', minHeight: 26}}
+                      >
+                        <MenuItem value={'1M'}><span style={{ fontSize: '12px' }}>1M</span></MenuItem>
+                        <MenuItem value={'1H'}><span style={{ fontSize: '12px' }}>1H</span></MenuItem>
+                        <MenuItem value={'1D'}><span style={{ fontSize: '12px' }}>1D</span></MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Stack>
                   <DatePickerFromTo selectedDate={ selectedFromToDate } isRange={ true } format={ 'yyyy-MM-dd HH:mm:00' } showTimeSelect={ true } onChangeDate={ changeFromToDate } useMaxDate={ false }/>
                 </Stack>
               </Stack>
@@ -252,25 +213,55 @@ const NetworkMonitoring = () => {
               </Stack>
             </Stack>
             {/* ROW2 */}
-            <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
+            <Stack Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
               <Stack direction={'row'} spacing={0.2}>
                 {/* <Typography variant="body2" paddingTop={0.5} paddingLeft={0.6} width={80} sx={{ textAlign: 'center', border: '0.5px solid #9fa2a7', background: '#f5f7f7', borderRadius: '0px' }}>조회대상1</Typography> */}
                 <TypoLabel label={'조회대상1'} />
-                <SelectBox options={ nodeTypeList } value={ searchTarget1.value } onChange={ node1TypeChange }/>
-                <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 287 } groupFilter={'mtso_desc'} />
+                <FormControl sx={{ verticalAlign: 'middle', minWidth: 100, minHeight: 26 }} >
+                  <Select
+                    id="selectSearchTarget1"
+                    value={ searchTarget1 }
+                    displayEmpty
+                    inputProps={{ 'aria-label': 'Without label' }}
+                    onChange={(e) => { setSearchTarget1(e.target.value) }}
+                    sx={{ borderRadius: '0px', minHeight: 26}}
+                  >
+                    <MenuItem value={'-'}><span style={{ fontSize: '12px' }}>-</span></MenuItem>
+                    <MenuItem value={'MME'}><span style={{ fontSize: '12px' }}>MME</span></MenuItem>
+                    <MenuItem value={'ENB'}><span style={{ fontSize: '12px' }}>ENB</span></MenuItem>
+                  </Select>
+                </FormControl>
+                {/* <OutlinedInput id="outlined-basic" type="string" variant="outlined" /> */}
+                {/* <AutoCompleteGroup item={[]}/> */}
+                {/* <AutoCompleteCheck data={ callTypeList } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 388 } /> */}
               </Stack>
               <Stack direction={'row'} spacing={0.2}>
                 {/* <Typography variant="body2" paddingTop={0.5} paddingLeft={0.6} width={80} sx={{ textAlign: 'center', border: '0.5px solid #9fa2a7', background: '#f5f7f7', borderRadius: '0px' }}>조회대상2</Typography> */}
                 <TypoLabel label={'조회대상2'} />
-                <SelectBox options={ node2TypeList } value={ searchTarget2.value } onChange={ node2TypeChange }/>
-                <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 287 } groupFilter={'mtso_desc'} />
+                <FormControl sx={{ verticalAlign: 'middle', minWidth: 100, minHeight: 26 }} >
+                  <Select
+                    id="searchTarget2"
+                    value={ searchTarget2 }
+                    displayEmpty
+                    inputProps={{ 'aria-label': 'Without label' }}
+                    onChange={(e) => { setSearchTarget2(e.target.value) }}
+                    sx={{ borderRadius: '0px', minHeight: 26}}
+                  >
+                    <MenuItem value={'-'}><span style={{ fontSize: '12px' }}>-</span></MenuItem>
+                    <MenuItem value={'S1-MME'}><span style={{ fontSize: '12px' }}>S1-MME</span></MenuItem>
+                  </Select>
+                </FormControl>
+                <OutlinedInput id="outlined-basic" type="string" variant="outlined" />
               </Stack>
             </Stack>
             {/* ROW3 */}
-            <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
+            <Stack Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
             <Stack direction={'row'} spacing={0.2}>
                 <TypoLabel label={'CALL TYPE'} />
-                <AutoCompleteCheck data={ JSON.parse(JSON.stringify(callTypeList)) } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 388 } />
+                {/* <SelectMulti options={callTypes} title={'CALL TYPE'} onChange={(e) => {}}/> */}
+                {/* <AutoCompleteCheck data={ callTypeList } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 388 } /> */}
+                {/* <AutoCompleteEquip key={1} /> */}
+                {/* <AutoCompleteEquip items={[]}/> */}
               </Stack>
             </Stack>
           </Stack>
@@ -313,12 +304,12 @@ const NetworkMonitoring = () => {
         </Box>
         <Box height={'calc(30% - 4px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
           <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '100%' }}>
-            {/* <GridMain
+            <GridMain
                 className={'ag-theme-balham'}
                 style={{ height: '100%' }}
                 rowData={rowData}
                 columnDefs={colDefs}
-            /> */}
+            />
           </Stack>
         </Box>
       </Grid>

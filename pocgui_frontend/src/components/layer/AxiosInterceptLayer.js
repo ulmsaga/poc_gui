@@ -1,11 +1,14 @@
 import custAxios from "api/custAxios";
 import useLoading from "hooks/useLoading";
-// import useMessage from "hooks/useMessage";
+import useMessage from "hooks/useMessage";
 import { Fragment, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { closeAlert } from "store/reducers/message";
 
 const AxiosInterceptLayer = () => {
   const { onLoad, offLoad } = useLoading();
-  // const { alert } = useMessage();
+  const { alert } = useMessage();
+  const dispatch = useDispatch();
   
   const requestInstance = custAxios.interceptors.request.use(
     (config) => {
@@ -74,7 +77,10 @@ const AxiosInterceptLayer = () => {
               if (errStatus === 401) {
                 errMsg = errMsg + '\n잠시 후 로그인 화면으로 이동 합니다.'
                 setTimeout(() => {
-                  window.location.href = '/login';
+                  dispatch(closeAlert());
+                  setTimeout(() => {
+                    window.location.href = '/login';
+                  }, 100);
                 }, 1000);
               }
             }
@@ -85,8 +91,10 @@ const AxiosInterceptLayer = () => {
                 // importantErrMsg = "현재 세션은 권한이 없는 세션으로 유효하지 않습니다.\n잠시 후 화면을 새로고침 하고 세션을 재 확인 합니다.";
                 importantErrMsg = "현재 세션은 권한이 없는 세션으로 유효하지 않습니다.\n잠시 후 로그인 화면으로 이동 합니다.";
                 setTimeout(() => {
-                  // window.location.reload();
-                  window.location.href = '/login';
+                  dispatch(closeAlert());
+                  setTimeout(() => {
+                    window.location.href = '/login';
+                  }, 100);
                 }, 1000);
               } else if (errStatus === 502 || errStatus === 504) {
                 importantErrMsg = "서버에 연결 할 수 없습니다.\n관리자에게 문의 하시기 바랍니다.";

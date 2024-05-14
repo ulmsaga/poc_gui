@@ -5,6 +5,7 @@ import ScrollTop from 'components/ScrollTop';
 import { useSelector } from 'react-redux';
 import AxiosInterceptLayer from 'components/layer/AxiosInterceptLayer';
 import LoadingLayer from 'components/layer/LoadingLayer';
+import Alert from 'components/alert';
 
 function App() {
 
@@ -20,6 +21,7 @@ function App() {
       </BrowserRouter>
       <LoadingLayer isLoading={ isLoadingShow } />
       <AxiosInterceptLayer />
+      <Alert />
     </ThemeCustomization>
   );
 }

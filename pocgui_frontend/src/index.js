@@ -10,8 +10,6 @@ import rootReducer  from './store';
 import 'styles/common.css';
 import 'material-icons/css/material-icons.css';
 import 'react-virtualized/styles.css';
-// import 'ag-grid-community/styles/ag-grid.css';
-// import "ag-grid-community/styles/ag-theme-quartz.css";
 
 import App from './App';
 import { configureStore } from '@reduxjs/toolkit';
@@ -20,7 +18,8 @@ import logger from 'redux-logger';
 
 const store = configureStore({
   reducer: rootReducer,
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }).concat(logger, thunk),
+  // middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }).concat(logger, thunk),
+  middleware: (process.env.REACT_APP_ENV_STATUS === 'local' && process.env.REACT_APP_USE_STORE_LOG) ? (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }).concat(logger, thunk) : (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }).concat(thunk),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

@@ -5,7 +5,7 @@ const StyledAutoComplete = styled(Autocomplete)`
   font-size: 12px;
   boarder-radius: 0px;
   min-Width: 100px;
-  width: 300px;
+  width: 286px;
   padding: 0px;
   margin: 0px;
 `;
@@ -34,12 +34,13 @@ const AutoCompleteEquip = ({ items }) => {
         sx={{
           "& .MuiOutlinedInput-root": {
             height: 26,
-            paddingTop: '-5px'
+            paddingTop: '-5px',
+            borderRadius: 0
           },
           "& .MuiOutlinedInput-root.MuiInputBase-sizeSmall": {
-            padding: 0
+            padding: 0,
           },
-          padding: 0,
+          padding: 0
         }}
       />}
     />
