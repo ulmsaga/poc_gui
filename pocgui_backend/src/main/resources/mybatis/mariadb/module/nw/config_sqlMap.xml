@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.mariadb.module.nw.config">
+    <select id="getMmeList" parameterType="map" resultType="com.mobigen.cdev.poc.module.nw.dto.EquipNodeDto" >
+        select
+            A.mtso_id
+        ,	B.mtso_name
+        ,	case
+                when ifnull(LAG(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'F') = 'F' then 'Y'
+                else 'N'
+            end mtso_first
+        ,	case
+                when ifnull(LEAD(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'L') = 'L' then 'Y'
+                else 'N'
+            end mtso_last
+        ,   'MME' node_type
+        ,	A.mme_id node_id
+        ,	concat('MME#', lpad(cast(mme_id as integer), 2, '0')) node_exp_id
+        ,	A.mme_name node_name
+        ,   A.mme_id value
+        ,   concat('MME#', lpad(cast(mme_id as integer), 2, '0')) label
+        ,   concat(B.mtso_name, ' (', A.mtso_id, ')') group_filter
+        from
+        cl_mme A left outer join cb_mtso B
+        on A.mtso_id = B.mtso_id
+        where 1 = 1
+        and opr_status = 'ACT'
+    </select>
+
+    <select id="getEnbList" parameterType="map" resultType="com.mobigen.cdev.poc.module.nw.dto.EnbNodeDto">
+        select
+            A.*
+        ,	case
+                when ifnull(LAG(A.branch_id, 1) over (partition by A.branch_id order by A.branch_id, opteam_id, part_id), 'F') = 'F' then 'Y'
+                else 'N'
+            end branch_first
+        ,	case
+                when ifnull(LEAD(A.branch_id, 1) over (partition by A.branch_id order by A.branch_id, opteam_id, part_id), 'L') = 'L' then 'Y'
+                else 'N'
+            end branch_last
+        ,	case
+                when ifnull(LAG(A.opteam_id, 1) over (partition by A.opteam_id order by A.branch_id, opteam_id, part_id), 'F') = 'F' then 'Y'
+                else 'N'
+            end opteam_first
+        ,	case
+                when ifnull(LEAD(A.opteam_id, 1) over (partition by A.opteam_id order by A.branch_id, opteam_id, part_id), 'L') = 'L' then 'Y'
+                else 'N'
+            end opteam_last
+        ,	case
+                when ifnull(LAG(A.part_id, 1) over (partition by A.part_id order by A.branch_id, opteam_id, part_id), 'F') = 'F' then 'Y'
+                else 'N'
+            end part_first
+        ,	case
+                when ifnull(LEAD(A.part_id, 1) over (partition by A.part_id order by A.branch_id, opteam_id, part_id), 'L') = 'L' then 'Y'
+                else 'N'
+            end part_last
+        from
+        (
+            <include refid="sqlEnbList" />
+        ) A
+        where 1 = 1
+        and branch_name is not null
+        and opteam_name is not null
+        and part_name is not null
+        order by branch_id, opteam_id, part_id
+    </select>
+
+    <sql id="sqlEnbList" >
+        select
+            A.branch_id
+        ,	B.branch_name
+        ,	A.opteam_id
+        ,	C.team_name opteam_name
+        ,	A.part_id
+        ,	D.part_name
+        ,	A.mtso_name
+        ,	E.mtso_id
+        ,	enb_id
+        ,	bts_name
+        ,   enb_id value
+        ,   concat(ifnull(bts_name, '-'), ' (', enb_id, ')') label
+        ,   case when ifnull(opteam_name, '-') = '-' then '미분류'
+                else concat(opteam_name, ' (', opteam_id, ')')
+            end group_filter
+        from
+            cl_enb A
+            left outer join cm_branch B
+            on A.branch_id = B.branch_id
+            left outer join cm_team C
+            on A.opteam_id = C.team_id
+            left outer join cm_part D
+            on A.part_id = D.part_id
+            left outer join cb_mtso E
+            on a.mtso_name = e.mtso_name
+        where 1 = 1
+        and opr_status = 'ACT'
+    </sql>
+</mapper>

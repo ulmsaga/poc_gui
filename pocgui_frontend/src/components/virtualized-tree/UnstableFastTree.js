@@ -1,11 +1,37 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import Tree from './Tree';
-import {Node} from './shapes/nodeShapes';
 import TreeStateModifiers from './state/TreeStateModifiers';
 import {UPDATE_TYPE} from './contants';
 
+
+const UnstableFastTree = ({ nodes, onChange, children, nodeMarginLeft }) => {
+
+  const handleChange = ({node, type, index}) => {
+    let nodes;
+
+    if (type === UPDATE_TYPE.UPDATE) {
+      nodes = TreeStateModifiers.editNodeAt(nodes, index, node);
+    } else {
+      nodes = TreeStateModifiers.deleteNodeAt(nodes, index);
+    }
+
+    onChange(nodes);
+  };
+
+  return (
+    <Tree
+      nodeMarginLeft={nodeMarginLeft}
+      nodes={ nodes }
+      onChange={handleChange}
+      NodeRenderer={children}
+    />
+  );
+};
+
+export default UnstableFastTree;
+
+/*
 export default class UnstableFastTree extends React.Component {
   static contextTypes = {
     unfilteredNodes: PropTypes.arrayOf(PropTypes.shape(Node)),
@@ -58,3 +84,4 @@ UnstableFastTree.propTypes = {
 UnstableFastTree.defaultProps = {
   nodeMarginLeft: 30,
 };
+*/
