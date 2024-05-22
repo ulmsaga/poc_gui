@@ -15,7 +15,7 @@ const LoginFooter = () => {
         textAlign={matchDownSM ? 'center' : 'inherit'}
       >
         <Typography variant="subtitle2" color="secondary" component="span">
-          &copy; CDO React Template By&nbsp;
+          &copy; React Template By&nbsp;
           <Typography component={Link} variant="subtitle2" href="http://mobigen.com" target="_blank" underline="hover">
             Mobigen
           </Typography>

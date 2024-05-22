@@ -1,5 +1,5 @@
 import { Box, Button, Grid, Stack } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import { DatePickerFromTo } from "components/datepicker";
 import { add } from "date-fns";
 import GridMain from "components/grid/GridMain";
@@ -11,6 +11,8 @@ import { AutoCompleteCheck, AutoCompleteGroup } from "components/autocomplete";
 import { forEach } from "lodash";
 import { getEnbList, getEnbTreeList, getMmeList, getMmeTreeList } from "api/nw/configApi";
 import TreeEquipType from "./items/TreeEquipType";
+import PopupCallFailSearch from "./popup/PopupCallFailSearch.js";
+import PopupEquipStatus from "./popup/PopupEquipStatus.js";
 
 const NetworkMonitoring = () => {
   const [mmeList, setMmeList] = useState([]);
@@ -49,15 +51,6 @@ const NetworkMonitoring = () => {
   };
 
   const { alert, confirm } = useMessage();
-  const excelDownload = () => {
-    // Alert({ title: 'Excel Download', message: 'Excel Download', callback: (e) => { console.log(e); } });
-    // confirm({ title: 'Excel Download', message: 'Excel Download', callback: callback });
-    confirm('Excel Download', callback);
-  };
-  const callback = (ret) => {
-    alert(ret);
-  };
-
   
 
   
@@ -163,115 +156,144 @@ const NetworkMonitoring = () => {
 
   const refTopTree = useRef();
   const refBotTree = useRef();
-  const [topTreeSize, setTopTreeSize] = useState({ width: 0, height: 0 });
-  const [botTreeSize, setBotTreeSize] = useState({ width: 0, height: 0 });
-  useEffect(() => {
-    setTopTreeSize({height: refTopTree.current.clientHeight, width: refTopTree.current.clientWidth - 6} );
-    setBotTreeSize({height: refBotTree.current.clientHeight, width: refBotTree.current.clientWidth - 6} );
-  }, [refTopTree, refBotTree]); 
+
+  // alarmList
+  const [mmeAlarmList, setMmeAlarmList] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [enbAlarmList, setEnbAlarmList] = useState([]);
+
+  const excelDownload = () => {
+    // Alert({ title: 'Excel Download', message: 'Excel Download', callback: (e) => { console.log(e); } });
+    // confirm({ title: 'Excel Download', message: 'Excel Download', callback: callback });
+    confirm('Excel Download', callback);
+  };
+  const callback = (ret) => {
+    alert(ret);
+  };
+
+  const searchClick = () => {
+    setMmeAlarmList([{ id:  'MME#44', alarmGrade: 'MJ' }]);
+    setEnbAlarmList([{ id: '143911', alarmGrade: 'CR' }]);
+    //
+    setIsOpenCallFailSearch(true);
+  };
+
+  // Call Fail Search
+  const [isOpenCallFailSearch, setIsOpenCallFailSearch] = useState(false);
+  // Popup Status
+  const [isOpenPopupStatus, setIsOpenPopupStatus] = useState(false);
+
+  const openPopupStatus = (params) => {
+    alert(params.name);
+    setIsOpenPopupStatus(true);
+  };
 
   return (
-    <Grid sx={{ width: '100%', height: 'calc(100vh - 70px)', flexGrow: 1, paddingTop: '3px' }} container spacing={0.5}>
-      <Grid item sx={{ width: '300px'}}>
-        {/* TREE1 */}
-        <Box ref = { refTopTree } height={'calc(50% - 4px)'} width={'100%'} gap={4} marginTop={1} marginRight={1} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }} >
-          <TreeEquipType data={ mmeTreeList } size={ topTreeSize } />
-        </Box>
-        {/* TREE2 */}
-        <Box ref = { refBotTree } height={'calc(50% - 4px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }} >
-          <TreeEquipType data={enbTreeList} size={ botTreeSize } />
-        </Box>
-      </Grid>
-      <Grid item sx={{ width: 'calc(100% - 310px)'}}>
-        {/* ANALYSIS MAIN */}
-        <Box height={'calc(70% - 4px)'} width={'100%'} gap={4} marginTop={1} marginRight={1} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
-          {/* CONDS */}
-          <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle' }}>
-            <Stack direction={'row'} spacing={0} sx={{ justifyContent: 'space-between', height: '26px' }}>
-              {/* ROW1 CONDS */}
-              <Stack direction={'row'} spacing={1.5}>
-                <Stack direction={'row'} spacing={0.2} sx={{ verticalAlign: 'middle' }}>
-                  <TypoLabel label={'조회기간'} />
-                  <SelectBox options={ periodList } value={ period } onChange={(e) => { setPeriod(e.target.value) }}/>
-                  <DatePickerFromTo selectedDate={ selectedFromToDate } isRange={ true } format={ 'yyyy-MM-dd HH:mm:00' } showTimeSelect={ true } onChangeDate={ changeFromToDate } useMaxDate={ false }/>
+    <Fragment>
+      <Grid sx={{ width: '100%', height: 'calc(100vh - 70px)', flexGrow: 1, paddingTop: '3px' }} container spacing={0.5}>
+        <Grid item sx={{ width: '300px'}}>
+          {/* TREE1 */}
+          <Box ref = { refTopTree } height={'calc(50% - 4px)'} width={'100%'} gap={4} marginTop={1} marginRight={1} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }} >
+            <TreeEquipType data={ mmeTreeList } alarmList={ mmeAlarmList } openPopupStatus={ openPopupStatus }/>
+          </Box>
+          {/* TREE2 */}
+          <Box ref = { refBotTree } height={'calc(50% - 4px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }} >
+            <TreeEquipType data={ enbTreeList } alarmList={ enbAlarmList } openPopupStatus={ openPopupStatus }/>
+          </Box>
+        </Grid>
+        <Grid item sx={{ width: 'calc(100% - 310px)'}}>
+          {/* ANALYSIS MAIN */}
+          <Box height={'calc(70% - 4px)'} width={'100%'} gap={4} marginTop={1} marginRight={1} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
+            {/* CONDS */}
+            <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle' }}>
+              <Stack direction={'row'} spacing={0} sx={{ justifyContent: 'space-between', height: '26px' }}>
+                {/* ROW1 CONDS */}
+                <Stack direction={'row'} spacing={1.5}>
+                  <Stack direction={'row'} spacing={0.2} sx={{ verticalAlign: 'middle' }}>
+                    <TypoLabel label={'조회기간'} />
+                    <SelectBox options={ periodList } value={ period } onChange={(e) => { setPeriod(e.target.value) }}/>
+                    <DatePickerFromTo selectedDate={ selectedFromToDate } isRange={ true } format={ 'yyyy-MM-dd HH:mm:00' } showTimeSelect={ true } onChangeDate={ changeFromToDate } useMaxDate={ false }/>
+                  </Stack>
+                </Stack>
+                {/* ROW1 BUTTONS */}
+                <Stack direction={'row'} spacing={0.2} sx={{float: 'right'}}>
+                  <Button variant="contained" color="primary" onClick={ searchClick }>Search</Button>
+                  <Button variant="contained" color="secondary" onClick={ excelDownload }>Excel</Button>
                 </Stack>
               </Stack>
-              {/* ROW1 BUTTONS */}
-              <Stack direction={'row'} spacing={0.2} sx={{float: 'right'}}>
-                <Button variant="contained" color="primary">Search</Button>
-                <Button variant="contained" color="secondary" onClick={excelDownload}>Excel</Button>
+              {/* ROW2 */}
+              <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
+                <Stack direction={'row'} spacing={0.2}>
+                  <TypoLabel label={'조회대상1'} />
+                  <SelectBox options={ nodeTypeList } value={ searchTarget1.value } onChange={ node1TypeChange }/>
+                  <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 287 } groupFilter={'group_filter'} />
+                </Stack>
+                <Stack direction={'row'} spacing={0.2}>
+                  <TypoLabel label={'조회대상2'} />
+                  <SelectBox options={ node2TypeList } value={ searchTarget2.value } onChange={ node2TypeChange }/>
+                  <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 287 } groupFilter={'group_filter'} />
+                </Stack>
               </Stack>
-            </Stack>
-            {/* ROW2 */}
-            <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
+              {/* ROW3 */}
+              <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
               <Stack direction={'row'} spacing={0.2}>
-                <TypoLabel label={'조회대상1'} />
-                <SelectBox options={ nodeTypeList } value={ searchTarget1.value } onChange={ node1TypeChange }/>
-                <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 287 } groupFilter={'group_filter'} />
-              </Stack>
-              <Stack direction={'row'} spacing={0.2}>
-                <TypoLabel label={'조회대상2'} />
-                <SelectBox options={ node2TypeList } value={ searchTarget2.value } onChange={ node2TypeChange }/>
-                <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 287 } groupFilter={'group_filter'} />
+                  <TypoLabel label={'CALL TYPE'} />
+                  <AutoCompleteCheck data={ JSON.parse(JSON.stringify(callTypeList)) } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 388 } />
+                </Stack>
               </Stack>
             </Stack>
-            {/* ROW3 */}
-            <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
-            <Stack direction={'row'} spacing={0.2}>
-                <TypoLabel label={'CALL TYPE'} />
-                <AutoCompleteCheck data={ JSON.parse(JSON.stringify(callTypeList)) } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 388 } />
-              </Stack>
-            </Stack>
-          </Stack>
-          {/* GRID KPI - CAUSE */}
-          <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '60%' }}>
-            <GridMain
-              className={'ag-theme-balham'}
-              style={{ height: '100%' }}
-              rowData={rowData}
-              columnDefs={colDefs}
-            />
-          </Stack>
-          {/* GRID PATH */}
-          <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: 'calc(40% - 92px)' }}>
-            {/* <GridMain
-              className={'ag-theme-balham'}
-              style={{ height: '100%', width: '100%' }}
-              rowData={rowData}
-              columnDefs={colDefs}
-            />
-            <GridMain
-              className={'ag-theme-balham'}
-              style={{ height: '100%', width: '100%' }}
-              rowData={rowData}
-              columnDefs={colDefs}
-            />
-            <GridMain
-              className={'ag-theme-balham'}
-              style={{ height: '100%', width: '100%' }}
-              rowData={rowData}
-              columnDefs={colDefs}
-            />
-            <GridMain
-              className={'ag-theme-balham'}
-              style={{ height: '100%', width: '100%' }}
-              rowData={rowData}
-              columnDefs={colDefs}
-            /> */}
-          </Stack>
-        </Box>
-        <Box height={'calc(30% - 4px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
-          <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '100%' }}>
-            {/* <GridMain
+            {/* GRID KPI - CAUSE */}
+            <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '60%' }}>
+              <GridMain
                 className={'ag-theme-balham'}
                 style={{ height: '100%' }}
                 rowData={rowData}
                 columnDefs={colDefs}
-            /> */}
-          </Stack>
-        </Box>
+              />
+            </Stack>
+            {/* GRID PATH */}
+            <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: 'calc(40% - 92px)' }}>
+              <GridMain
+                className={'ag-theme-balham'}
+                style={{ height: '100%', width: '100%' }}
+                rowData={rowData}
+                columnDefs={colDefs}
+              />
+              <GridMain
+                className={'ag-theme-balham'}
+                style={{ height: '100%', width: '100%' }}
+                rowData={rowData}
+                columnDefs={colDefs}
+              />
+              <GridMain
+                className={'ag-theme-balham'}
+                style={{ height: '100%', width: '100%' }}
+                rowData={rowData}
+                columnDefs={colDefs}
+              />
+              <GridMain
+                className={'ag-theme-balham'}
+                style={{ height: '100%', width: '100%' }}
+                rowData={rowData}
+                columnDefs={colDefs}
+              />
+            </Stack>
+          </Box>
+          <Box height={'calc(30% - 4px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
+            <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '100%' }}>
+              <GridMain
+                  className={'ag-theme-balham'}
+                  style={{ height: '100%' }}
+                  rowData={rowData}
+                  columnDefs={colDefs}
+              />
+            </Stack>
+          </Box>
+        </Grid>
       </Grid>
-    </Grid>
+      <PopupCallFailSearch title={'Call Fail Search'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenCallFailSearch } setIsOpen={ setIsOpenCallFailSearch }/>
+      <PopupEquipStatus title={'Equip Status'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenPopupStatus } setIsOpen={ setIsOpenPopupStatus }/>
+    </Fragment>
   );
 };
 

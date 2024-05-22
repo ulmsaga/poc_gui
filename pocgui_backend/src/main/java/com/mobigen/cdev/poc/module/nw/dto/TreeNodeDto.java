@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class TreeNodeDto {
     // private String id;
-    private int id;
+    private String id;
     private String name;
     private Map<String, Object> state;
     private List<TreeNodeDto> children;
@@ -19,11 +19,11 @@ public class TreeNodeDto {
 //    }
 
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

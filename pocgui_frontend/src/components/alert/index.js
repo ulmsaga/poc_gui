@@ -35,7 +35,7 @@ const Alert = () => {
   return (
     <Dialog
       open={ message.isShow }
-      onClose={() => { }}
+      onClose={close}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
       sx={{ margin: 0.5, padding: 0.5}}

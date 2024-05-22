@@ -5,6 +5,8 @@ import com.mobigen.cdev.poc.module.nw.dto.EnbNodeDto;
 import com.mobigen.cdev.poc.module.nw.dto.EquipNodeDto;
 import com.mobigen.cdev.poc.module.nw.dto.TreeNodeDto;
 import com.mobigen.cdev.poc.module.nw.repository.mybatis.NwConfigRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,6 +18,10 @@ import java.util.Map;
 public class NwConfigServiceImpl implements NwConfigService {
 
     private final NwConfigRepository nwConfigRepository;
+
+    @SuppressWarnings("unused")
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     public NwConfigServiceImpl(NwConfigRepository nwConfigRepository) {
         this.nwConfigRepository = nwConfigRepository;
     }
@@ -40,8 +46,8 @@ public class NwConfigServiceImpl implements NwConfigService {
                 mmeList = new ArrayList<>();
             }
             if ("Y".equals(node.getMtso_last())) {
-                // mtsoNode.setId(node.getMtso_id());
-                mtsoNode.setId(Integer.parseInt(node.getMtso_id()));
+                mtsoNode.setId(node.getMtso_id());
+                // mtsoNode.setId(Integer.parseInt(node.getMtso_id()));
                 mtsoNode.setName(node.getMtso_name());
                 mtsoNode.setState(setDefaultState("MTSO"));
                 mtsoNode.setChildren(mmeList);
@@ -50,10 +56,10 @@ public class NwConfigServiceImpl implements NwConfigService {
             }
             //
             TreeNodeDto mmeNode = new TreeNodeDto();
-            // mmeNode.setId(node.getNode_exp_id());
-            mmeNode.setId(Integer.parseInt(node.getNode_id()));
+            mmeNode.setId(node.getNode_exp_id());
+            // mmeNode.setId(Integer.parseInt(node.getNode_id()));
             mmeNode.setName(node.getNode_exp_id());
-            mmeNode.setState(setDefaultState("MME"));
+            mmeNode.setState(setDefaultState("MME", true));
 
             mmeList.add(mmeNode);
         }
@@ -81,7 +87,13 @@ public class NwConfigServiceImpl implements NwConfigService {
 
         List<TreeNodeDto> enbList = new ArrayList<>();
 
+        // logger.debug("=====================================");
+        // logger.debug("01. Before GetEnbList");
+
         List<EnbNodeDto> list = nwConfigRepository.getEnbList(param);
+
+        // logger.debug("02. After GetEnbList");
+
         for (EnbNodeDto node: list) {
 
             if ("Y".equals(node.getBranch_first())) {
@@ -98,8 +110,8 @@ public class NwConfigServiceImpl implements NwConfigService {
             }
 
             if ("Y".equals(node.getPart_last())) {
-                // partNode.setId(node.getPart_id());
-                partNode.setId(Integer.parseInt(node.getPart_id()));
+                partNode.setId(node.getPart_id());
+                // partNode.setId(Integer.parseInt(node.getPart_id()));
                 partNode.setName(node.getPart_name());
                 partNode.setState(setDefaultState("PART"));
 
@@ -107,8 +119,8 @@ public class NwConfigServiceImpl implements NwConfigService {
                 partList.add(partNode);
             }
             if ("Y".equals(node.getOpteam_last())) {
-                // opteamNode.setId(node.getOpteam_id());
-                opteamNode.setId(Integer.parseInt(node.getOpteam_id()));
+                opteamNode.setId(node.getOpteam_id());
+                // opteamNode.setId(Integer.parseInt(node.getOpteam_id()));
                 opteamNode.setName(node.getOpteam_name());
                 opteamNode.setState(setDefaultState("OPTEAM"));
                 opteamNode.setChildren(partList);
@@ -116,8 +128,8 @@ public class NwConfigServiceImpl implements NwConfigService {
                 opteamList.add(opteamNode);
             }
             if ("Y".equals(node.getBranch_last())) {
-                // branchNode.setId(node.getBranch_id());
-                branchNode.setId(Integer.parseInt(node.getBranch_id()));
+                branchNode.setId(node.getBranch_id());
+                // branchNode.setId(Integer.parseInt(node.getBranch_id()));
                 branchNode.setName(node.getBranch_name());
                 branchNode.setState(setDefaultState("BRANCH"));
                 branchNode.setChildren(opteamList);
@@ -126,12 +138,14 @@ public class NwConfigServiceImpl implements NwConfigService {
             }
 
             TreeNodeDto enbNode = new TreeNodeDto();
-            // enbNode.setId(node.getEnb_id());
-            enbNode.setId(Integer.parseInt(node.getEnb_id()));
+            enbNode.setId(node.getEnb_id());
+            // enbNode.setId(Integer.parseInt(node.getEnb_id()));
             enbNode.setName(node.getBts_name());
-            enbNode.setState(setDefaultState("ENB"));
+            enbNode.setState(setDefaultState("ENB", true));
             enbList.add(enbNode);
         }
+
+        // logger.debug("03. After Make Tree");
 
         return branchList;
     }
@@ -142,6 +156,20 @@ public class NwConfigServiceImpl implements NwConfigService {
         state.put("expanded", false);
         state.put("deletable", false);
         state.put("favorite", false);
+        state.put("lastDepth", false);
+        state.put("nodeType", nodeType);
+        state.put("alarmGrade", "NR");
+
+        return state;
+    }
+
+    private Map<String, Object> setDefaultState(String nodeType, Boolean isLastDepth) {
+        Map<String, Object> state = new HashMap<>();
+
+        state.put("expanded", false);
+        state.put("deletable", false);
+        state.put("favorite", false);
+        state.put("lastDepth", isLastDepth);
         state.put("nodeType", nodeType);
         state.put("alarmGrade", "NR");
 
