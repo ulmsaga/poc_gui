@@ -13,6 +13,9 @@ import { getEnbList, getEnbTreeList, getMmeList, getMmeTreeList } from "api/nw/c
 import TreeEquipType from "./items/TreeEquipType";
 import PopupCallFailSearch from "./popup/PopupCallFailSearch.js";
 import PopupEquipStatus from "./popup/PopupEquipStatus.js";
+import ButtonIconHelp from "components/button/ButtonIconHelp";
+import PopupEquipSearch from "popup/PopupEquipSearch";
+import { FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
 
 const NetworkMonitoring = () => {
   const [mmeList, setMmeList] = useState([]);
@@ -126,7 +129,12 @@ const NetworkMonitoring = () => {
   const onChangeNode2 = (selected) => {
     setSelectedNode2(selected);
   };
-    
+   
+  const searchNodeTypeClick = (e, targetType) => {
+    // alert('searchNodeTypeClick');
+    setIsOpenEquipSearch(true);
+  };
+
   // Call Type
   const [ selectedCallTypes, setSelectedCallTypes ] = useState([...callTypeList]);
   const onChangeCallTypeList = (selected) => {
@@ -182,6 +190,8 @@ const NetworkMonitoring = () => {
   const [isOpenCallFailSearch, setIsOpenCallFailSearch] = useState(false);
   // Popup Status
   const [isOpenPopupStatus, setIsOpenPopupStatus] = useState(false);
+  // Equip Search
+  const [isOpenEquipSearch, setIsOpenEquipSearch] = useState(false);
 
   const openPopupStatus = (params) => {
     alert(params.name);
@@ -217,8 +227,8 @@ const NetworkMonitoring = () => {
                 </Stack>
                 {/* ROW1 BUTTONS */}
                 <Stack direction={'row'} spacing={0.2} sx={{float: 'right'}}>
-                  <Button variant="contained" color="primary" onClick={ searchClick }>Search</Button>
-                  <Button variant="contained" color="secondary" onClick={ excelDownload }>Excel</Button>
+                  <Button variant="contained" color='primary' startIcon={<SearchOutlined fontSize="small" />} sx={{ minWidth: '100px' }} onClick={ searchClick }>조회</Button>
+                  <Button variant="contained" color="secondary" startIcon={<FileDownloadOutlined fontSize="small" />} sx={{ minWidth: '100px' }} onClick={ excelDownload }>다운로드</Button>
                 </Stack>
               </Stack>
               {/* ROW2 */}
@@ -227,6 +237,7 @@ const NetworkMonitoring = () => {
                   <TypoLabel label={'조회대상1'} />
                   <SelectBox options={ nodeTypeList } value={ searchTarget1.value } onChange={ node1TypeChange }/>
                   <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 287 } groupFilter={'group_filter'} />
+                  <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node1') }} />
                 </Stack>
                 <Stack direction={'row'} spacing={0.2}>
                   <TypoLabel label={'조회대상2'} />
@@ -293,6 +304,7 @@ const NetworkMonitoring = () => {
       </Grid>
       <PopupCallFailSearch title={'Call Fail Search'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenCallFailSearch } setIsOpen={ setIsOpenCallFailSearch }/>
       <PopupEquipStatus title={'Equip Status'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenPopupStatus } setIsOpen={ setIsOpenPopupStatus }/>
+      <PopupEquipSearch title={'Equip Search'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenEquipSearch } setIsOpen={ setIsOpenEquipSearch }/>
     </Fragment>
   );
 };

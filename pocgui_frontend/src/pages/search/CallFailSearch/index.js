@@ -72,7 +72,7 @@ const CallFailSearch = ({ params }) => {
     <Fragment>
       <Grid item sx={{ width: '100%' }}>
         <Box height={'100%'} width={'100%'} gap={4} marginTop={0.5} marginRight={0.5} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
-        <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle' }}>
+          <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle' }}>
             <Stack direction={'row'} spacing={0} sx={{ justifyContent: 'space-between', height: '26px' }}>
               {/* ROW1 CONDS */}
               <Stack direction={'row'} spacing={1.5}>

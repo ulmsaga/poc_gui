@@ -1,3 +1,5 @@
 import TypoLabel from "./TypoLabel";
+import TypoLableNoLine from "./TypoLableNoLine";
+import TypoMarkLableNoLine from "./TypoMarkLableNoLine";
 
-export { TypoLabel };
+export { TypoLabel, TypoLableNoLine, TypoMarkLableNoLine};
