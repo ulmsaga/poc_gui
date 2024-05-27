@@ -130,8 +130,17 @@ const NetworkMonitoring = () => {
     setSelectedNode2(selected);
   };
    
-  const searchNodeTypeClick = (e, targetType) => {
+  const searchNodeTypeClick = (e, targetNumName) => {
     // alert('searchNodeTypeClick');
+    const params = {};
+    if (targetNumName === 'node1') {
+      params.nodeType = searchTarget1.value;
+      params.selectedNode = JSON.parse(JSON.stringify(selectedNode1));
+    } else if (targetNumName === 'node2') {
+      params.nodeType = searchTarget2.value;
+      params.selectedNode = JSON.parse(JSON.stringify(selectedNode2));
+    }
+    setEquipSearchparam(params);
     setIsOpenEquipSearch(true);
   };
 
@@ -190,12 +199,18 @@ const NetworkMonitoring = () => {
   const [isOpenCallFailSearch, setIsOpenCallFailSearch] = useState(false);
   // Popup Status
   const [isOpenPopupStatus, setIsOpenPopupStatus] = useState(false);
+  // const [popupStatusParam, setPopupStatusParam] = useState({});
   // Equip Search
   const [isOpenEquipSearch, setIsOpenEquipSearch] = useState(false);
+  const [equipSearchParam, setEquipSearchparam] = useState({});
 
   const openPopupStatus = (params) => {
     alert(params.name);
     setIsOpenPopupStatus(true);
+  };
+
+  const callBackEquipSearch = (ret) => {
+    setSelectedNode1(ret);
   };
 
   return (
@@ -304,7 +319,7 @@ const NetworkMonitoring = () => {
       </Grid>
       <PopupCallFailSearch title={'Call Fail Search'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenCallFailSearch } setIsOpen={ setIsOpenCallFailSearch }/>
       <PopupEquipStatus title={'Equip Status'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenPopupStatus } setIsOpen={ setIsOpenPopupStatus }/>
-      <PopupEquipSearch title={'Equip Search'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenEquipSearch } setIsOpen={ setIsOpenEquipSearch }/>
+      <PopupEquipSearch title={'Equip Search'} params={ equipSearchParam } popupCallBack={ callBackEquipSearch } style={{ width: '100%', height: 1000 }} isOpen={ isOpenEquipSearch } setIsOpen={ setIsOpenEquipSearch }/>
     </Fragment>
   );
 };

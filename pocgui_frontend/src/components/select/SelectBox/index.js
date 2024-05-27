@@ -3,7 +3,7 @@ import React from "react";
 
 const SelectBoxStyled = styled(Select)(({ theme, variant }) => ({}));
 
-const SelectBox = ({ options, value, onChange }) => {
+const SelectBox = ({ options, value, onChange, style }) => {
   return (
     <FormControl sx={{ verticalAlign: 'middle', minWidth: 100, minHeight: 26 }} >
       <SelectBoxStyled
@@ -12,7 +12,7 @@ const SelectBox = ({ options, value, onChange }) => {
         displayEmpty
         inputProps={{ 'aria-label': 'Without label' }}
         onChange={ onChange }
-        sx={{ borderRadius: '0px', minHeight: 26}}
+        sx={{ borderRadius: '0px', minHeight: 26, ...style}}
       >
         {options.map((option) => (
           <MenuItem key={option.value} value={option.value}>

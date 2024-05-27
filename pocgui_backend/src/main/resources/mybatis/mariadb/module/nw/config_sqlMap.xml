@@ -4,16 +4,31 @@
 <mapper namespace="com.mobigen.cdev.mapper.mariadb.module.nw.config">
     <select id="getMmeList" parameterType="map" resultType="com.mobigen.cdev.poc.module.nw.dto.EquipNodeDto" >
         select
+            *
+        from
+        (
+            <include refid="sqlMmeList" />
+        ) A
+        where 1 = 1
+        <if test = 'searchType != null and searchText != null'>
+            <if test = 'searchType != "" and searchText != ""'>
+                AND ${searchType} LIKE concat('%', #{searchText}, '%')
+            </if>
+        </if>
+        order by mtso_id, node_id
+    </select>
+    <sql id="sqlMmeList">
+        select
             A.mtso_id
         ,	B.mtso_name
         ,	case
-                when ifnull(LAG(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'F') = 'F' then 'Y'
-                else 'N'
-            end mtso_first
+        when ifnull(LAG(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'F') = 'F' then 'Y'
+        else 'N'
+        end mtso_first
         ,	case
-                when ifnull(LEAD(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'L') = 'L' then 'Y'
-                else 'N'
-            end mtso_last
+        when ifnull(LEAD(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'L') = 'L' then 'Y'
+        else 'N'
+        end mtso_last
         ,   'MME' node_type
         ,	A.mme_id node_id
         ,	concat('MME#', lpad(cast(mme_id as integer), 2, '0')) node_exp_id
@@ -21,12 +36,13 @@
         ,   A.mme_id value
         ,   concat('MME#', lpad(cast(mme_id as integer), 2, '0')) label
         ,   concat(B.mtso_name, ' (', A.mtso_id, ')') group_filter
+        ,   concat(B.mtso_name, ' (', A.mtso_id, ')', ' - MME#', lpad(cast(mme_id as integer), 2, '0')) description
         from
-        cl_mme A left outer join cb_mtso B
-        on A.mtso_id = B.mtso_id
+            cl_mme A left outer join cb_mtso B
+            on A.mtso_id = B.mtso_id
         where 1 = 1
         and opr_status = 'ACT'
-    </select>
+    </sql>
 
     <select id="getEnbList" parameterType="map" resultType="com.mobigen.cdev.poc.module.nw.dto.EnbNodeDto">
         select
@@ -63,6 +79,13 @@
         and branch_name is not null
         and opteam_name is not null
         and part_name is not null
+
+        <if test = 'searchType != null and searchText != null'>
+            <if test = 'searchType != "" and searchText != ""'>
+                AND ${searchType} LIKE concat('%', #{searchText}, '%')
+            </if>
+        </if>
+
         order by branch_id, opteam_id, part_id
     </select>
 

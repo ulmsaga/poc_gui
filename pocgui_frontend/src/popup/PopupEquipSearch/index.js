@@ -37,7 +37,7 @@ const PopupEquipSearch = ({ title, params, style, isOpen, setIsOpen, popupCallBa
       aria-labelledby="draggable-dialog-title"
       aria-describedby="alert-dialog-description"
       fullWidth={ true }
-      maxWidth={ 'md' }
+      maxWidth={ 'lg' }
       sx={{ margin: 0, padding: 0}}
     >
       <DialogTitle id="draggable-dialog-title">
@@ -57,7 +57,7 @@ const PopupEquipSearch = ({ title, params, style, isOpen, setIsOpen, popupCallBa
         <CloseCircleOutlined />
       </IconButton>
       <DialogContent dividers sx={{ paddingLeft: 0, paddingRight: 2, paddingTop: 0.5, paddingBottom: 0.5}}>
-        <EquipSearch params={ params } contentCallBack = { contentCallBack }/>
+        <EquipSearch params={ params } contentCallBack = { contentCallBack } selectedNode = { params.selectedNode }/>
       </DialogContent>
     </Dialog>
   );

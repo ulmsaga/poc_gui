@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 
 import { styled } from "@mui/material/styles";
 import { Button } from "@mui/material";
-import { BackspaceTwoTone, CheckCircleTwoTone, CheckOutlined, DownloadTwoTone, FindInPageTwoTone } from "@mui/icons-material";
+import { BackspaceOutlined, CancelOutlined, CheckCircleOutline, CheckOutlined, DownloadOutlined, SearchOutlined } from "@mui/icons-material";
 import PropTypes from "prop-types";
 
 const ButtonStyled = styled(Button)(({ theme, variant }) => ({
@@ -26,10 +26,10 @@ const ButtonStd = ({ label, variant, color, onClick, iconType }) => {
     }
     return (
       <Fragment>
-        { (iconType === 'search') && <FindInPageTwoTone fontsize="small" /> }
-        { (iconType === 'download') && <DownloadTwoTone fontsize="small" /> }
-        { (iconType === 'confirm') && <CheckCircleTwoTone fontsize="small" /> }
-        { (iconType === 'close') && <BackspaceTwoTone fontsize="small" /> }
+        { (iconType === 'search') && <SearchOutlined fontSize="small" /> }
+        { (iconType === 'download') && <DownloadOutlined fontSize="small" /> }
+        { (iconType === 'confirm') && <CheckOutlined fontSize="small" /> }
+        { (iconType === 'close') && <CancelOutlined fontSize="small" /> }
       </Fragment>
     )
   };

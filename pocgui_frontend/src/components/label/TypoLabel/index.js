@@ -14,13 +14,13 @@ const TypoLabel = ({ label, variant, paddingTop, width, style }) => {
   };
 
   // Gray Type
-  // style = style === undefined ? { textAlign: 'center', border: '0.5px solid #9fa2a7', background: '#f5f7f7', borderRadius: '0px' } : style;
+  style = style === undefined ? { textAlign: 'center', border: '0.5px solid #9fa2a7', background: '#f5f7f7', borderRadius: '0px' } : style;
 
   // SkyBlue1 Type
   // style = style === undefined ? { textAlign: 'center', border: '0.5px solid #abbccb', background: '#d8edff', borderRadius: '0px' } : style;
 
   // SkyBlue2 Type
-  style = style === undefined ? { textAlign: 'center', border: '0.5px solid #abbccb', background: '#e6f4ff', borderRadius: '0px' } : style;
+  // style = style === undefined ? { textAlign: 'center', border: '0.5px solid #abbccb', background: '#e6f4ff', borderRadius: '0px' } : style;
   
   return (
   <TypographyStyled
