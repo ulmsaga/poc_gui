@@ -41,7 +41,7 @@ public class DataSourcePemdb1Config {
     /**
      *
      * Mybatis
-     * MARIADB
+     * MYSQL
      * pemdb1 설정 (MultiDataSource 적용)
      *
      */
@@ -56,7 +56,7 @@ public class DataSourcePemdb1Config {
     public SqlSessionFactory sqlSessionFactoryPemdb1(DataSource dataSourcePemdb1, ApplicationContext applicationContext) throws Exception {
         SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
         Resource mybatisConfig = applicationContext.getResource("classpath:mybatis/mybatis-config.xml");
-        Resource[] resource = new PathMatchingResourcePatternResolver().getResources("classpath:mybatis/mariadb/**/*.xml");
+        Resource[] resource = new PathMatchingResourcePatternResolver().getResources("classpath:mybatis/mysql/**/*.xml");
 
         factoryBean.setDataSource(dataSourcePemdb1);
         factoryBean.setConfigLocation(mybatisConfig);

@@ -2,19 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mobigen.cdev.mapper.mysql.core.security.manage">
 	
-	<sql id = "def_table_cm_sms_authontication">
-		cm_sms_authontication
-	</sql>
-
-    <sql id = "def_table_cm_exception_sms_auth">
-        cm_exception_sms_auth
-    </sql>
+	<sql id = "cm_sms_authontication"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_sms_authontication" /></sql>
+    <sql id = "cm_exception_sms_auth"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_exception_sms_auth" /></sql>
+    <sql id = "cm_main_config"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_main_config" /></sql>
+    <sql id = "cm_user"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_user" /></sql>
 	
     <select id = "getSmsReqId" parameterType="map" resultType="string">
         SELECT
-            IFNULL(req_id, "") req_id
+            IFNULL(req_id, '') req_id
         FROM
-            <include refid = "def_table_cm_sms_authontication" />
+            <include refid = "cm_sms_authontication" />
         WHERE 1 = 1
         AND user_id = #{userId}
         AND public_key = #{publicKey}
@@ -23,7 +20,7 @@
     </select>
     
     <insert id = "insertSmsAuthManage" parameterType="map">
-        INSERT INTO <include refid = "def_table_cm_sms_authontication" />
+        INSERT INTO <include refid = "cm_sms_authontication" />
         (
         	req_id
 		,	user_id
@@ -48,7 +45,7 @@
 				      CONCAT(SUBSTR(MAX(req_id), 1, 8), LPAD(SUBSTR(MAX(req_id), 9) + 1, 4, '0'))
 				  END req_id
 				FROM
-                    <include refid = "def_table_cm_sms_authontication" />
+                    <include refid = "cm_sms_authontication" />
                 WHERE SUBSTR(req_id, 1, 8) = DATE_FORMAT(SYSDATE(), '%Y%m%d')
         	)
         ,	#{userId}
@@ -65,7 +62,7 @@
     </insert>
     
     <update id="updateSmsAuthManage" parameterType="map">
-        UPDATE <include refid = "def_table_cm_sms_authontication" /> SET
+        UPDATE <include refid = "cm_sms_authontication" /> SET
             auth_flow_stage = #{authFlowStage}
         <if test = 'authFlowStage eq "2".toString()'>
         ,   auth_passed_time = SYSDATE()
@@ -75,7 +72,10 @@
     </update>
     
     <update id="updateLastLoginTime" parameterType="map">
-		UPDATE cm_user SET
+		UPDATE
+            <!-- cm_user -->
+            <include refid="cm_user" />
+        SET
 			last_login_time = SYSDATE()
 		WHERE user_id = #{userId}
 	</update>
@@ -85,36 +85,45 @@
         <!-- UL : 무제한 기간 SMS POPUP 안나옴 -->
         <!-- 마지막 인증 후 MIN ~ YEAR + VALUE 기간 동안 SMS POPUP 안나옴 -->
         SELECT
-            CASE COUNT(*)
-                WHEN 0 THEN 'N'
-                ELSE
-                    CASE expire_cond
-                        WHEN 'UL' THEN 'Y'
-                        ELSE
-                            CASE
-                                WHEN
-                                    (
-                                        SELECT
-                                            MAX(auth_passed_time)
-                                        FROM
-                                            <include refid="def_table_cm_sms_authontication" />
-                                        WHERE user_id = #{userId}
-                                    ) 
-                                    &gt;=
-                                    (
-                                        CASE 
-                                            WHEN expire_cond = 'MIN' OR expire_cond = 'MINUTE' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value MINUTE)
-                                            WHEN expire_cond = 'HOUR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value HOUR)
-                                            WHEN expire_cond = 'DAY' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value DAY)
-                                            WHEN expire_cond = 'WEEK' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value WEEK)
-                                            WHEN expire_cond = 'MON' OR expire_cond = 'MONTH' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value MONTH)
-                                            WHEN expire_cond = 'YEAR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value YEAR)
-                                        END
-                                    )
-                                THEN 'Y'
-                                ELSE 'N'
-                            END
-                    END
+            CASE
+                <!-- SMS 인증 사용 유무 -->
+                (select config_value from <include refid="cm_main_config" /> where config_type = 'use_sms_auth')
+            WHEN 'N'
+                <!-- 사용 안할 경우 2차 인증 그대로 통과 'Y' -->
+                THEN 'Y'
+            ELSE
+                <!-- 사용 할 경우에는 예외 처리자 등록 여부 확인 -->
+                CASE COUNT(*)
+                    WHEN 0 THEN 'N'
+                    ELSE
+                        CASE expire_cond
+                            WHEN 'UL' THEN 'Y'
+                            ELSE
+                                CASE
+                                    WHEN
+                                        (
+                                            SELECT
+                                                MAX(auth_passed_time)
+                                            FROM
+                                                <include refid="cm_sms_authontication" />
+                                            WHERE user_id = #{userId}
+                                        )
+                                        &gt;=
+                                        (
+                                            CASE
+                                                WHEN expire_cond = 'MIN' OR expire_cond = 'MINUTE' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value MINUTE)
+                                                WHEN expire_cond = 'HOUR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value HOUR)
+                                                WHEN expire_cond = 'DAY' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value DAY)
+                                                WHEN expire_cond = 'WEEK' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value WEEK)
+                                                WHEN expire_cond = 'MON' OR expire_cond = 'MONTH' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value MONTH)
+                                                WHEN expire_cond = 'YEAR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value YEAR)
+                                            END
+                                        )
+                                    THEN 'Y'
+                                    ELSE 'N'
+                                END
+                        END
+                END
             END allow_exception
         ,	expire_cond
         ,	expire_value
@@ -127,7 +136,7 @@
                 WHEN expire_cond = 'YEAR' THEN DATE_SUB(SYSDATE(), INTERVAL expire_value YEAR)
             END compare_time
         FROM
-            <include refid="def_table_cm_exception_sms_auth" />
+            <include refid="cm_exception_sms_auth" />
         WHERE 1 = 1
         AND user_id  = #{userId}
         AND use_yn = 'Y'

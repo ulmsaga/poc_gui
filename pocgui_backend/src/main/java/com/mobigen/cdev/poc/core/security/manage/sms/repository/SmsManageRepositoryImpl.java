@@ -12,7 +12,7 @@ public class SmsManageRepositoryImpl implements SmsManageRepository{
 
     private final SqlSessionTemplate sqlSessionTemplateGuiweb;
 
-    private final String namespace = "com.mobigen.cdev.mapper.mariadb.core.security.manage";
+    private final String namespace = "com.mobigen.cdev.mapper.mysql.core.security.manage";
 
     public SmsManageRepositoryImpl(SqlSessionTemplate sqlSessionTemplateGuiweb) {
         this.sqlSessionTemplateGuiweb = sqlSessionTemplateGuiweb;

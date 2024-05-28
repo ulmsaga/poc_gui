@@ -13,7 +13,7 @@ import java.util.Map;
 public class NwConfigRepositoryImpl implements NwConfigRepository {
 
     private final SqlSessionTemplate sqlSessionTemplatePemdb1;
-    private final String namespace = "com.mobigen.cdev.mapper.mariadb.module.nw.config";
+    private final String namespace = "com.mobigen.cdev.mapper.mysql.module.nw.config";
 
     @Autowired
     public NwConfigRepositoryImpl(SqlSessionTemplate sqlSessionTemplatePemdb1) {

@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.mobigen.cdev.mapper.mariadb.module.nw.config">
+<mapper namespace="com.mobigen.cdev.mapper.mysql.module.nw.config">
+
+    <sql id="cb_mtso"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cb_mtso" /></sql>
+    <sql id="cm_branch"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_branch" /></sql>
+    <sql id="cm_team"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_team" /></sql>
+    <sql id="cm_part"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_part" /></sql>
+    <sql id="cl_mme" ><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cl_mme" /></sql>
+    <sql id="cl_enb"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cl_enb" /></sql>
+
     <select id="getMmeList" parameterType="map" resultType="com.mobigen.cdev.poc.module.nw.dto.EquipNodeDto" >
         select
             *
@@ -22,13 +30,13 @@
             A.mtso_id
         ,	B.mtso_name
         ,	case
-        when ifnull(LAG(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'F') = 'F' then 'Y'
-        else 'N'
-        end mtso_first
+                when ifnull(LAG(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'F') = 'F' then 'Y'
+                else 'N'
+            end mtso_first
         ,	case
-        when ifnull(LEAD(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'L') = 'L' then 'Y'
-        else 'N'
-        end mtso_last
+                when ifnull(LEAD(A.mtso_id, 1) over (partition by A.mtso_id order by A.mtso_id, mme_id), 'L') = 'L' then 'Y'
+                else 'N'
+            end mtso_last
         ,   'MME' node_type
         ,	A.mme_id node_id
         ,	concat('MME#', lpad(cast(mme_id as integer), 2, '0')) node_exp_id
@@ -38,7 +46,8 @@
         ,   concat(B.mtso_name, ' (', A.mtso_id, ')') group_filter
         ,   concat(B.mtso_name, ' (', A.mtso_id, ')', ' - MME#', lpad(cast(mme_id as integer), 2, '0')) description
         from
-            cl_mme A left outer join cb_mtso B
+            <include refid="cl_mme" /> A
+            left outer join <include refid="cb_mtso" /> B
             on A.mtso_id = B.mtso_id
         where 1 = 1
         and opr_status = 'ACT'
@@ -107,15 +116,15 @@
                 else concat(opteam_name, ' (', opteam_id, ')')
             end group_filter
         from
-            cl_enb A
-            left outer join cm_branch B
+            <include refid="cl_enb" /> A
+            left outer join <include refid="cm_branch" /> B
             on A.branch_id = B.branch_id
-            left outer join cm_team C
+            left outer join <include refid="cm_team" /> C
             on A.opteam_id = C.team_id
-            left outer join cm_part D
+            left outer join <include refid="cm_part" /> D
             on A.part_id = D.part_id
-            left outer join cb_mtso E
-            on a.mtso_name = e.mtso_name
+            left outer join <include refid="cb_mtso" /> E
+            on A.mtso_name = E.mtso_name
         where 1 = 1
         and opr_status = 'ACT'
     </sql>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.mysql.tabledef">
+    <!-- security -->
+    <sql id = "cm_sms_authontication">CM_SMS_AUTHONTICATION</sql>
+    <sql id = "cm_exception_sms_auth">CM_EXCEPTION_SMS_AUTH</sql>
+    <sql id = "cm_main_config">CM_MAIN_CONFIG</sql>
+
+    <!-- common -->
+    <sql id="cm_user">CM_USER</sql>
+    <sql id="cm_menu">CM_MENU</sql>
+    <sql id="cm_role">CM_ROLE</sql>
+    <sql id="cm_module">CM_MODULE</sql>
+    <sql id="cm_user_role">CM_USER_ROLE</sql>
+    <sql id="cm_role_module">CM_ROLE_MODULE</sql>
+    <sql id="cm_menu_module">CM_MENU_MODULE</sql>
+
+    <!-- nw config -->
+    <sql id="cb_mtso">CB_MTSO</sql>
+    <sql id="cm_branch">CM_BRANCH</sql>
+    <sql id="cm_team">CM_TEAM</sql>
+    <sql id="cm_part">CM_PART</sql>
+    <sql id="cl_mme" >CL_MME</sql>
+    <sql id="cl_enb">CL_ENB</sql>
+
+    <!-- nw analysis -->
+    <sql id="pm_epc_kpi">PM_EPC_KPI_${tableSuffix}</sql>
+    <sql id="pm_epc_root_cause">PM_EPC_ROOT_CAUSE_${tableSuffix}</sql>
+    <sql id="cu_cause_fail_type">CU_CAUSE_FAIL_TYPE</sql>
+
+
+</mapper>

@@ -3,32 +3,15 @@
 
 <mapper namespace="com.mobigen.cdev.mapper.mysql.module.common">
 
-	<sql id="def_table_cm_user">cm_user</sql>
-	<sql id="def_table_cm_menu">
-		<choose>
-			<when test = 'envStatus eq "dev".toString()'>cm_menu_s</when>
-			<when test = 'envStatus eq "prod".toString()'>cm_menu_p</when>
-			<otherwise>cm_menu_p</otherwise>
-		</choose>
-	</sql>
-	<sql id="def_table_common_code">common_code</sql>
-	<sql id="def_table_status_code">status_code</sql>
+	<sql id="cm_user"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_user" /></sql>
+	<sql id="cm_menu"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_menu" /></sql>
+	<sql id="cm_role"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_role" /></sql>
+	<sql id="cm_module"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_module" /></sql>
+	<sql id="cm_user_role"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_user_role" /></sql>
+	<sql id="cm_role_module"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_role_module" /></sql>
+	<sql id="cm_menu_module"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cm_menu_module" /></sql>
 
-	<sql id="def_common_interface_cycle">
-    (
-      SELECT
-        sub_cd interface_cycle
-      ,	sub_cd_nm interface_cycle_nm
-      ,	IFNULL(description, '-') description
-      FROM
-        <include refid="com.mobigen.cdev.mapper.mysql.module.common.def_table_common_code" />
-      WHERE main_cd = '5000'
-      AND use_yn = 'Y'
-    )
-  </sql>
-
-	
-
+	<!-- Login User -->
 	<select id="getUserList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.user.UserInfoDto">
 		<include refid="sqlUserList"/>
 	</select>
@@ -46,18 +29,11 @@
 		,	EMAIL
 		,	INSA_TEAM_ID
 		,	INSA_TEAM_NAME
-		,	ADMIN_LV
-		,	MODULE_HIS_LV
-		,	MODULE_DAT_LV
-		,	MODULE_SET_LV
-		, 	MODULE_COLLECT_LV
-		,	MODULE_PROVIDE_LV
-		,	MODULE_MANAGE_LV
 		,	LAST_LOGIN_TIME
 		,	UPDATE_TIME
 		,	UPDATE_USER
 		FROM
-			<include refid="def_table_cm_user" />
+			<include refid="cm_user" />
 		WHERE 1 = 1
 		AND USE_YN = 'Y'
 		<if test = 'userId != null and userId neq ""'>
@@ -71,7 +47,6 @@
 			<otherwise>AND USER_PASS = #{userPwdEx}</otherwise>
 		</choose>
 		<choose>
-			<!-- checkUserPassByPhoneLastNum -->
 			<when test = 'checkUserPassByPhoneLastNum eq "Y".toString()'>AND RIGHT(PHONE, 4) = #{userPwdEx}</when>
 			<when test = 'checkUserPassByPhoneLastNum eq "N".toString()'>AND 1 = 1</when>
 			<otherwise>AND 1 = 1</otherwise>
@@ -83,7 +58,7 @@
 	</insert>
 	
 	<sql id = "sqlInsertUserInfo">
-		INSERT INTO	<include refid="def_table_cm_user" />
+		INSERT INTO	<include refid="cm_user" />
 		(
 			USER_ID
 		,	USER_NAME
@@ -92,12 +67,8 @@
 		,	EMAIL
 		,	INSA_TEAM_ID
 		,	INSA_TEAM_NAME
-		,	ADMIN_LV
-		,	MODULE_HIS_LV
-		,	MODULE_DAT_LV
-		,	MODULE_SET_LV
 		,	USE_YN
-		, PASS_CHANGEDATE
+		, 	PASS_CHANGEDATE
 		,	LAST_EDIT_TIME
 		,	LAST_LOGIN_TIME
 		,	UPDATE_TIME
@@ -113,10 +84,6 @@
 			,	#{item.email}
 			,	#{item.insa_team_id}
 			,	#{item.insa_team_name}
-			,	#{item.admin_lv}
-			,	#{item.module_his_lv}
-			,	#{item.module_dat_lv}
-			,	#{item.module_set_lv}
 			,	#{item.use_yn}
 			,	#{item.pass_changedate}
 			,	#{item.last_edit_time}
@@ -136,23 +103,57 @@
 		,	UPDATE_TIME = values(update_time)
 		,	UPDATE_USER = values(update_user)
 	</sql>
-	
+
+	<select id="getUserRoleList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.user.UserRoleDto">
+		select
+			A.user_id
+		,	A.user_name
+		,	B.role_id
+		,	C.role_id
+		,	C.role_name
+		,	C.role_desc
+		from
+			<include refid="cm_user" /> A
+			left outer join <include refid="cm_user_role" /> B
+			on A.user_id = B.user_id
+			left outer join <include refid="cm_role" /> C
+			on B.role_id  = C.role_id
+		where A.user_id  = #{userId}
+	</select>
+
+
 	<select id="getDefaultMenuInfo" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.menu.MenuInfoDto">
+		<!--
 		<include refid="sqlRecursiveMenuInfo"/>
 		<include refid="sqlMenuInfoMain"/>
 		<include refid="sqlMenuInfoDefaultUseMenuCond"/>
+		-->
+		SELECT
+			A.*
+		FROM
+		(
+			<include refid="sqlMenuInfoWithAuth" />
+		) A
+		WHERE A.default_menu_yn = 'Y'
 	</select>
 
 	<select id="getUserMenuInfoList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.menu.MenuInfoDto">
+		<!--
 		<include refid="sqlRecursiveMenuInfo"/>
 		<include refid="sqlMenuInfoMain"/>
 		<include refid="sqlMenuInfoUserMenuCond"/>
+		-->
+		<include refid="sqlMenuInfoWithAuth" />
+		ORDER BY menu_pcode, menu_code
 	</select>
 
 	<select id="getMenuInfoList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.menu.MenuInfoDto">
+		<!--
 		<include refid="sqlRecursiveMenuInfo"/>
 		<include refid="sqlMenuInfoMain"/>
 		<include refid="sqlMenuInfoAllMenuCode"/>
+		-->
+		<include refid="sqlMenuInfoWithAuth" />
 	</select>
 
 	<sql id="sqlRecursiveMenuInfo">
@@ -176,7 +177,7 @@
 			,	DEFAULT_MENU_YN
 			,	UPDATE_TIME
 			,	UPDATE_USER
-			FROM <include refid="def_table_cm_menu" />
+			FROM <include refid="cm_menu" />
 			WHERE VERSION = '1'
 			AND MENU_PCODE = '00000000'
 			UNION ALL
@@ -199,7 +200,7 @@
 			,	C.DEFAULT_MENU_YN
 			,	C.UPDATE_TIME
 			,	C.UPDATE_USER
-			FROM <include refid="def_table_cm_menu" /> C
+			FROM <include refid="cm_menu" /> C
 			INNER JOIN CTE
 				ON CTE.VERSION = C.VERSION 
 				AND CTE.MENU_CODE = C.MENU_PCODE
@@ -247,7 +248,7 @@
 		AND USE_YN = 'Y'
 	</sql>
 	<sql id="sqlMenuInfoUserAndAuthCond">
-		AND ADMIN_ALLOW_LV &gt;= (SELECT ADMIN_LV FROM <include refid="def_table_cm_user" /> WHERE USER_ID = #{userId})
+		AND ADMIN_ALLOW_LV &gt;= (SELECT ADMIN_LV FROM <include refid="cm_user" /> WHERE USER_ID = #{userId})
 		AND MODULE_ALLOW_LV &gt;= (
 				SELECT
 					CASE CTE.MODULE_TYPE
@@ -258,178 +259,167 @@
 						WHEN 'PROVIDE' THEN MODULE_PROVIDE_LV
 						WHEN 'MANAGE' THEN MODULE_MANAGE_LV
 					ELSE 5 END
-				FROM <include refid="def_table_cm_user" />
+				FROM <include refid="cm_user" />
 				WHERE  USER_ID = #{userId}
 			)
 	</sql>
 
-
-	<!-- ========  -->
-	<!-- 조회 조건  -->
-	<!-- ========  -->
-	<select id="getNmsCondList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto">
-		SELECT
-			system_cd value
-		<!-- ,	CONCAT(system_nm, '(', system_cd, ')') text -->
-		<!-- ,	IFNULL(system_nm, '-') text -->
-		,	CASE WHEN IFNULL(subcode, '') = '' THEN IFNULL(system_nm, '-') ELSE CONCAT(IFNULL(system_nm, '-'), ' (', subcode, ')') END text
-		<!-- ,	CONCAT(system_nm, '(', system_cd, ')') label -->
-		,	CASE WHEN IFNULL(subcode, '') = '' THEN IFNULL(system_nm, '-') ELSE CONCAT(IFNULL(system_nm, '-'), ' (', subcode, ')') END label
-		,	IFNULL(system_nm, '-') label
-		,	user_name description
-		FROM
+	<sql id="sqlMenuInfoWithAuth">
+		select
+			menu_pcode, menu_code
+		,	lead(menu_code) over (order by menu_code, menu_order) menu_code_next
+		,	lead(menu_pcode) over (order by menu_code, menu_order) menu_pcode_next
+		,	lag(menu_code) over (order by menu_code, menu_order) menu_code_prev
+		,	lag(menu_pcode) over (order by menu_code, menu_order) menu_pcode_prev
+		, 	menu_order, menu_name, menu_navigation, menu_location
+		,	A.use_yn
+		,	A.end_flag
+		,	A.default_menu_yn
+		,	A.module_id, module_name, module_desc
+		,	role_id
+		,	role_name
+		,	role_desc
+		,	case when allow_use_lv >= target_use_lv then '1' else '0' end allow_use_auth
+		,	case when allow_read_lv >= target_read_lv then '1' else '0' end allow_read_auth
+		,	case when allow_create_lv >= target_create_lv then '1' else '0' end allow_create_auth
+		,	case when allow_modify_lv >= target_modify_lv then '1' else '0' end allow_modify_auth
+		,	case when allow_delete_lv >= target_delete_lv then '1' else '0' end allow_delete_auth
+		,	case when allow_confirm_lv >= target_confirm_lv then '1' else '0' end allow_confirm_auth
+		,	case when allow_func01_lv >= target_func01_lv then '1' else '0' end allow_func01_auth
+		,	case when allow_func02_lv >= target_func02_lv then '1' else '0' end allow_func02_auth
+		,	case when allow_func03_lv >= target_func03_lv then '1' else '0' end allow_func03_auth
+		,	case when allow_func04_lv >= target_func04_lv then '1' else '0' end allow_func04_auth
+		,	case when allow_func05_lv >= target_func05_lv then '1' else '0' end allow_func05_auth
+		,	case when allow_func06_lv >= target_func06_lv then '1' else '0' end allow_func06_auth
+		,	case when allow_func07_lv >= target_func07_lv then '1' else '0' end allow_func07_auth
+		,	case when allow_func08_lv >= target_func08_lv then '1' else '0' end allow_func08_auth
+		,	case when allow_func09_lv >= target_func09_lv then '1' else '0' end allow_func09_auth
+		,	case when allow_func10_lv >= target_func10_lv then '1' else '0' end allow_func10_auth
+		,	update_user
+		,	update_time
+		from
 		(
-			<include refid = "sqlNmsInfoWithUserPivot"/>
-		) A
-		WHERE 1 = 1
-		<if test = 'condTarget != null and condTarget != "".toString()'>
-			<if test = 'targetValue != null and targetValue != "".toString()'>
-				AND ${condTarget} LIKE CONCAT('%', #{targetValue}, '%')
-			</if>
-		</if>
-		<!-- ORDER BY system_cd -->
-		ORDER BY system_nm
-	</select>
-
-	<sql id="sqlNmsInfoWithUserPivot">
-		SELECT
-			A.system_cd 
-		,	A.system_nm
-		,	A.subcode
-		,	IFNULL(B.user_name, '-') user_name
-		FROM
-			<include refid="com.mobigen.cdev.mapper.mysql.module.manage.def_table_system_code" /> A
-		LEFT OUTER JOIN 
-			(
-				SELECT
-					system_cd
-				,	LTRIM(GROUP_CONCAT(CONCAT(' ', B.user_name, '(', A.user_id, ' ', team_name, ')'  ) ORDER BY B.user_name)) user_name
-				FROM
-					<include refid="com.mobigen.cdev.mapper.mysql.module.manage.def_table_system_code_manager_map" /> A
-				LEFT OUTER JOIN
+			select
+				A.menu_pcode
+			,	A.menu_code
+			,	A.menu_order
+			,	A.menu_name
+			,	A.menu_navigation
+			,	A.menu_location
+			,	A.use_yn
+			,	A.end_flag
+			,	A.default_menu_yn
+			,	B.module_id
+			,	B.module_name
+			,	B.module_desc
+			,	B.allow_use_lv
+			,	B.allow_read_lv
+			,	B.allow_create_lv
+			,	B.allow_modify_lv
+			,	B.allow_delete_lv
+			,	B.allow_confirm_lv
+			,	B.allow_func01_lv
+			,	B.allow_func02_lv
+			,	B.allow_func03_lv
+			,	B.allow_func04_lv
+			,	B.allow_func05_lv
+			,	B.allow_func06_lv
+			,	B.allow_func07_lv
+			,	B.allow_func08_lv
+			,	B.allow_func09_lv
+			,	B.allow_func10_lv
+			,	A.update_user
+			,	A.update_time
+			from
+				<include refid="cm_menu" /> A
+				left outer join
 				(
-					SELECT user_id, user_name, team_name
-					FROM
-						<include refid="com.mobigen.cdev.mapper.mysql.module.manage.def_table_system_manager" />
-					WHERE use_yn = 'Y'
+					select
+					A.module_id
+					,	A.module_name
+					,	A.module_desc
+					,	B.menu_code
+					,	ifnull(B.allow_use_lv, 5) allow_use_lv
+					,	ifnull(B.allow_read_lv, 5) allow_read_lv
+					,	ifnull(B.allow_create_lv, 5) allow_create_lv
+					,	ifnull(B.allow_modify_lv, 5) allow_modify_lv
+					,	ifnull(B.allow_delete_lv, 5) allow_delete_lv
+					,	ifnull(B.allow_confirm_lv, 5) allow_confirm_lv
+					,	ifnull(B.allow_func01_lv, 5) allow_func01_lv
+					,	ifnull(B.allow_func02_lv, 5) allow_func02_lv
+					,	ifnull(B.allow_func03_lv, 5) allow_func03_lv
+					,	ifnull(B.allow_func04_lv, 5) allow_func04_lv
+					,	ifnull(B.allow_func05_lv, 5) allow_func05_lv
+					,	ifnull(B.allow_func06_lv, 5) allow_func06_lv
+					,	ifnull(B.allow_func07_lv, 5) allow_func07_lv
+					,	ifnull(B.allow_func08_lv, 5) allow_func08_lv
+					,	ifnull(B.allow_func09_lv, 5) allow_func09_lv
+					,	ifnull(B.allow_func10_lv, 5) allow_func10_lv
+					from
+						<include refid="cm_module" /> A
+						left outer join
+						<include refid="cm_menu_module" /> B
+						on A.module_id = B.module_id
 				) B
-				ON A.user_id = B.user_id
-				WHERE 1 = 1
-				GROUP BY system_cd 
+				on A.menu_code = B.menu_code
+			where A.use_yn = 'Y'
+		) A
+		left outer join
+		(
+			select
+				A.user_id, A.user_name
+			,	A.phone, A.email
+			,	A.role_id, A.role_name, A.role_desc
+			,	B.module_id
+			,	min(nvl(target_use_lv, 5)) target_use_lv
+			,	min(nvl(target_read_lv, 5)) target_read_lv
+			,	min(nvl(target_create_lv, 5)) target_create_lv
+			,	min(nvl(target_modify_lv, 5)) target_modify_lv
+			,	min(nvl(target_delete_lv, 5)) target_delete_lv
+			,	min(nvl(target_confirm_lv, 5)) target_confirm_lv
+			,	min(nvl(target_func01_lv, 5)) target_func01_lv
+			,	min(nvl(target_func02_lv, 5)) target_func02_lv
+			,	min(nvl(target_func03_lv, 5)) target_func03_lv
+			,	min(nvl(target_func04_lv, 5)) target_func04_lv
+			,	min(nvl(target_func05_lv, 5)) target_func05_lv
+			,	min(nvl(target_func06_lv, 5)) target_func06_lv
+			,	min(nvl(target_func07_lv, 5)) target_func07_lv
+			,	min(nvl(target_func08_lv, 5)) target_func08_lv
+			,	min(nvl(target_func09_lv, 5)) target_func09_lv
+			,	min(nvl(target_func10_lv, 5)) target_func10_lv
+			from
+			(
+				select
+					A.user_id, A.user_name
+				,	A.phone, A.email
+				,	B.role_id, B.role_name, B.role_desc
+				from
+					<include refid="cm_user" /> A
+					left outer join
+					(
+						select
+							A.role_id
+						,	A.role_name
+						,	A.role_desc
+						,	B.user_Id
+						from
+							<include refid="cm_role" /> A
+							left outer join
+							<include refid="cm_user_role" /> B
+							on A.role_id = B.role_id
+					) B
+					on A.user_id  = B.user_id
+					where 1 = 1
+					and A.use_yn = 'Y'
+					and A.user_id = #{userId}
+				) A
+				left outer join
+				<include refid="cm_role_module" /> B
+				on A.role_id = B.role_id
+				where 1 = 1
+				group by module_id, user_id, user_name, phone, email
 			) B
-		ON A.system_cd = B.system_cd
-		WHERE A.use_yn = 'Y'
-		AND A.system_cd  != '2000'
+		on A.module_id = B.module_id
+		where 1 = 1
 	</sql>
-
-	<select id="getProtocolCondList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto">
-		SELECT
-			sub_cd value
-		,	sub_cd_nm text
-		,	sub_cd_nm label
-		,	IFNULL(description, '-') description
-		FROM 
-			<include refid="def_table_common_code" />
-		WHERE main_cd = '4000'
-		AND use_yn = 'Y'
-		ORDER BY sub_cd_order
-	</select>
-
-	<select id="getStatusCondList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto">
-		SELECT
-			status_cd value
-		,	status_nm text
-		,	status_nm label
-		,	IFNULL(description, '-') description
-		FROM
-			<include refid="def_table_status_code" />
-		WHERE status_cd != '6000'
-		AND use_yn = 'Y'
-		ORDER BY status_cd 
-	</select>
-
-	<select id="getManagerCondList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto">
-		SELECT
-			user_id value
-		,	user_name text
-		,	CONCAT(user_name, '(', user_id, ')') label
-		,	team_name description
-		, phone phone
-		FROM
-			<include refid="com.mobigen.cdev.mapper.mysql.module.manage.def_table_system_manager" />
-		WHERE 1 = 1
-		<if test = 'condTarget != null and condTarget != "".toString()'>
-			<if test = 'targetValue != null and targetValue != "".toString()'>
-				AND ${condTarget} LIKE CONCAT('%', #{targetValue}, '%')
-			</if>
-		</if>
-	</select>
-
-	<!---->
-	<!---->
-	<!---->
-
-	<select id="getInterfaceCycleCondList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto" >
-		SELECT
-			sub_cd value
-		,	sub_cd_nm text
-		,	sub_cd_nm label
-		,	IFNULL(description, '-') description
-		FROM
-			<include refid="def_table_common_code" />
-		WHERE main_cd = '5000'
-		AND use_yn = 'Y'
-		ORDER BY sub_cd_order 
-	</select>
-
-	<select id="getIpNetCondList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto">
-		SELECT
-			sub_cd value
-		,	sub_cd_nm text
-		,	sub_cd_nm label
-		,	IFNULL(description, '-') description
-		FROM
-			<include refid="def_table_common_code" />
-		WHERE main_cd = '2000'
-		AND use_yn = 'Y'
-		<!-- ORDER BY CASE WHEN REPLACE(sub_cd, 'ip_net_', '') REGEXP '^[0-9]+$' = 1 THEN CAST(REPLACE(sub_cd, 'ip_net_', '') AS UNSIGNED) ELSE 9999 END
-			,	sub_cd -->
-		ORDER BY sub_cd_order
-	</select>
-
-	<select id="getCloudList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto">
-    SELECT
-      topic_name value
-    , cloud_name text
-		,	cloud_name label
-    , IFNULL(description, '-') description
-    FROM
-      <include refid="com.mobigen.cdev.mapper.mysql.module.collect.interfacesource.def_table_noti_topic" />
-  </select>
-	
-	<select id="getRunByCondList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto">
-		SELECT
-			sub_cd value
-		,	sub_cd_nm text
-		,	sub_cd_nm label
-		,	IFNULL(description, '-') description
-		FROM
-			<include refid="def_table_common_code" />
-		WHERE main_cd = '6000'
-		AND use_yn = 'Y'
-		ORDER BY sub_cd_order
-	</select>
-
-	<select id="getProvidedToCondList" parameterType="map" resultType="com.mobigen.cdev.poc.module.common.dto.common.CondValueTextDto">
-		SELECT
-			sub_cd value
-		,	sub_cd_nm text
-		,	sub_cd_nm label
-		,	IFNULL(description, '-') description
-		FROM
-			<include refid="def_table_common_code" />
-		WHERE main_cd = '7000'
-		AND use_yn = 'Y'
-		ORDER BY sub_cd_order 
-	</select>
 </mapper>

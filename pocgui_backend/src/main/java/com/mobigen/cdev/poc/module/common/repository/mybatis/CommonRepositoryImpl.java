@@ -14,7 +14,7 @@ import java.util.Map;
 @Repository
 public class CommonRepositoryImpl implements CommonRepository {
     private final SqlSessionTemplate sqlSessionTemplatePemdb1;
-    private final String namespace = "com.mobigen.cdev.mapper.mariadb.module.common";
+    private final String namespace = "com.mobigen.cdev.mapper.mysql.module.common";
 
     @Autowired
     public CommonRepositoryImpl(SqlSessionTemplate sqlSessionTemplatePemdb1) {

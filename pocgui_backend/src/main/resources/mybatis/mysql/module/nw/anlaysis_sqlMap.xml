@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mobigen.cdev.mapper.mysql.module.nw.analysis">
+    <sql id="pm_epc_kpi"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.pm_epc_kpi" /></sql>
+    <sql id="pm_epc_root_cause"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.pm_epc_root_cause" /></sql>
+    <sql id="cu_cause_fail_type"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cu_cause_fail_type" /></sql>
+
+    <select id="getKpiAnalysisRootCause" parameterType="map" resultType="com.mobigen.cdev.poc.module.nw.dto.RootCauseForPivotDto">
+        SELECT
+            CAUSE
+        ,	CASE WHEN IFNULL(DESCRIPTION, '0') = '0' THEN CAUSE ELSE DESCRIPTION END DESCRIPTION
+        FROM
+        (
+            SELECT
+                A.FAIL_TYPE
+            ,	CONCAT(A.FAIL_TYPE, '_', A.CAUSE) CAUSE
+            ,	CONCAT(IFNULL(B.DESCRIPTION, '-'), '|'
+                , 	CASE
+                        WHEN IFNULL(CAUSE_TYPE, '') = 'EMM' THEN 'EMM_'
+                        WHEN IFNULL(CAUSE_TYPE, '') = 'ESM' THEN 'ESM_' ELSE ''
+                    END
+                ,	CASE
+                        WHEN A.DESCRIPTION =  '0' THEN  A.CAUSE
+                        ELSE  REPLACE(REPLACE(A.DESCRIPTION, 'EMM_', ''), 'ESM_', '')
+                    END
+                ) DESCRIPTION
+            ,	CAUSE_CNT
+            FROM
+                PM_EPC_ROOT_CAUSE_1M A
+                LEFT OUTER JOIN
+                CU_CAUSE_FAIL_TYPE B
+                ON A.FAIL_TYPE = B.FAIL_TYPE
+            WHERE 1 = 1
+            AND A.EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
+            AND A.NODE_TYPE = 'MME'
+            AND A.NODE_ID = '0067'
+            AND A.MCC = 'ALL'
+            AND A.MNC = 'ALL'
+            AND A.CAUSE_CNT > 0
+        ) A
+        GROUP BY
+        FAIL_TYPE, CAUSE, DESCRIPTION
+        ORDER BY
+        FAIL_TYPE, SUM(CAUSE_CNT) DESC
+    </select>
+
+    <select id="getKpiAnalysis" parameterType="map" resultType="java.util.HashMap">
+        SELECT
+            EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
+<!--        ,	SUM(ATTEMPT_CNT) ATTEMPT_CNT-->
+<!--        ,	SUM(SUCCESS_CNT) SUCCESS_CNT-->
+<!--        ,	SUM(DROP_CNT) DROP_CNT-->
+<!--        ,	SUM(DATA_ATTEMPT_CNT) DATA_ATTEMPT_CNT-->
+<!--        ,	SUM(DATA_SUCESS_CNT) DATA_SUCESS_CNT-->
+<!--        ,	SUM(IMS_ATTEMPT_CNT) IMS_ATTEMPT_CNT-->
+<!--        ,	SUM(IMS_SUCESS_CNT) IMS_SUCESS_CNT-->
+<!--        ,	SUM(DETACH_CNT)-->
+        <include refid="sqlKpiAnalysisCaclulatedSumKpiColumns" />
+        <!-- SAMPLE -->
+        <!--
+        ,	SUM(CASE WHEN CAUSE = 'CD_C_00000901' THEN CAUSE_CNT ELSE 0 END) CD_C_00000901
+        ,	SUM(CASE WHEN CAUSE = 'SUC_FAIL_C_04000087' THEN CAUSE_CNT ELSE 0 END) SUC_FAIL_C_04000087
+        -->
+        <foreach item="item" index="index" collection="pivotCauseList" open="" separator="," close="">
+        ,   SUM(CASE WHEN CAUSE = #{item} THEN CAUSE_CNT ELSE 0 END) ${item}
+        </foreach>
+        FROM
+        (
+            SELECT
+                A.EVENT_TIME
+            ,	A.NODE_TYPE NODE1_TYPE
+            ,	A.NODE_ID NODE1_ID
+            ,	'-' NODE2_TYPE
+            ,	'-' NODE2_ID
+            ,	A.CALL_TYPE
+            ,	A.ATTEMPT_CNT, A.SUCCESS_CNT, A.DROP_CNT
+            ,	A.DATA_ATTEMPT_CNT, A.DATA_SUCESS_CNT
+            ,	A.IMS_ATTEMPT_CNT, A.IMS_SUCESS_CNT
+            ,	A.DETACH_CNT
+            #,	B.CAUSE_TYPE
+            ,	CONCAT(B.FAIL_TYPE, '_', B.CAUSE) CAUSE
+            ,	B.CAUSE_CNT
+            FROM
+                PM_EPC_KPI_1M A LEFT OUTER JOIN
+                PM_EPC_ROOT_CAUSE_1M B
+                ON A.EVENT_TIME = B.EVENT_TIME
+                AND A.NODE_TYPE = B.NODE_TYPE
+                AND A.NODE_ID  = B.NODE_ID
+                AND A.MCC = B.MCC
+                AND A.MNC = B.MNC
+            WHERE 1 = 1
+            AND A.EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
+            AND A.NODE_TYPE = 'MME'
+            AND A.NODE_ID = '0067'
+            AND A.MCC = 'ALL'
+            AND A.MNC = 'ALL'
+        ) A
+        GROUP BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
+        ORDER BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
+    </select>
+
+    <sql id="sqlKpiAnalysisFormattedEquipColumns">
+        <choose>
+            <when test='node1Type eq "ENB".toString()'>
+                ,   CONCAT(IFNULL(BTS_NAME, '-'), ' (', NODE1_ID, ')') NODE1_EXP_ID
+            </when>
+            <when test='node1Type eq "-".toString()'>
+                ,	'-' NODE1_EXP_ID
+            </when>
+            <otherwise>
+                , CASE WHEN NVL(NODE1_ID, '0') = '0' THEN '-' ELSE NODE1_TYPE || '#' || NODE1_ID END NODE1_EXP_ID
+            </otherwise>
+        </choose>
+        <if test='graphType=="NODE"'>, '-' NODE2_EXP_ID </if>
+        <if test='graphType=="LINK"'>
+            , CASE WHEN NVL(NODE2_ID, '0') = '0' THEN '-' ELSE NODE2_TYPE || '#' || NODE2_ID END NODE2_EXP_ID
+        </if>
+        <choose>
+            <when test='node1Type eq "-".toString()'>
+                ,   '-' NODE1_ID
+                ,   '-' NODE1_TYPE
+                ,   '-' NODE2_ID
+                ,   '-' NODE2_TYPE
+            </when>
+            <otherwise>
+                ,   NODE1_ID
+                ,   NODE1_TYPE
+                ,   NODE2_ID
+                ,   NODE2_TYPE
+            </otherwise>
+        </choose>
+        ,	'' NODE1_PROPERTY
+        ,	'' NODE2_PROPERTY
+        ,	#{node1TypePattern} NODE1_TYPE_PATTERN
+        ,	#{mobileGenType} NETWORK_TYPE
+    </sql>
+
+    <sql id="sqlKpiAnalysisCaclulatedSumKpiColumns">
+        ,	IFNULL(SUM(ATTEMPT_CNT), 0) ATTEMPT_CNT
+        ,	IFNULL(SUM(SUCCESS_CNT), 0) SUCCESS_CNT
+        ,	CASE IFNULL(SUM(ATTEMPT_CNT), 0) WHEN 0 THEN '0' ELSE ROUND((SUM(SUCCESS_CNT) / SUM(ATTEMPT_CNT)) * 100, 2) END SUCCESS_RATE
+        ,	IFNULL(DROP_CNT, 0) DROP_CNT
+        ,	CASE WHEN SUM(DATA_SUCCESS_CNT) + SUM(IMS_SUCCESS_CNT) != 0 AND SUM(DROP_CNT) != 0 THEN ROUND(((SUM(DROP_CNT) / (SUM(DATA_SUCCESS_CNT) + SUM(IMS_SUCCESS_CNT))) * 100), 2) ELSE 0 END DROP_RATE
+        , 	IFNULL(SUM(DATA_ATTEMPT_CNT), 0) DATA_ATTEMPT_CNT
+        , 	IFNULL(SUM(DATA_SUCCESS_CNT), 0) DATA_SUCCESS_CNT
+        , 	CASE WHEN SUM(DATA_ATTEMPT_CNT) != 0 AND SUM(DATA_SUCCESS_CNT) != 0 THEN ROUND(((SUM(DATA_SUCCESS_CNT) / SUM(DATA_ATTEMPT_CNT)) * 100), 2) ELSE 0 END DATA_SUCCESS_RATE
+        ,	IFNULL(SUM(IMS_ATTEMPT_CNT), 0) IMS_ATTEMPT_CNT
+        ,	IFNULL(SUM(IMS_SUCCESS_CNT), 0) IMS_SUCCESS_CNT
+        , 	CASE WHEN SUM(IMS_ATTEMPT_CNT) != 0 AND SUM(IMS_SUCCESS_CNT) != 0 THEN ROUND(((SUM(IMS_SUCCESS_CNT) / SUM(IMS_ATTEMPT_CNT)) * 100) ELSE 0 END IMS_SUCCESS_RATE
+        <if test="addDetachCnt=='OK'">
+        ,	IFNULL(SUM(DETACH_CNT), 0) DETACH_CNT
+        </if>
+    </sql>
+
+</mapper>
