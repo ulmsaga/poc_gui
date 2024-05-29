@@ -2,5 +2,245 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.mobigen.cdev.mapper.mysql.module.nw.analysis">
+    <sql id="pm_epc_kpi"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.pm_epc_kpi" /></sql>
+    <sql id="pm_epc_root_cause"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.pm_epc_root_cause" /></sql>
+    <sql id="cu_cause_fail_type"><include refid="com.mobigen.cdev.mapper.mysql.tabledef.cu_cause_fail_type" /></sql>
 
+    <select id="getKpiAnalysisRootCause" parameterType="map" resultType="com.mobigen.cdev.poc.module.nw.dto.RootCauseForPivotDto">
+        SELECT
+            CAUSE
+        ,	CASE WHEN IFNULL(DESCRIPTION, '0') = '0' THEN CAUSE ELSE DESCRIPTION END DESCRIPTION
+        FROM
+        (
+            SELECT
+                A.FAIL_TYPE
+            ,	CONCAT(A.FAIL_TYPE, '_', A.CAUSE) CAUSE
+            ,	CONCAT(IFNULL(B.DESCRIPTION, '-'), '|'
+                , 	CASE
+                        WHEN IFNULL(CAUSE_TYPE, '') = 'EMM' THEN 'EMM_'
+                        WHEN IFNULL(CAUSE_TYPE, '') = 'ESM' THEN 'ESM_' ELSE ''
+                    END
+                ,	CASE
+                        WHEN A.DESCRIPTION =  '0' THEN  A.CAUSE
+                        ELSE  REPLACE(REPLACE(A.DESCRIPTION, 'EMM_', ''), 'ESM_', '')
+                    END
+                ) DESCRIPTION
+            ,	CAUSE_CNT
+            FROM
+                PM_EPC_ROOT_CAUSE_1M A
+                LEFT OUTER JOIN
+                CU_CAUSE_FAIL_TYPE B
+                ON A.FAIL_TYPE = B.FAIL_TYPE
+            WHERE 1 = 1
+            AND A.EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
+            AND A.NODE_TYPE = 'MME'
+            AND A.NODE_ID = '0067'
+            AND A.MCC = 'ALL'
+            AND A.MNC = 'ALL'
+            AND A.CAUSE_CNT > 0
+        ) A
+        GROUP BY
+        FAIL_TYPE, CAUSE, DESCRIPTION
+        ORDER BY
+        FAIL_TYPE, SUM(CAUSE_CNT) DESC
+    </select>
+
+    <select id="getKpiAnalysis" parameterType="map" resultType="java.util.HashMap">
+        <include refid="sqlKpiAnalysis" />
+    </select>
+
+    <select id="getKpiAnalysisExcel" parameterType="map" resultType="java.util.HashMap">
+        <include refid="sqlKpiAnalysis" />
+    </select>
+
+    <sql id="sqlKpiAnalysis">
+        SELECT
+            EVENT_TIME
+            , 	NODE1_TYPE, NODE1_ID, NODE1_NAME, NODE1_EXP_ID
+            ,	NODE2_TYPE, NODE2_ID, NODE2_NAME, NODE2_EXP_ID
+            ,   CALL_TYPE
+                <include refid="sqlKpiAnalysisCaclulatedSumKpiColumns" />
+                <foreach item="item" index="index" collection="pivotCauseList" open="" separator="," close="">
+                ,   SUM(CASE WHEN CAUSE = #{item} THEN CAUSE_CNT ELSE 0 END) ${item}
+                </foreach>
+        FROM
+        (
+            SELECT
+                A.EVENT_TIME
+                <include refid="sqlKpiAnalysisEquipColumns" />
+            ,	A.CALL_TYPE
+            ,	A.ATTEMPT_CNT
+            ,   A.SUCCESS_CNT
+            ,   A.DROP_CNT
+            ,	A.DATA_ATTEMPT_CNT
+            ,   A.DATA_SUCESS_CNT DATA_SUCCESS_CNT
+            ,	A.IMS_ATTEMPT_CNT
+            ,   A.IMS_SUCESS_CNT IMS_SUCCESS_CNT
+            ,	A.DETACH_CNT
+            ,	B.CAUSE_TYPE
+            ,	CONCAT(B.FAIL_TYPE, '_', B.CAUSE) CAUSE
+            ,	B.CAUSE_CNT
+            FROM
+                <include refid="sqlKpiAnalysisTableJoin" />
+            WHERE 1 = 1
+            AND A.EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
+            <include refid="sqlKpiAnalysisMainCond" />
+            AND CALL_TYPE IN <foreach item="item" index="index" collection="callTypeList" open="(" separator="," close=")" />
+        ) A
+        GROUP BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
+        ORDER BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
+    </sql>
+
+    <sql id="sqlKpiAnalysisEquipColumns">
+        <if test='graphType eq "NODE".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB"'>
+                    ,	'ENB' NODE1_TYPE
+                    ,	A.ENB_ID NODE1_ID
+                    ,	A.BTS_NAME NODE1_NAME
+                    ,	CONCAT(A.BTS_NAME, ' (', A.ENB_ID, ')') NODE1_EXP_ID
+                </when>
+                <otherwise>
+                    <!-- EPC -->
+                    ,	A.NODE_TYPE NODE1_TYPE
+                    ,	A.NODE_ID NODE1_ID
+                    ,	CONCAT(A.NODE_TYPE, '_', A.NODE_ID) NODE1_NAME
+                    ,	CASE WHEN NVL(A.NODE_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE_TYPE, '#', LPAD(A.NODE_ID * 1, 2, '0')) END NODE1_EXP_ID
+                </otherwise>
+            </choose>
+            ,	'-' NODE2_TYPE
+            ,	'-' NODE2_ID
+            ,	'-' NODE2_NAME
+            ,	'-' NODE2_EXP_ID
+        </if>
+        <if test='graphType eq "LINK".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB"'>
+                    <!-- NODE1 ENB -->
+                    ,	'ENB' NODE1_TYPE
+                    ,	A.ENB_ID NODE1_ID
+                    ,	A.BTS_NAME NODE1_NAME
+                    ,	CONCAT(A.BTS_NAME, ' (', A.ENB_ID, ')') NODE1_EXP_ID
+                    <!-- NODE2 MME -->
+                    ,	A.NODE_TYPE NODE2_TYPE
+                    ,	A.NODE_ID NODE2_ID
+                    ,	CONCAT(A.NODE_TYPE, '_', A.NODE_ID) NODE2_NAME
+                    ,	CASE WHEN NVL(A.NODE_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE_TYPE, '#', LPAD(A.NODE_ID * 1, 2, '0')) END NODE2_EXP_ID
+                </when>
+                <otherwise>
+                    <!-- NODE1 -->
+                    ,	A.NODE1_TYPE NODE1_TYPE
+                    ,	A.NODE1_ID NODE1_ID
+                    ,	CONCAT(A.NODE1_TYPE, '_', A.NODE1_ID) NODE1_NAME
+                    ,	CASE WHEN NVL(A.NODE1_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE1_TYPE, '#', LPAD(A.NODE1_ID * 1, 2, '0')) END NODE1_EXP_ID
+                    <!-- NODE2 -->
+                    ,	A.NODE2_TYPE NODE2_TYPE
+                    ,	A.NODE2_ID NODE2_ID
+                    ,	CONCAT(A.NODE2_TYPE, '_', A.NODE2_ID) NODE2_NAME
+                    ,	CASE WHEN NVL(A.NODE2_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE2_TYPE, '#', LPAD(A.NODE2_ID * 1, 2, '0')) END NODE2_EXP_ID
+                </otherwise>
+            </choose>
+        </if>
+
+    </sql>
+
+    <sql id="sqlKpiAnalysisCaclulatedSumKpiColumns">
+        ,	IFNULL(SUM(ATTEMPT_CNT), 0) ATTEMPT_CNT
+        ,	IFNULL(SUM(SUCCESS_CNT), 0) SUCCESS_CNT
+        ,	CASE IFNULL(SUM(ATTEMPT_CNT), 0) WHEN 0 THEN '0' ELSE ROUND((SUM(SUCCESS_CNT) / SUM(ATTEMPT_CNT)) * 100, 2) END SUCCESS_RATE
+        ,	IFNULL(DROP_CNT, 0) DROP_CNT
+        ,	CASE WHEN SUM(DATA_SUCCESS_CNT) + SUM(IMS_SUCCESS_CNT) != 0 AND SUM(DROP_CNT) != 0 THEN ROUND(((SUM(DROP_CNT) / (SUM(DATA_SUCCESS_CNT) + SUM(IMS_SUCCESS_CNT))) * 100), 2) ELSE 0 END DROP_RATE
+        , 	IFNULL(SUM(DATA_ATTEMPT_CNT), 0) DATA_ATTEMPT_CNT
+        , 	IFNULL(SUM(DATA_SUCCESS_CNT), 0) DATA_SUCCESS_CNT
+        , 	CASE WHEN SUM(DATA_ATTEMPT_CNT) != 0 AND SUM(DATA_SUCCESS_CNT) != 0 THEN ROUND(((SUM(DATA_SUCCESS_CNT) / SUM(DATA_ATTEMPT_CNT)) * 100), 2) ELSE 0 END DATA_SUCCESS_RATE
+        ,	IFNULL(SUM(IMS_ATTEMPT_CNT), 0) IMS_ATTEMPT_CNT
+        ,	IFNULL(SUM(IMS_SUCCESS_CNT), 0) IMS_SUCCESS_CNT
+        , 	CASE WHEN SUM(IMS_ATTEMPT_CNT) != 0 AND SUM(IMS_SUCCESS_CNT) != 0 THEN ROUND(((SUM(IMS_SUCCESS_CNT) / SUM(IMS_ATTEMPT_CNT)) * 100), 2) ELSE 0 END IMS_SUCCESS_RATE
+        <if test="addDetachCnt=='OK'">
+        ,	IFNULL(SUM(DETACH_CNT), 0) DETACH_CNT
+        </if>
+    </sql>
+
+    <sql id="sqlKpiAnalysisTableJoin">
+        <if test='graphType eq "NODE".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB"'>
+                    PM_ENB_KPI_1M A LEFT OUTER JOIN
+                    PM_ENB_ROOT_CAUSE_1M B
+                    ON A.EVENT_TIME = B.EVENT_TIME
+                    AND A.ENB_ID = B.ENB_ID
+                    AND A.CALL_TYPE = B.CALL_TYPE
+                </when>
+                <otherwise>
+                    PM_EPC_KPI_1M A LEFT OUTER JOIN
+                    PM_EPC_ROOT_CAUSE_1M B
+                    ON A.EVENT_TIME = B.EVENT_TIME
+                    AND A.NODE_TYPE = B.NODE_TYPE
+                    AND A.NODE_ID  = B.NODE_ID
+                    AND A.CALL_TYPE = B.CALL_TYPE
+                    AND A.MCC = B.MCC
+                    AND A.MNC = B.MNC
+                </otherwise>
+            </choose>
+        </if>
+        <if test='graphType eq "LINK".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB"'>
+                    PM_LINK_ENB_KPI_1M A LEFT OUTER JOIN
+                    PM_LINK_ENB_ROOT_CAUSE_1M B
+                    ON A.EVENT_TIME = B.EVENT_TIME
+                    AND A.ENB_ID = B.ENB_ID
+                    AND A.NODE_TYPE = B.NODE_TYPE
+                    AND A.NODE_ID  = B.NODE_ID
+                    AND A.CALL_TYPE = B.CALL_TYPE
+                </when>
+                <otherwise>
+                    PM_LINK_EPC_KPI_1M A LEFT OUTER JOIN
+                    PM_LINK_EPC_ROOT_CAUSE_1M B
+                    ON A.EVENT_TIME = B.EVENT_TIME
+                    AND A.NODE1_TYPE = B.NODE1_TYPE
+                    AND A.NODE1_ID  = B.NODE1_ID
+                    AND A.NODE2_TYPE = B.NODE2_TYPE
+                    AND A.NODE2_ID  = B.NODE2_ID
+                    AND A.CALL_TYPE = B.CALL_TYPE
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+
+    <sql id="sqlKpiAnalysisMainCond">
+        <if test='graphType eq "NODE".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB"'>
+                    <if test='node1List.size > 0'>
+                        AND A.ENB_ID IN <foreach item="item" index="index" collection="node1List" open="(" separator="," close=")" />
+                    </if>
+                </when>
+                <otherwise>
+                    AND A.NODE_TYPE = #{node1Type}
+                    <if test='node1List.size > 0'>
+                        AND A.NODE_ID IN <foreach item="item" index="index" collection="node1List" open="(" separator="," close=")" />
+                    </if>
+                    AND A.MCC = 'ALL'
+                    AND A.MNC = 'ALL'
+                </otherwise>
+            </choose>
+        </if>
+        <if test='graphType eq "LINK".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB"'>
+                </when>
+                <otherwise>
+                    AND A.NODE1_TYPE = #{node1Type}
+                    AND A.NODE1_ID IN <foreach item="item" index="index" collection="node1List" open="(" separator="," close=")" />
+                    <if test='node2Type neq "-".toString()'>
+                        AND A.NODE2_TYPE = #{node2Type}
+                        <if test='node2List.size > 0'>
+                            AND A.NODE2_ID IN <foreach item="item" index="index" collection="node2List" open="(" separator="," close=")" />
+                        </if>
+                    </if>
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
 </mapper>

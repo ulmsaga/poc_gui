@@ -23,4 +23,11 @@
     <sql id="cm_part">CM_PART</sql>
     <sql id="cl_mme" >CL_MME</sql>
     <sql id="cl_enb">CL_ENB</sql>
+
+    <!-- nw analysis -->
+    <sql id="pm_epc_kpi">PM_EPC_KPI_${tableSuffix}</sql>
+    <sql id="pm_epc_root_cause">PM_EPC_ROOT_CAUSE_${tableSuffix}</sql>
+    <sql id="cu_cause_fail_type">CU_CAUSE_FAIL_TYPE</sql>
+
+
 </mapper>
