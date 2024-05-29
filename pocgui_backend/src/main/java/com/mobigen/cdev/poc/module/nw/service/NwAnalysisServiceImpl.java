@@ -6,6 +6,8 @@ import com.mobigen.cdev.poc.core.util.common.Cutil;
 import com.mobigen.cdev.poc.module.nw.dto.KpiAnalysisResultDto;
 import com.mobigen.cdev.poc.module.nw.dto.RootCauseForPivotDto;
 import com.mobigen.cdev.poc.module.nw.repository.mybatis.NwAnalysisRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,6 +18,9 @@ import java.util.Map;
 public class NwAnalysisServiceImpl implements NwAnalysisService {
 
     private final NwAnalysisRepository nwAnalysisRepository;
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     public NwAnalysisServiceImpl(NwAnalysisRepository nwAnalysisRepository) {
         this.nwAnalysisRepository = nwAnalysisRepository;
     }
@@ -24,6 +29,10 @@ public class NwAnalysisServiceImpl implements NwAnalysisService {
     public KpiAnalysisResultDto getKpiAnalysis(Map<String, Object> param) {
         KpiAnalysisResultDto ret = new KpiAnalysisResultDto();
         setKpiAnalysisParam(param);
+
+        List<String> tmpCallTypeList = (List<String>) param.get("callTypeList");
+        logger.debug("tmpCallTypeList [0], {}", tmpCallTypeList.get(0));
+
         List<?> list = nwAnalysisRepository.getKpiAnalysis(param);
         ret.setList(list);
         ret.setCauseList((List<RootCauseForPivotDto>)param.get("causeList"));

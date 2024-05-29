@@ -115,6 +115,7 @@
         ,   case when ifnull(opteam_name, '-') = '-' then '미분류'
                 else concat(opteam_name, ' (', opteam_id, ')')
             end group_filter
+        ,   concat(ifnull(bts_name, '-'), ' (', enb_id, ')') description
         from
             <include refid="cl_enb" /> A
             left outer join <include refid="cm_branch" /> B

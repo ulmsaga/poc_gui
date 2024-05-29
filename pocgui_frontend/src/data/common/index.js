@@ -15,7 +15,7 @@ const callTypeList = [
 
 const nodeTypeList = [
   { value : 'MME', label: 'MME', node: 'MME', linkTypeList: [{ value: '-', label: '-', node: '-' }] },
-  { value: 'ENB', label: 'ENB', node: 'ENB', linkTypeList: [{ value: '-', label: '-', node: '-' }, { value: 'S1-MME', label: 'S1-MME', node: 'MME' }] }
+  { value: 'ENB', label: 'ENB', node: 'ENB', linkTypeList: [{ value: '-', label: '-', node: '-' }, { value: 'MME', label: 'S1-MME', node: 'MME' }] }
 ];
 
 const mmeList = [

@@ -60,8 +60,8 @@
             ,	NODE2_TYPE, NODE2_ID, NODE2_NAME, NODE2_EXP_ID
             ,   CALL_TYPE
                 <include refid="sqlKpiAnalysisCaclulatedSumKpiColumns" />
-                <foreach item="item" index="index" collection="pivotCauseList" open="" separator="," close="">
-                ,   SUM(CASE WHEN CAUSE = #{item} THEN CAUSE_CNT ELSE 0 END) ${item}
+            ,   <foreach item="item" index="index" collection="pivotCauseList" open="" separator="," close="">
+                    SUM(CASE WHEN CAUSE = #{item} THEN CAUSE_CNT ELSE 0 END) ${item}
                 </foreach>
         FROM
         (
@@ -85,7 +85,7 @@
             WHERE 1 = 1
             AND A.EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
             <include refid="sqlKpiAnalysisMainCond" />
-            AND CALL_TYPE IN <foreach item="item" index="index" collection="callTypeList" open="(" separator="," close=")" />
+                AND A.CALL_TYPE IN <foreach collection="callTypeList" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
         ) A
         GROUP BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
         ORDER BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
@@ -212,14 +212,16 @@
         <if test='graphType eq "NODE".toString()'>
             <choose>
                 <when test='node1Type eq "ENB"'>
+                    <!-- NODE-ENB -->
                     <if test='node1List.size > 0'>
-                        AND A.ENB_ID IN <foreach item="item" index="index" collection="node1List" open="(" separator="," close=")" />
+                        AND A.ENB_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
                     </if>
                 </when>
                 <otherwise>
+                    <!-- NODE-EPC -->
                     AND A.NODE_TYPE = #{node1Type}
                     <if test='node1List.size > 0'>
-                        AND A.NODE_ID IN <foreach item="item" index="index" collection="node1List" open="(" separator="," close=")" />
+                        AND A.NODE_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
                     </if>
                     AND A.MCC = 'ALL'
                     AND A.MNC = 'ALL'
@@ -229,14 +231,25 @@
         <if test='graphType eq "LINK".toString()'>
             <choose>
                 <when test='node1Type eq "ENB"'>
+                    <!-- LINK-ENB -->
+                    <if test='node1List.size > 0'>
+                        AND A.ENB_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                    </if>
+                    <if test='node2Type neq "-".toString()'>
+                        AND A.NODE_TYPE = #{node2Type}
+                        <if test='node2List.size > 0'>
+                            AND A.NODE_ID IN <foreach collection="node2List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                        </if>
+                    </if>
                 </when>
                 <otherwise>
+                    <!-- LINK-EPC -->
                     AND A.NODE1_TYPE = #{node1Type}
-                    AND A.NODE1_ID IN <foreach item="item" index="index" collection="node1List" open="(" separator="," close=")" />
+                    AND A.NODE1_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
                     <if test='node2Type neq "-".toString()'>
                         AND A.NODE2_TYPE = #{node2Type}
                         <if test='node2List.size > 0'>
-                            AND A.NODE2_ID IN <foreach item="item" index="index" collection="node2List" open="(" separator="," close=")" />
+                            AND A.NODE2_ID IN <foreach collection="node2List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
                         </if>
                     </if>
                 </otherwise>

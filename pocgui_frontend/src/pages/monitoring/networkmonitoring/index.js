@@ -1,7 +1,7 @@
 import { Box, Button, Grid, Stack } from "@mui/material";
 import React, { Fragment, useEffect, useRef, useState } from "react";
 import { DatePickerFromTo } from "components/datepicker";
-import { add } from "date-fns";
+import { add, differenceInMinutes } from "date-fns";
 import GridMain from "components/grid/GridMain";
 import { TypoLabel } from "components/label";
 import useMessage from "hooks/useMessage";
@@ -16,6 +16,8 @@ import PopupEquipStatus from "./popup/PopupEquipStatus.js";
 import ButtonIconHelp from "components/button/ButtonIconHelp";
 import PopupEquipSearch from "popup/PopupEquipSearch";
 import { FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
+import { formatDate } from "utils/common";
+import { getKpiAnalysis } from "api/nw/analysisApi";
 
 const NetworkMonitoring = () => {
   const [mmeList, setMmeList] = useState([]);
@@ -175,6 +177,7 @@ const NetworkMonitoring = () => {
   const refBotTree = useRef();
 
   // alarmList
+  // eslint-disable-next-line no-unused-vars
   const [mmeAlarmList, setMmeAlarmList] = useState([]);
   // eslint-disable-next-line no-unused-vars
   const [enbAlarmList, setEnbAlarmList] = useState([]);
@@ -189,10 +192,87 @@ const NetworkMonitoring = () => {
   };
 
   const searchClick = () => {
-    setMmeAlarmList([{ id:  'MME#44', alarmGrade: 'MJ' }]);
-    setEnbAlarmList([{ id: '143911', alarmGrade: 'CR' }]);
-    //
-    setIsOpenCallFailSearch(true);
+    // Alarm Test
+    // setMmeAlarmList([{ id:  'MME#44', alarmGrade: 'MJ' }]);
+    // setEnbAlarmList([{ id: '143911', alarmGrade: 'CR' }]);
+    
+    // Call Fail Open Test
+    // setIsOpenCallFailSearch(true);
+
+    const param = {};
+    param.isValid = true;
+    param.nonValidMsg = '';
+
+    // Terms & Time
+    param.timeCond = period;
+    param.startTime = formatDate(selectedFromToDate.startDate, 'yyyyMMddHHmm00');
+    param.endTIme = formatDate(selectedFromToDate.endDate, 'yyyyMMddHHmm00');
+    if (param.timeCond === '1M' && param.startTime === param.endTIme) {
+      param.isValid = false;
+      param.nonValidMsg = '시작 시간과 종료 시간을 다르게 설정하세요.\n';
+    }
+    if (param.startTime === param.endTIme) {
+      param.isValid = false;
+      param.nonValidMsg = param.nonValidMsg + '종료 시간이 시작 시간보다 빠릅니다. 변경 후 조회 해 주시기 바랍니다.\n';
+    }
+    param.diffOneMin = false;
+    if (param.timeCond === '1M') {
+      const diffMin = differenceInMinutes(selectedFromToDate.startDate, selectedFromToDate.endDate);
+      if (diffMin === 1) {
+        param.diffOneMin = true;
+      }
+    }
+
+    // graphType
+    param.graphType = 'NODE';
+    if (searchTarget2.value !== '-') {
+      param.graphType = 'LINK';
+    }
+
+    // Node1
+    param.node1Type = searchTarget1.value;
+    param.node1List = [];
+    selectedNode1.forEach((item) => {
+      param.node1List.push(item.value);
+    });
+    if (param.node1List.length === 0) {
+      param.isValid = false;
+      param.nonValidMsg = param.nonValidMsg + '조회대상1을 1건 이상 선택하세요.\n';
+    }
+
+    // Node2
+    param.node2Type = searchTarget2.value;
+    param.node2List = [];
+    selectedNode2.forEach((item) => {
+      param.node2List.push(item.value);
+    });
+
+    // Call Type
+    param.callTypeList = [];
+    selectedCallTypes.forEach((item) => {
+      param.callTypeList.push(item.value);
+    });
+    if (param.callTypeList.length === 0) {
+      param.isValid = false;
+      param.nonValidMsg = param.nonValidMsg + 'CALL TYPE을 1건 이상 선택하세요.\n';
+    }
+
+    // Show DetachCnt
+    param.addDetachCnt = 'OK';
+
+    if (param.isValid === false) {
+      alert(param.nonValidMsg);
+      return;
+    }
+
+    getKpiAnalysis(param).then(response => response.data).then((ret) => {
+      if (ret !== undefined) {
+        if (ret.rs !== undefined) {
+          // setRowData(ret.rs);
+          console.log(ret.rs);
+        }
+      }
+    });
   };
 
   // Call Fail Search
