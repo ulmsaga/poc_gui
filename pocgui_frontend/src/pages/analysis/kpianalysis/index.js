@@ -1,6 +1,6 @@
 import { FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
 import { Button, Stack } from "@mui/material";
-import { getKpiAnalysis } from "api/nw/analysisApi";
+import { getKpiAnalysis, getKpiAnalysisEquipCauseCnt } from "api/nw/analysisApi";
 import { AutoCompleteCheck, AutoCompleteGroup } from "components/autocomplete";
 import { ButtonIconHelp } from "components/button";
 import { DatePickerFromTo } from "components/datepicker";
@@ -8,14 +8,12 @@ import GridMain from "components/grid/GridMain";
 import { TypoLabel } from "components/label";
 import SelectBox from "components/select/SelectBox";
 import { callTypeList, nodeTypeList, periodList } from "data/common";
-import { add, differenceInMinutes } from "date-fns";
-import { de } from "date-fns/locale";
+import { add, addMinutes, differenceInMinutes } from "date-fns";
 import useMessage from "hooks/useMessage";
-import { forEach, head, split } from "lodash";
+import { forEach, split } from "lodash";
 import PopupCallFailSearch from "pages/monitoring/networkmonitoring/popup/PopupCallFailSearch.js";
 import PopupEquipSearch from "popup/PopupEquipSearch";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
-import { closeAlert } from "store/reducers/message";
 import { formatDate } from "utils/common";
 
 const KpiAnalysis = () => {
@@ -27,7 +25,7 @@ const KpiAnalysis = () => {
 
   // From Date, To Date
   const [selectedFromToDate, setSelectedFromToDate] = useState({
-    startDate: add(new Date(), {hours: -1}),
+    startDate: addMinutes(new Date(), -1),
     endDate: new Date(),
     searchTarget: 'historyFromToTime'
   });
@@ -42,7 +40,9 @@ const KpiAnalysis = () => {
   };
 
   // Node1 Type, Node2 Type
+  // eslint-disable-next-line no-unused-vars
   const [mmeList, setMmeList] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [enbList, setEnbList] = useState([]);
 
   const [searchTarget1, setSearchTarget1] = useState({ value : 'MME', label: 'MME', node: 'MME' });
@@ -141,12 +141,14 @@ const KpiAnalysis = () => {
   // Call Fail Search
   const [isOpenCallFailSearch, setIsOpenCallFailSearch] = useState(false);
   // Popup Status
+  // eslint-disable-next-line no-unused-vars
   const [isOpenPopupStatus, setIsOpenPopupStatus] = useState(false);
   // const [popupStatusParam, setPopupStatusParam] = useState({});
   // Equip Search
   const [isOpenEquipSearch, setIsOpenEquipSearch] = useState(false);
   const [equipSearchParam, setEquipSearchparam] = useState({});
 
+  // eslint-disable-next-line no-unused-vars
   const openPopupStatus = (params) => {
     alert(params.name);
     setIsOpenPopupStatus(true);
@@ -160,56 +162,56 @@ const KpiAnalysis = () => {
   const defaultCols = useMemo(() => [
     {
       headerName: '',
-      children: [{ headerName:'처리시간', field: 'EVENT_TIME', width: 120, suppressSizeToFit: true }]
+      children: [{ headerName:'처리시간', field: 'EVENT_EXP_TIME', width: 150, suppressSizeToFit: true, cellStyle: { textAlign: 'center' } }]
     },
     {
-      headerName: '장비',
+      headerName: '대상',
       children: [
-        {headerName: 'NODE1', field: "NODE1_EXP_ID", width: 80, suppressSizeToFit: true},
-        {headerName: 'NODE2', field: "NODE2_EXP_ID", width: 80, suppressSizeToFit: true},
+        {headerName: '장비1', field: "NODE1_EXP_ID", width: 90, suppressSizeToFit: true, cellStyle: { textAlign: 'center' }},
+        {headerName: '장비2', field: "NODE2_EXP_ID", width: 90, suppressSizeToFit: true, cellStyle: { textAlign: 'center' }},
       ]
     },
     {
       headerName: '',
       children: [
-        {headerName: 'CALL TYPE', field: "CALL_TYPE", width: 80, suppressSizeToFit: true},
+        {headerName: 'CALL TYPE', field: "CALL_TYPE", width: 100, suppressSizeToFit: true, cellStyle: { textAlign: 'center' }},
       ]
     },
     {
       headerName: '접속',
       children: [
-        {headerName: '시도호', field: 'ATTEMPT_CNT', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공호', field: 'SUCCESS_CNT', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공율', field: 'SUCCESS_RATE', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
+        {headerName: '시도호', field: 'ATTEMPT_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공호', field: 'SUCCESS_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공율(%)', field: 'SUCCESS_RATE', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
       ]
     },
     {
       headerName: 'DATA',
       children: [
-        {headerName: '시도호', field: 'DATA_ATTEMPT_CNT', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공호', field: 'DATA_SUCCESS_CNT', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공율', field: 'DATA_SUCCESS_RATE', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
+        {headerName: '시도호', field: 'DATA_ATTEMPT_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공호', field: 'DATA_SUCCESS_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공율(%)', field: 'DATA_SUCCESS_RATE', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
       ]
     },
     {
       headerName: 'IMS',
       children: [
-        {headerName: '시도호', field: 'IMS_ATTEMPT_CNT', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공호', field: 'IMS_SUCCESS_CNT', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공율', field: 'IMS_SUCCESS_RATE', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
+        {headerName: '시도호', field: 'IMS_ATTEMPT_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공호', field: 'IMS_SUCCESS_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공율(%)', field: 'IMS_SUCCESS_RATE', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
       ]
     },
     {
       headerName: 'CD',
       children: [
-        {headerName: 'CD호', field: 'DROP_CNT', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: 'CD율', field: 'DROP_RATE', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: 'CD호', field: 'DROP_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: 'CD율(%)', field: 'DROP_RATE', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
       ]
     },
     {
       headerName: '',
       children: [
-        {headerName: 'DETACH', field: 'DETACH_CNT', width: 80, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
+        {headerName: 'DETACH', field: 'DETACH_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
       ]
     }
   ], []);
@@ -232,9 +234,9 @@ const KpiAnalysis = () => {
             cols.push(grps);
           }
           grps = {};
-          grps = { headerName: grp, children: [{ headerName: title, field: item.cause, width: 100, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } }] };
+          grps = { headerName: grp, children: [{ headerName: title, field: item.cause, minWidth: 100, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } }] };
         } else {
-          grps.children.push({ headerName: title, field: item.cause, width: 100, suppressSizeToFit: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } });
+          grps.children.push({ headerName: title, field: item.cause, minWidth: 100, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } });
         }
 
         if (index === (listLen - 1)) {
@@ -250,23 +252,33 @@ const KpiAnalysis = () => {
   };
 
   const equipImsi = useMemo(() => [
-    { headerName:'가입자', field: 'std_name', width: 200, suppressSizeToFit: true },
-    { headerName:'CNT', field: 'cuase_cnt', width: 100, suppressSizeToFit: true }
+    { headerName:'가입자', field: 'std_name', width: 180, suppressSizeToFit: true},
+    { headerName:'건수', field: 'cause_cnt', width: 100, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } }
   ], []);
   const equipEnb = useMemo(() => [
-    { headerName:'ENB', field: 'std_name', width: 200, suppressSizeToFit: true },
-    { headerName:'CNT', field: 'cuase_cnt', width: 100, suppressSizeToFit: true }
+    { headerName:'ENB', field: 'std_name', width: 180, suppressSizeToFit: true },
+    { headerName:'건수', field: 'cause_cnt', width: 100, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } }
   ], []);
   const equipMme = useMemo(() => [
-    { headerName:'MME', field: 'std_name', width: 200, suppressSizeToFit: true },
-    { headerName:'CNT', field: 'cuase_cnt', width: 100, suppressSizeToFit: true }
+    { headerName:'MME', field: 'std_name', width: 180, suppressSizeToFit: true },
+    { headerName:'건수', field: 'cause_cnt', width: 100, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } }
   ], []);
-  const equipVlan = useMemo(() => [
-    { headerName:'VLAN', field: 'std_name', width: 200, suppressSizeToFit: true },
-    { headerName:'CNT', field: 'cuase_cnt', width: 100, suppressSizeToFit: true }
+  const equipSgw = useMemo(() => [
+    { headerName:'SGW', field: 'std_name', width: 180, suppressSizeToFit: true },
+    { headerName:'건수', field: 'cause_cnt', width: 100, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } }
   ], []);
+  const equipPgw = useMemo(() => [
+    { headerName:'PGW', field: 'std_name', width: 180, suppressSizeToFit: true },
+    { headerName:'건수', field: 'cause_cnt', width: 100, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' } }
+  ], []);
+  
 
-  const [rowData, setRowData] = useState([]);
+  // const [rowData, setRowData] = useState([]);
+  const [imsi, setImsi] = useState([]);
+  const [enb, setEnb] = useState([]);
+  const [mme, setMme] = useState([]);
+  const [sgw, setSgw] = useState([]);
+  const [pgw, setPgw] = useState([]);
   
   const excelDownload = () => {
     // Alert({ title: 'Excel Download', message: 'Excel Download', callback: (e) => { console.log(e); } });
@@ -278,13 +290,6 @@ const KpiAnalysis = () => {
   };
 
   const searchClick = () => {
-    // Alarm Test
-    // setMmeAlarmList([{ id:  'MME#44', alarmGrade: 'MJ' }]);
-    // setEnbAlarmList([{ id: '143911', alarmGrade: 'CR' }]);
-    
-    // Call Fail Open Test
-    // setIsOpenCallFailSearch(true);
-
     const param = {};
     param.isValid = true;
     param.nonValidMsg = '';
@@ -303,7 +308,7 @@ const KpiAnalysis = () => {
     }
     param.diffOneMin = false;
     if (param.timeCond === '1M') {
-      const diffMin = differenceInMinutes(selectedFromToDate.startDate, selectedFromToDate.endDate);
+      const diffMin = differenceInMinutes(selectedFromToDate.endDate, selectedFromToDate.startDate);
       if (diffMin === 1) {
         param.diffOneMin = true;
       }
@@ -323,7 +328,7 @@ const KpiAnalysis = () => {
     });
     if (param.node1List.length === 0) {
       param.isValid = false;
-      param.nonValidMsg = param.nonValidMsg + '조회대상1을 1건 이상 선택하세요.\n';
+      param.nonValidMsg = param.nonValidMsg + '대상장비1에 대해서 1건 이상 선택하세요.\n';
     }
 
     // Node2
@@ -351,6 +356,7 @@ const KpiAnalysis = () => {
       return;
     }
 
+    initGridMain();
     getKpiAnalysis(param).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
@@ -361,6 +367,57 @@ const KpiAnalysis = () => {
         }
       }
     });
+  };
+
+  const gridKpiCellDbClick = (rowData) => {
+    const param = {};
+
+    param.startTime = rowData.data.EVENT_TIME;
+    if (rowData.data.NODE2_TYPE === '' || rowData.data.NODE2_TYPE === '-' || rowData.data.node2_type === null) {
+      param.graphType = 'NODE'
+    } else {
+      param.graphType = 'LINK'
+    }
+    param.node1Type = rowData.data.NODE1_TYPE;
+    param.node1Id = rowData.data.NODE1_ID;
+    param.node2Type = rowData.data.NODE2_TYPE;
+
+    if (param.graphType === 'LINK') {
+      param.node2Id = rowData.data.NODE2_ID
+    }
+    param.callType = rowData.data.CALL_TYPE;
+    // selectedVal
+    // failType
+    let tmp = rowData.colDef.field
+    param.failType = tmp.substr(0, tmp.length - 11)
+    param.selectedVal = tmp.replace(param.failType + '_', '');
+
+    initGridEquips();
+    getKpiAnalysisEquipCauseCnt(param).then(response => response.data).then((ret) => {
+      if (ret !== undefined) {
+        if (ret.rs !== undefined) {
+          const data = ret.rs
+          if (data?.imsi !== null && data?.imsi !== undefined) setImsi(data.imsi);
+          if (data?.enb != null && data?.enb !== undefined) setEnb(data.enb);
+          if (data?.mme != null && data?.mme !== undefined) setMme(data.mme);
+          if (data?.sgw != null && data?.sgw !== undefined) setSgw(data.sgw);
+          if (data?.pgw != null && data?.pgw !== undefined) setPgw(data.pgw);
+        }
+      }
+    });
+    
+  };
+
+  const initGridMain = () => {
+    setKpiAnalysisData([]);
+  };
+
+  const initGridEquips = () => {
+    setImsi([]);
+    setEnb([]);
+    setMme([]);
+    setSgw([]);
+    setPgw([]);
   };
 
   useEffect(() => {
@@ -378,7 +435,7 @@ const KpiAnalysis = () => {
             <Stack direction={'row'} spacing={0.2} sx={{ verticalAlign: 'middle' }}>
               <TypoLabel label={'조회기간'} />
               <SelectBox options={ periodList } value={ period } onChange={(e) => { setPeriod(e.target.value) }}/>
-              <DatePickerFromTo selectedDate={ selectedFromToDate } isRange={ true } format={ 'yyyy-MM-dd HH:mm:00' } showTimeSelect={ true } onChangeDate={ changeFromToDate } useMaxDate={ false }/>
+              <DatePickerFromTo selectedDate={ selectedFromToDate } isRange={ true } format={ 'yyyy-MM-dd HH:mm:00' } timeIntervals={1} showTimeSelect={ true } onChangeDate={ changeFromToDate } useMaxDate={ false }/>
             </Stack>
           </Stack>
           {/* ROW1 BUTTONS */}
@@ -390,13 +447,13 @@ const KpiAnalysis = () => {
         {/* ROW2 */}
         <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
           <Stack direction={'row'} spacing={0.2}>
-            <TypoLabel label={'조회대상1'} />
+            <TypoLabel label={'대상장비1'} />
             <SelectBox options={ nodeTypeList } value={ searchTarget1.value } onChange={ node1TypeChange }/>
             <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 287 } groupFilter={'group_filter'} />
             <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node1') }} />
           </Stack>
           <Stack direction={'row'} spacing={0.2}>
-            <TypoLabel label={'조회대상2'} />
+            <TypoLabel label={'대상장비2'} />
             <SelectBox options={ node2TypeList } value={ searchTarget2.value } onChange={ node2TypeChange }/>
             <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 287 } groupFilter={'group_filter'} />
           </Stack>
@@ -416,6 +473,8 @@ const KpiAnalysis = () => {
           style={{ height: '100%' }}
           columnDefs={analysisCols}
           rowData={kpiAnalysisData}
+          // getSelectedData={ getSelectedKpiAnalysisData }
+          onCellDoubleClicked={ gridKpiCellDbClick }
         />
       </Stack>
       {/* GRID PATH */}
@@ -423,26 +482,32 @@ const KpiAnalysis = () => {
         <GridMain
           className={'ag-theme-balham'}
           style={{ height: '100%', width: '100%' }}
-          rowData={rowData}
+          rowData={ imsi }
           columnDefs={equipImsi}
         />
         <GridMain
           className={'ag-theme-balham'}
           style={{ height: '100%', width: '100%' }}
-          rowData={ rowData }
+          rowData={ enb }
           columnDefs={equipEnb}
-        />
-         <GridMain
-          className={'ag-theme-balham'}
-          style={{ height: '100%', width: '100%' }}
-          rowData={ rowData }
-          columnDefs={equipVlan}
         />
         <GridMain
           className={'ag-theme-balham'}
           style={{ height: '100%', width: '100%' }}
-          rowData={rowData}
+          rowData={ mme }
           columnDefs={equipMme}
+        />
+        <GridMain
+          className={'ag-theme-balham'}
+          style={{ height: '100%', width: '100%' }}
+          rowData={ sgw }
+          columnDefs={equipSgw}
+        />
+        <GridMain
+          className={'ag-theme-balham'}
+          style={{ height: '100%', width: '100%' }}
+          rowData={ pgw }
+          columnDefs={equipPgw}
         />
       </Stack>
       <PopupCallFailSearch title={'Call Fail Search'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenCallFailSearch } setIsOpen={ setIsOpenCallFailSearch }/>

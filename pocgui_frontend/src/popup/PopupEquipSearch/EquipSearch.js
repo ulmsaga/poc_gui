@@ -33,7 +33,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
 
   const defSearchedTargetCols = (nodeType) => {
     let cols = [];
-    let defaultColField = '';
+    // let defaultColField = '';
     if (nodeType === undefined || nodeType === null || nodeType === '') nodeType = 'ENB';
     if (nodeType === 'MME') {
       cols = [
@@ -45,7 +45,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
         { field: 'value', headerName: 'value', width: 100, suppressSizeToFit: true, hide: true },
         { field: 'label', headerName: 'label', width: 100, suppressSizeToFit: true, hide: true }
       ];
-      defaultColField = 'node_name';
+      // defaultColField = 'node_name';
     } else if (nodeType === 'ENB') {
       cols = [
         { field: 'check', headerName: '선택', width: 50, suppressSizeToFit: true, checkboxSelection: true, showDisabledCheckbox: true , pinned: 'left' },
@@ -56,7 +56,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
         { field: 'value', headerName: 'value', width: 100, suppressSizeToFit: true, hide: true },
         { field: 'label', headerName: 'label', width: 100, suppressSizeToFit: true, hide: true }
       ];
-      defaultColField = 'enb_name';
+      // defaultColField = 'enb_name';
     }
     setTargetCols(cols);
     defCondTypeList(cols);
@@ -64,7 +64,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
 
   const defCondTypeList = (cols) => {
     const list = [];
-    let needSetDefault = false;
+    // let needSetDefault = false;
     cols.forEach((col) => {
       if (!col.hide && col.field !== 'check') {
         list.push({ value: col.field, label: col.headerName });
@@ -75,7 +75,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
 
   const setDefaultCondType = () => {
     if (params.nodeType === 'MME') setCondType({value:'node_name', label:'MME NAME'});
-    if (params.nodeType === 'ENB') setCondType({value:'enb_name', label:'ENB NAME'});
+    if (params.nodeType === 'ENB') setCondType({value:'bts_name', label:'ENB NAME'});
   };
 
   const condTypeChange = (e) => {
@@ -142,7 +142,10 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
 
   useEffect(() => {
     defSearchedTargetCols(params?.nodeType);
-    // setDefaultCondType();
+    
+    setTimeout(() => {
+      setDefaultCondType();
+    }, 500);
     setTargetRows([]);
     setDestRows([]);
     if (selectedNode !== undefined && selectedNode !== null) {
@@ -161,8 +164,8 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
               <Stack direction={'row'} spacing={1.5}>
                 <Stack direction={'row'} spacing={0.2} sx={{ verticalAlign: 'middle' }}>
                   <TypoLabel label={'검색조건'} />
-                  <SelectBox options={ condTypeList } value={ condType.value } onChange={ condTypeChange } style={{ width: '120px' }}/>
-                  <OutlinedInput placeholder="검색어를 입력하세요" value={ condTypeText } onChange={ (e) => setCondTypeText(e.target.value) } sx={{ width: 300 }}/>
+                  <SelectBox options={ condTypeList } defaultValue={ condType.value } value={ condType.value } onChange={ condTypeChange } style={{ width: '120px' }}/>
+                  <OutlinedInput placeholder="검색어를 입력하세요" value={ condTypeText } onChange={ (e) => setCondTypeText(e.target.value) } sx={{ width: 300 }} onKeyDown={ (e) => { if (e.key==="Enter") { searchClick() }} }/>
                 </Stack>
               </Stack>
               {/* ROW1 BUTTONS */}

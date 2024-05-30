@@ -29,6 +29,7 @@ pemdb1:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect
+        # dialect: org.hibernate.dialect.MySQL5InnoDBDialect
         format_sql: true
     open-in-view: false
 
@@ -45,7 +46,7 @@ pemdb1:
     password: tndfPans2013^_
     # jdbc-url: jdbc:mariadb://175.126.73.136:3306/pemdb1
     jdbc-url: jdbc:log4jdbc:mariadb://175.126.73.136:3306/pemdb1
-
+    # jdbc-url: jdbc:log4jdbc:mysql://192.168.100.216:3307/pemdb1?useUnicode=true&serverTimezone=Asia/Seoul&allowMultiQueries=true
 ---
 #dev
 spring:

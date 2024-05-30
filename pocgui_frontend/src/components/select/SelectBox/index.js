@@ -3,12 +3,13 @@ import React from "react";
 
 const SelectBoxStyled = styled(Select)(({ theme, variant }) => ({}));
 
-const SelectBox = ({ options, value, onChange, style }) => {
+const SelectBox = ({ options, value, defaultValue, onChange, style }) => {
   return (
     <FormControl sx={{ verticalAlign: 'middle', minWidth: 100, minHeight: 26 }} >
       <SelectBoxStyled
         id="selectBox"
         value={ value }
+        defaultValue={ defaultValue }
         displayEmpty
         inputProps={{ 'aria-label': 'Without label' }}
         onChange={ onChange }

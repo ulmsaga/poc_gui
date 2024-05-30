@@ -32,9 +32,13 @@
                 CU_CAUSE_FAIL_TYPE B
                 ON A.FAIL_TYPE = B.FAIL_TYPE
             WHERE 1 = 1
-            AND A.EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
+            <include refid="sqlKpiAnalysisEventTimeCond" />
+            <include refid="sqlKpiAnalysisMainCond" />
+            AND A.CALL_TYPE IN <foreach collection="callTypeList" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+            <!--
             AND A.NODE_TYPE = 'MME'
             AND A.NODE_ID = '0067'
+            -->
             AND A.MCC = 'ALL'
             AND A.MNC = 'ALL'
             AND A.CAUSE_CNT > 0
@@ -55,7 +59,8 @@
 
     <sql id="sqlKpiAnalysis">
         SELECT
-            EVENT_TIME
+                DATE_FORMAT(EVENT_TIME, '%Y%m%d%H%i%s') EVENT_TIME
+            ,	DATE_FORMAT(EVENT_TIME, '%Y-%m-%d %H:%i:%s') EVENT_EXP_TIME
             , 	NODE1_TYPE, NODE1_ID, NODE1_NAME, NODE1_EXP_ID
             ,	NODE2_TYPE, NODE2_ID, NODE2_NAME, NODE2_EXP_ID
             ,   CALL_TYPE
@@ -83,9 +88,9 @@
             FROM
                 <include refid="sqlKpiAnalysisTableJoin" />
             WHERE 1 = 1
-            AND A.EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
+            <include refid="sqlKpiAnalysisEventTimeCond" />
             <include refid="sqlKpiAnalysisMainCond" />
-                AND A.CALL_TYPE IN <foreach collection="callTypeList" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+            AND A.CALL_TYPE IN <foreach collection="callTypeList" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
         ) A
         GROUP BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
         ORDER BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
@@ -208,6 +213,17 @@
         </if>
     </sql>
 
+    <sql id="sqlKpiAnalysisEventTimeCond">
+        <choose>
+            <when test = 'diffOneMin == true'>
+                AND A.EVENT_TIME = DATE_FORMAT(#{startTime}, '%Y%m%d%H%i%s')
+            </when>
+            <otherwise>
+                AND A.EVENT_TIME &gt;= DATE_FORMAT(#{startTime}, '%Y%m%d%H%i%s')
+                AND A.EVENT_TIME &lt;  DATE_FORMAT(#{endTime}, '%Y%m%d%H%i%s')
+            </otherwise>
+        </choose>
+    </sql>
     <sql id="sqlKpiAnalysisMainCond">
         <if test='graphType eq "NODE".toString()'>
             <choose>
@@ -256,4 +272,132 @@
             </choose>
         </if>
     </sql>
+
+    <!-- -->
+    <select id="getKpiAnalysisEquipCauseCnt" resultType ="com.mobigen.cdev.poc.module.nw.dto.EquipCaseCauseDto" parameterType="map">
+        <!-- MariaDB(local) 에서는 GROUPING이 안되 COALESCE 로 대체 -->
+        <!-- MySQL(prod) 에서는 GROUPING 사용 가는 하나 추후 정리 -->
+        SELECT
+            *
+        FROM
+            (
+                <include refid="sqlKpiAnalysisEquipCauseCnt" />
+            ) A
+        ORDER BY CASE WHEN STD_VALUE = '합계' THEN '0' ELSE STD_VALUE END
+    </select>
+
+    <sql id="sqlKpiAnalysisEquipCauseCnt">
+        SELECT
+            <include refid="com.mobigen.cdev.mapper.mysql.module.nw.analysis.sqlEquipCauseCntColumnsMariDB"/>
+        FROM
+        (
+            SELECT
+                <choose>
+                    <when test = 'targetNodeType eq "IMSI".toString()'>
+                        IFNULL(IMSI, 'NULL') IMSI
+                    </when>
+                    <when test = 'targetNodeType eq "UEM".toString()'>
+                        <!-- DECODE(IFNULL(IWF_ID, '-'), '-', 'NULL', NVL(MODEL_NAME, '-')) IWF_ID -->
+                        CASE
+                            WHEN
+                                IFNULL(IWF_ID, '-') = '-' THEN 'NULL'
+                            ELSE
+                                IFNULL(MODEL_NAME, '-')
+                        END IWF_ID
+                    </when>
+                    <when test = 'targetNodeType eq "VLAN".toString()'>
+                        <!-- DECODE(IFNULL(VLAN_ID, '0_0000'), '0_0000', 'NULL', IFNULL(VLAN_ID, '-')) VLAN_ID -->
+                        CASE
+                            WHEN
+                                IFNULL(VLAN_ID, '-') = '-' THEN 'NULL'
+                            ELSE
+                                VLAN_ID
+                        END VLAN_ID
+                    </when>
+                    <when test = 'targetNodeType eq "ENB".toString()'>
+                        IFNULL(BTS_NAME, 'NULL') BTS_NAME
+                    </when>
+                    <otherwise>
+                        CASE
+                            WHEN
+                                IFNULL(${targetNodeType}_ID, 'NULL') = '0000' THEN 'NULL'
+                            ELSE
+                                CASE
+                                    WHEN
+                                        IFNULL(${targetNodeType}_ID, 'NULL') REGEXP('^[0-9]+$') = 0 THEN 'NULL'
+                                    ELSE
+                                        CONCAT(#{targetNodeType}, '#', LPAD(${targetNodeType}_ID * 1, LENGTH(${targetNodeType}_ID * 1), '0'))
+                            END
+                        END ${targetNodeType}_ID
+                    </otherwise>
+                </choose>
+                ,	CAUSE_CNT
+            FROM
+                PM_PATH_ROOT_CAUSE_1M
+                <if test="targetNodeType=='UEM'"> A
+                    LEFT OUTER JOIN  CM_UEMODEL B
+                    ON A.IWF_ID = B.MODEL_CODE
+                    AND A.IWF_ID = B.MODEL_CODE
+                </if>
+            WHERE 1 = 1
+            AND CAUSE = #{selectedVal}
+            AND FAIL_TYPE = #{failType}
+            AND EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
+            AND CALL_TYPE = #{callType}
+            <!-- MCC MNC -->
+            AND MCC = 'ALL'
+            AND MNC = 'ALL'
+            <!-- MCC / MNC -->
+            AND ${node1Type}_ID = #{node1Id}
+            <if test='graphType=="LINK"'>
+                AND ${node2Type}_ID = #{node2Id}
+            </if>
+        ) A
+        <include refid="com.mobigen.cdev.mapper.mysql.module.nw.analysis.sqlEquipCauseGroupbyRollupMariDB"/>
+    </sql>
+
+    <sql id="sqlEquipCauseCntColumnsMariDB">
+        <choose>
+            <when test="targetNodeType == 'ENB'">
+                    COALESCE (BTS_NAME, '합계') STD_NAME
+                ,   BTS_NAME STD_VALUE
+                ,	IFNULL(SUM(CAUSE_CNT),0) CAUSE_CNT
+            </when>
+            <when test="targetNodeType == 'IMSI'">
+                    COALESCE (IMSI, '합계') STD_NAME
+                ,   IMSI STD_VALUE
+                ,	IFNULL(SUM(CAUSE_CNT),0) CAUSE_CNT
+            </when>
+            <when test="targetNodeType == 'UEM'">
+                    COALESCE (IWF_ID, '합계') STD_NAME
+                ,   IWF_ID STD_VALUE
+                ,	IFNULL(SUM(CAUSE_CNT),0) CAUSE_CNT
+            </when>
+            <otherwise>
+                    COALESCE (${targetNodeType}_ID, '합계') STD_NAME
+                ,   ${targetNodeType}_ID STD_VALUE
+                ,	IFNULL(SUM(CAUSE_CNT),0) CAUSE_CNT
+            </otherwise>
+        </choose>
+    </sql>
+    <sql id="sqlEquipCauseGroupbyRollupMariDB">
+        <choose>
+            <when test="targetNodeType == 'ENB'">
+                GROUP BY BTS_NAME WITH ROLLUP
+            </when>
+            <when test="targetNodeType == 'VLAN'">
+                GROUP BY VLAN_ID WITH ROLLUP
+            </when>
+            <when test="targetNodeType == 'IMSI'">
+                GROUP BY IMSI WITH ROLLUP
+            </when>
+            <when test="targetNodeType == 'UEM'">
+                GROUP BY IWF_ID WITH ROLLUP
+            </when>
+            <otherwise>
+                GROUP BY ${targetNodeType}_ID WITH ROLLUP
+            </otherwise>
+        </choose>
+    </sql>
+
 </mapper>

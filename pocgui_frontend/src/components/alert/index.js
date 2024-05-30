@@ -23,11 +23,11 @@ const Alert = () => {
 
   useEffect(() => {
     if (message.size ==='small') {
-      setStyle({ minWidth: 200, minHeight: 100 });
+      setStyle({ minWidth: 200, minHeight: 100, whiteSpace: 'pre-wrap'});
     } else if (message.size === 'medium') {
-      setStyle({ minWidth: 400, minHeight: 200 });
+      setStyle({ minWidth: 400, minHeight: 200, whiteSpace: 'pre-wrap' });
     } else if (message.size === 'large') {
-      setStyle({ minWidth: 600, minHeight: 300 });
+      setStyle({ minWidth: 600, minHeight: 300, whiteSpace: 'pre-wrap' });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message.size]);
@@ -59,7 +59,11 @@ const Alert = () => {
         dividers
         sx={ style }
       >
-        { message.msg }
+        { 
+          // message.msg.replace('<br>', '\n')
+          // message.msg.replace('<br>', '\n')
+          message.msg
+        }
       </DialogContent>
       <DialogActions>
         { message.type === 'confirm' && <Button onClick={confirm} autoFocus>확인</Button> }
