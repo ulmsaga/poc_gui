@@ -65,9 +65,11 @@
             ,	NODE2_TYPE, NODE2_ID, NODE2_NAME, NODE2_EXP_ID
             ,   CALL_TYPE
                 <include refid="sqlKpiAnalysisCaclulatedSumKpiColumns" />
+            <if test="pivotCauseList.size > 0">
             ,   <foreach item="item" index="index" collection="pivotCauseList" open="" separator="," close="">
                     SUM(CASE WHEN CAUSE = #{item} THEN CAUSE_CNT ELSE 0 END) ${item}
                 </foreach>
+            </if>
         FROM
         (
             SELECT
@@ -342,7 +344,7 @@
             WHERE 1 = 1
             AND CAUSE = #{selectedVal}
             AND FAIL_TYPE = #{failType}
-            AND EVENT_TIME = DATE_FORMAT('20240520130000', '%Y%m%d%H%i%s')
+            AND EVENT_TIME = DATE_FORMAT(#{startTime}, '%Y%m%d%H%i%s')
             AND CALL_TYPE = #{callType}
             <!-- MCC MNC -->
             AND MCC = 'ALL'

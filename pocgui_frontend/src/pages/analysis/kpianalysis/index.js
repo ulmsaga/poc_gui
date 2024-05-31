@@ -297,12 +297,12 @@ const KpiAnalysis = () => {
     // Terms & Time
     param.timeCond = period;
     param.startTime = formatDate(selectedFromToDate.startDate, 'yyyyMMddHHmm00');
-    param.endTIme = formatDate(selectedFromToDate.endDate, 'yyyyMMddHHmm00');
-    if (param.timeCond === '1M' && param.startTime === param.endTIme) {
+    param.endTime = formatDate(selectedFromToDate.endDate, 'yyyyMMddHHmm00');
+    if (param.timeCond === '1M' && param.startTime === param.endTime) {
       param.isValid = false;
       param.nonValidMsg = '시작 시간과 종료 시간을 다르게 설정하세요.\n';
     }
-    if (param.startTime === param.endTIme) {
+    if (param.startTime === param.endTime) {
       param.isValid = false;
       param.nonValidMsg = param.nonValidMsg + '종료 시간이 시작 시간보다 빠릅니다. 변경 후 조회 해 주시기 바랍니다.\n';
     }
@@ -360,10 +360,8 @@ const KpiAnalysis = () => {
     getKpiAnalysis(param).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
-          // setRowData(ret.rs);
-          // console.log(ret.rs);
-          rootCauseAddedCols(ret.rs.causeList);
-          setKpiAnalysisData([...ret.rs.list]);
+          if (ret.rs?.causeList !== null && ret.rs?.causeList !== undefined) rootCauseAddedCols(ret.rs.causeList);
+          if (ret.rs?.list !== null && ret.rs?.list !== undefined) setKpiAnalysisData([...ret.rs.list]);
         }
       }
     });
@@ -398,10 +396,10 @@ const KpiAnalysis = () => {
         if (ret.rs !== undefined) {
           const data = ret.rs
           if (data?.imsi !== null && data?.imsi !== undefined) setImsi(data.imsi);
-          if (data?.enb != null && data?.enb !== undefined) setEnb(data.enb);
-          if (data?.mme != null && data?.mme !== undefined) setMme(data.mme);
-          if (data?.sgw != null && data?.sgw !== undefined) setSgw(data.sgw);
-          if (data?.pgw != null && data?.pgw !== undefined) setPgw(data.pgw);
+          if (data?.enb !== null && data?.enb !== undefined) setEnb(data.enb);
+          if (data?.mme !== null && data?.mme !== undefined) setMme(data.mme);
+          if (data?.sgw !== null && data?.sgw !== undefined) setSgw(data.sgw);
+          if (data?.pgw !== null && data?.pgw !== undefined) setPgw(data.pgw);
         }
       }
     });

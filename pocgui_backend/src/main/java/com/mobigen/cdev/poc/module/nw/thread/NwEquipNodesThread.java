@@ -1,82 +1,41 @@
-package com.mobigen.cdev.poc.module.nw.service;
+package com.mobigen.cdev.poc.module.nw.thread;
 
-import com.mobigen.cdev.poc.core.util.annotation.EnvStatus;
-import com.mobigen.cdev.poc.module.nw.dto.EnbNodeDto;
-import com.mobigen.cdev.poc.module.nw.dto.EquipNodeDto;
-import com.mobigen.cdev.poc.module.nw.dto.NwEquipNodesDto;
-import com.mobigen.cdev.poc.module.nw.dto.TreeNodeDto;
-import com.mobigen.cdev.poc.module.nw.process.NwConfigDemon;
+import com.mobigen.cdev.poc.module.common.dto.common.ThreadCallResult;
+import com.mobigen.cdev.poc.module.nw.dto.*;
 import com.mobigen.cdev.poc.module.nw.repository.mybatis.NwConfigRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-@Service
-public class NwConfigServiceImpl implements NwConfigService {
+public class NwEquipNodesThread implements Callable<ThreadCallResult> {
 
-    private final NwConfigRepository nwConfigRepository;
-    private final Environment env;
+    private NwConfigRepository nwConfigRepository;
+    private Map<String, Object> param = new HashMap<String, Object>();
 
-    private final NwConfigDemon nwConfigDemon;
+    private String sid;
 
-    @SuppressWarnings("unused")
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    public static String C_ENB_LIST = "ENB_LIST";
+    public static String C_ENB_TREE = "ENB_TREE";
+    public static String C_MME_LIST = "MME_LIST";
+    public static String C_MME_TREE = "MME_TREE";
 
-    @Autowired
-    public NwConfigServiceImpl(NwConfigRepository nwConfigRepository, NwConfigDemon nwConfigDemon, Environment env) {
+    public static final int POOL = 10;
+
+    public NwEquipNodesThread(NwConfigRepository nwConfigRepository, String sid, Map<String, Object> param) {
         this.nwConfigRepository = nwConfigRepository;
-        this.nwConfigDemon = nwConfigDemon;
-        this.env = env;
+        this.sid = sid;
+        this.param = param;
     }
 
-    @PostConstruct
-    public void initialize(){
-        String envStatus = env.getProperty("spring.profiles.active");
-
-
-        if ("local".equals(envStatus)) {
-            //Run Demon (dev, prod)
-            boolean isRun = nwConfigDemon.isRun();
-            if(!isRun){
-                nwConfigDemon.setRun(true);
-                Thread demon = new Thread(nwConfigDemon);
-                boolean demonIsAlive = demon.isAlive();
-                if(!demonIsAlive) demon.start();
-            }
-            /*
-            isRun = awakenProcess.isRun();
-            if(!isRun){
-                awakenProcess.setRun(true);
-                Thread awakenDemon = new Thread(awakenProcess);
-                boolean awakenDemonIsAlive = awakenDemon.isAlive();
-                if(!awakenDemonIsAlive) awakenDemon.start();
-            }
-            */
-        }
-    }
-
-    @Override
-    @EnvStatus
-    public List<EquipNodeDto> getMmeList(Map<String, Object> param) {
-        return nwConfigRepository.getMmeList(param);
-    }
-
-    @Override
-    @EnvStatus
-    public List<TreeNodeDto> getMmeTreeList(Map<String, Object> param) {
+    private List<TreeNodeDto> getEquipTree(List<EquipNodeDto> list) {
         List<TreeNodeDto> mtsoList = new ArrayList<>();
         TreeNodeDto mtsoNode = new TreeNodeDto();
         List<TreeNodeDto> mmeList = new ArrayList<>();
         //
-        List<EquipNodeDto> list = nwConfigRepository.getMmeList(param);
         for (EquipNodeDto node: list) {
             if ("Y".equals(node.getMtso_first())) {
                 mtsoNode = new TreeNodeDto();
@@ -104,24 +63,7 @@ public class NwConfigServiceImpl implements NwConfigService {
         return mtsoList;
     }
 
-    @Override
-    @EnvStatus
-    public List<EnbNodeDto> getEnbList(Map<String, Object> param) {
-        return nwConfigRepository.getEnbList(param);
-    }
-
-    @Override
-    @EnvStatus
-    public List<TreeNodeDto> getEnbTreeList(Map<String, Object> param) {
-        NwEquipNodesDto nodes = nwConfigDemon.nwEquipNodes();
-        if (nodes != null) {
-            if (nodes.getEnbTreeList() != null) {
-                if (nodes.getEnbTreeList().size() > 0) {
-                    return nodes.getEnbTreeList();
-                }
-            }
-        }
-
+    public List<TreeNodeDto> getEnbTreeList(List<EnbNodeDto> list) {
         List<TreeNodeDto> branchList = new ArrayList<>();
         TreeNodeDto branchNode = new TreeNodeDto();
 
@@ -132,13 +74,6 @@ public class NwConfigServiceImpl implements NwConfigService {
         TreeNodeDto partNode = new TreeNodeDto();
 
         List<TreeNodeDto> enbList = new ArrayList<>();
-
-        // logger.debug("=====================================");
-        // logger.debug("01. Before GetEnbList");
-
-        List<EnbNodeDto> list = nwConfigRepository.getEnbList(param);
-
-        // logger.debug("02. After GetEnbList");
 
         for (EnbNodeDto node: list) {
 
@@ -157,7 +92,6 @@ public class NwConfigServiceImpl implements NwConfigService {
 
             if ("Y".equals(node.getPart_last())) {
                 partNode.setId(node.getPart_id());
-                // partNode.setId(Integer.parseInt(node.getPart_id()));
                 partNode.setName(node.getPart_name());
                 partNode.setState(setDefaultState("PART"));
 
@@ -166,7 +100,6 @@ public class NwConfigServiceImpl implements NwConfigService {
             }
             if ("Y".equals(node.getOpteam_last())) {
                 opteamNode.setId(node.getOpteam_id());
-                // opteamNode.setId(Integer.parseInt(node.getOpteam_id()));
                 opteamNode.setName(node.getOpteam_name());
                 opteamNode.setState(setDefaultState("OPTEAM"));
                 opteamNode.setChildren(partList);
@@ -175,7 +108,6 @@ public class NwConfigServiceImpl implements NwConfigService {
             }
             if ("Y".equals(node.getBranch_last())) {
                 branchNode.setId(node.getBranch_id());
-                // branchNode.setId(Integer.parseInt(node.getBranch_id()));
                 branchNode.setName(node.getBranch_name());
                 branchNode.setState(setDefaultState("BRANCH"));
                 branchNode.setChildren(opteamList);
@@ -185,13 +117,10 @@ public class NwConfigServiceImpl implements NwConfigService {
 
             TreeNodeDto enbNode = new TreeNodeDto();
             enbNode.setId(node.getEnb_id());
-            // enbNode.setId(Integer.parseInt(node.getEnb_id()));
             enbNode.setName(node.getBts_name());
             enbNode.setState(setDefaultState("ENB", true));
             enbList.add(enbNode);
         }
-
-        // logger.debug("03. After Make Tree");
 
         return branchList;
     }
@@ -220,5 +149,43 @@ public class NwConfigServiceImpl implements NwConfigService {
         state.put("alarmGrade", "NR");
 
         return state;
+    }
+
+    @Override
+    public ThreadCallResult call() throws Exception {
+        TimeUnit.MILLISECONDS.sleep(40);
+
+        ThreadCallResult ret = new ThreadCallResult();
+
+        switch (sid) {
+            case "ENB_LIST":
+                List<EnbNodeDto> enbList = nwConfigRepository.getEnbList(param);
+                ret.setRetType(KpiAnalysisEquipCauseCntThread.LIST_TYPE);
+                ret.setRetMsg(NwEquipNodesThread.C_ENB_LIST);
+                ret.setRetList(enbList);
+                break;
+            case "MME_LIST":
+                List<EquipNodeDto> mmeList = nwConfigRepository.getMmeList(param);
+                ret.setRetType(KpiAnalysisEquipCauseCntThread.LIST_TYPE);
+                ret.setRetMsg(NwEquipNodesThread.C_MME_LIST);
+                ret.setRetList(mmeList);
+                break;
+            case "ENB_TREE":
+                List<TreeNodeDto> enbTree = getEnbTreeList(nwConfigRepository.getEnbList(param));
+                ret.setRetType(KpiAnalysisEquipCauseCntThread.LIST_TYPE);
+                ret.setRetMsg(NwEquipNodesThread.C_ENB_TREE);
+                ret.setRetList(enbTree);
+                break;
+            case "MME_TREE":
+                List<TreeNodeDto> mmeTree = getEquipTree(nwConfigRepository.getMmeList(param));
+                ret.setRetType(KpiAnalysisEquipCauseCntThread.LIST_TYPE);
+                ret.setRetMsg(NwEquipNodesThread.C_MME_TREE);
+                ret.setRetList(mmeTree);
+                break;
+            default:
+                break;
+        }
+
+        return ret;
     }
 }
