@@ -4,11 +4,11 @@ import 'ag-grid-community/styles/ag-grid.css';
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import 'ag-grid-community/styles/ag-theme-balham.min.css'
 import 'styles/ag-grid.css';
-import { ContextMenu } from "./ContextMenu";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { AgGridReact } from "ag-grid-react";
+import { ContextMenu } from "components/context/ MenuContext";
 
-function GridMain ({rowData, columnDefs, defaultColDef, style, className, rowSelection, getSelectedData, suppressRowClickSelection, isRowSelectable, getGridCurrApi, onCellDoubleClicked, onCellClicked, onCellValueChanged, onRowValueChanged, editType, stopEditingWhenCellsLoseFocus, useContextMenu }) {
+function GridMain ({rowData, columnDefs, defaultColDef, style, className, rowSelection, getSelectedData, suppressRowClickSelection, isRowSelectable, getGridCurrApi, onCellDoubleClicked, onCellClicked, onCellValueChanged, onRowValueChanged, editType, stopEditingWhenCellsLoseFocus, useContextMenu, onCellCustomContextMenu }) {
   const gridSimpleRef = useRef();
   const gridRef = useRef();
   const initDefaultColDef = useMemo(() => ({
@@ -56,6 +56,10 @@ function GridMain ({rowData, columnDefs, defaultColDef, style, className, rowSel
   }, []);
 
   const onCellContextMenu = (e) => {
+    if (onCellCustomContextMenu !== undefined) {
+      onCellCustomContextMenu(e);
+      return;
+    }
     if (!useContextMenu) return;
     if (e.rowIndex === undefined || e?.rowIndex < 0 || e.value === undefined || e?.value === "") return;
     setClicked(true);

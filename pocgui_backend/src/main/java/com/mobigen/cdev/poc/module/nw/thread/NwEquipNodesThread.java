@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 
 public class NwEquipNodesThread implements Callable<ThreadCallResult> {
 
-    private NwConfigRepository nwConfigRepository;
+    private final NwConfigRepository nwConfigRepository;
     private Map<String, Object> param = new HashMap<String, Object>();
 
-    private String sid;
+    private final String sid;
 
     public static String C_ENB_LIST = "ENB_LIST";
     public static String C_ENB_TREE = "ENB_TREE";

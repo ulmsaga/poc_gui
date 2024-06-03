@@ -100,33 +100,41 @@
 
     <sql id="sqlEnbList" >
         select
-            A.branch_id
-        ,	B.branch_name
-        ,	A.opteam_id
-        ,	C.team_name opteam_name
-        ,	A.part_id
-        ,	D.part_name
-        ,	A.mtso_name
-        ,	E.mtso_id
-        ,	enb_id
-        ,	bts_name
-        ,   enb_id value
-        ,   concat(ifnull(bts_name, '-'), ' (', enb_id, ')') label
-        ,   case when ifnull(opteam_name, '-') = '-' then '미분류'
-                else concat(opteam_name, ' (', opteam_id, ')')
-            end group_filter
-        ,   concat(ifnull(bts_name, '-'), ' (', enb_id, ')') description
+            A.*
         from
-            <include refid="cl_enb" /> A
-            left outer join <include refid="cm_branch" /> B
-            on A.branch_id = B.branch_id
-            left outer join <include refid="cm_team" /> C
-            on A.opteam_id = C.team_id
-            left outer join <include refid="cm_part" /> D
-            on A.part_id = D.part_id
-            left outer join <include refid="cb_mtso" /> E
-            on A.mtso_name = E.mtso_name
-        where 1 = 1
-        and opr_status = 'ACT'
+        (
+            select
+                A.branch_id
+            ,	B.branch_name
+            ,	A.opteam_id
+            ,	C.team_name opteam_name
+            ,	A.part_id
+            ,	D.part_name
+            ,	A.mtso_name
+            ,	E.mtso_id
+            ,	enb_id
+            ,	bts_name
+            ,   enb_id value
+            ,   concat(ifnull(bts_name, '-'), ' (', enb_id, ')') label
+            ,   case when ifnull(opteam_name, '-') = '-' then '미분류'
+                    else concat(opteam_name, ' (', opteam_id, ')')
+                end group_filter
+            ,   concat(ifnull(bts_name, '-'), ' (', enb_id, ')') description
+            ,	@ROWNUM:=@ROWNUM+1 AS row_num
+            from
+                <include refid="cl_enb" /> A
+                left outer join <include refid="cm_branch" /> B
+                on A.branch_id = B.branch_id
+                left outer join <include refid="cm_team" /> C
+                on A.opteam_id = C.team_id
+                left outer join <include refid="cm_part" /> D
+                on A.part_id = D.part_id
+                left outer join <include refid="cb_mtso" /> E
+                on A.mtso_name = E.mtso_name
+                ,	(SELECT @rownum:=0) TMP
+            where 1 = 1
+            and opr_status = 'ACT'
+        ) A
+        where A.row_num &lt; 4000
     </sql>
 </mapper>

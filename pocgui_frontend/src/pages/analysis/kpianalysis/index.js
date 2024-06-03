@@ -1,37 +1,42 @@
 import { FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
-import { Button, Stack } from "@mui/material";
+import { Button, OutlinedInput, Stack } from "@mui/material";
 import { getKpiAnalysis, getKpiAnalysisEquipCauseCnt } from "api/nw/analysisApi";
+import { getEnbList, getMmeList } from "api/nw/configApi";
+import { getLastStatusTime } from "api/nw/monitorApi";
 import { AutoCompleteCheck, AutoCompleteGroup } from "components/autocomplete";
 import { ButtonIconHelp } from "components/button";
+import { ContextMenu } from "components/context/ MenuContext";
 import { DatePickerFromTo } from "components/datepicker";
 import GridMain from "components/grid/GridMain";
 import { TypoLabel } from "components/label";
 import SelectBox from "components/select/SelectBox";
 import { callTypeList, nodeTypeList, periodList } from "data/common";
-import { add, addMinutes, differenceInMinutes } from "date-fns";
+import { addMinutes, differenceInMinutes } from "date-fns";
 import useMessage from "hooks/useMessage";
 import { forEach, split } from "lodash";
 import PopupCallFailSearch from "pages/monitoring/networkmonitoring/popup/PopupCallFailSearch.js";
 import PopupEquipSearch from "popup/PopupEquipSearch";
-import React, { Fragment, useEffect, useMemo, useState } from "react";
-import { formatDate } from "utils/common";
+import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { fnStrToDate, formatDate } from "utils/common";
 
-const KpiAnalysis = () => {
+const KpiAnalysis = ({ monitorParam }) => {
 
   const { alert, confirm } = useMessage();
 
   // Period
   const [period, setPeriod] = useState('1M');
 
+  const [lastStatusTime, setLastStatusTime] = useState('');
+
   // From Date, To Date
   const [selectedFromToDate, setSelectedFromToDate] = useState({
-    startDate: addMinutes(new Date(), -1),
-    endDate: new Date(),
-    searchTarget: 'historyFromToTime'
+    startDate: fnStrToDate(lastStatusTime),
+    endDate: addMinutes(fnStrToDate(lastStatusTime), 1),
+    searchTarget: 'kpiAnalysisFromToTime'
   });
 
   const changeFromToDate = (e) => {
-    if (e.searchTarget !== 'historyFromToTime') return;
+    if (e.searchTarget !== 'kpiAnalysisFromToTime') return;
     if (e.name === 'startDate') {
       setSelectedFromToDate({ ...selectedFromToDate, startDate: e.value });
     } else if (e.name === 'endDate') {
@@ -417,9 +422,58 @@ const KpiAnalysis = () => {
     setSgw([]);
     setPgw([]);
   };
+ 
+
+  const getDefaultTime = () => {
+    const param = {};
+    getLastStatusTime(param).then(response => response.data).then((ret) => {
+      if (ret !== undefined) {
+        if (ret.rs !== undefined) {
+          setSelectedFromToDate({ startDate: fnStrToDate(ret.rs), endDate: addMinutes(fnStrToDate(ret.rs), 1) , searchTarget: 'kpiAnalysisFromToTime' });
+          // setMonitorTime(ret.rs);
+        }
+      }
+    });
+  };
+
+  // Grid Context
+  const gridSimpleRef = useRef();
+  const selectedCellRef = useRef({});
+  const [clicked, setClicked] = useState(false);
+  const [points, setPoints] = useState({ x: 0, y: 0 })
+
+  const minKpiGroupId = 3;
+  const minCauseGroupId = 8;
+
+  const onCellCustomContextMenu = (e) => {
+    // if (!useContextMenu) return;
+    if (e.rowIndex === undefined || e?.rowIndex < 0 || e.value === undefined || e?.value === "") return;
+    setClicked(true);
+    setPoints({ x: e.event.pageX - gridSimpleRef.current?.getBoundingClientRect()?.left + 170, y: e.event.pageY - gridSimpleRef.current?.getBoundingClientRect()?.top + 160 });
+    selectedCellRef.current = e;
+    if (e.column.parent.groupId < minKpiGroupId) {
+      setClicked(false);
+    } 
+    
+  };
 
   useEffect(() => {
-    setNode1List([...mmeList]);
+    // console.log("useEffect :: " + monitorParam);
+    getDefaultTime();
+    getMmeList({}).then((response) => { 
+      setMmeList(response.data.rs)
+      setNode1List([...response.data.rs]);
+    });
+    getEnbList({}).then((response) => { 
+      setEnbList(response.data.rs)
+    });
+
+    // grid Context
+    const handleClick = () => setClicked(false);
+    window.addEventListener("click", handleClick);
+    return () => {
+      window.removeEventListener("click", handleClick);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -447,13 +501,16 @@ const KpiAnalysis = () => {
           <Stack direction={'row'} spacing={0.2}>
             <TypoLabel label={'대상장비1'} />
             <SelectBox options={ nodeTypeList } value={ searchTarget1.value } onChange={ node1TypeChange }/>
-            <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 287 } groupFilter={'group_filter'} />
-            <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node1') }} />
+            { (searchTarget1.value !== 'ENB' && searchTarget1.value !== '-' ) && <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 287 } groupFilter={'group_filter'} /> }
+            { (searchTarget1.value === 'ENB' || searchTarget1.value === '-' ) && <OutlinedInput value={""} onChange={(e) => {}} sx={{ width: 287, borderRadius: 0 }} disabled /> }
+            { (searchTarget1.value !== '-') && <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node1') }} /> }
           </Stack>
           <Stack direction={'row'} spacing={0.2}>
             <TypoLabel label={'대상장비2'} />
             <SelectBox options={ node2TypeList } value={ searchTarget2.value } onChange={ node2TypeChange }/>
-            <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 287 } groupFilter={'group_filter'} />
+            { (searchTarget2.value !== 'ENB' && searchTarget2.value !== '-') && <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 287 } groupFilter={'group_filter'} /> }
+            { (searchTarget2.value === 'ENB' || searchTarget2.value === '-') && <OutlinedInput value={""} onChange={(e) => {}} sx={{ width: 287, borderRadius: 0 }} disabled /> }
+            { (searchTarget2.value !== '-')  && <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node2') }} /> }
           </Stack>
         </Stack>
         {/* ROW3 */}
@@ -466,14 +523,26 @@ const KpiAnalysis = () => {
       </Stack>
       {/* GRID KPI - CAUSE */}
       <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '60%' }}>
-        <GridMain
-          className={'ag-theme-balham'}
-          style={{ height: '100%' }}
-          columnDefs={analysisCols}
-          rowData={kpiAnalysisData}
-          // getSelectedData={ getSelectedKpiAnalysisData }
-          onCellDoubleClicked={ gridKpiCellDbClick }
-        />
+        <div ref = { gridSimpleRef } style={{ height: '100%' }} onContextMenu={(e) => {  e.preventDefault(); }}>
+          {clicked && (
+            <ContextMenu top={points.y} left={points.x}>
+              <ul>
+                {/* 셀 복사 */}
+                {/* <CopyToClipboard text = { selectedCellRef.current.value } ><li>셀 복사</li></CopyToClipboard> */}
+                <li>Trend Chart 보기</li>
+              </ul>
+            </ContextMenu>
+          )}
+          <GridMain
+            className={'ag-theme-balham'}
+            style={{ height: '100%' }}
+            columnDefs={analysisCols}
+            rowData={kpiAnalysisData}
+            // getSelectedData={ getSelectedKpiAnalysisData }
+            onCellDoubleClicked={ gridKpiCellDbClick }
+            onCellCustomContextMenu={ onCellCustomContextMenu }
+          />
+        </div>
       </Stack>
       {/* GRID PATH */}
       <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: 'calc(40% - 92px)' }}>

@@ -78,6 +78,7 @@ public class NwConfigDemon implements Runnable {
             try {
                 ThreadCallResult fget = future.get();
                 String sMsgId = fget.getRetMsg();
+                logger.debug("sMsgId :: {}", sMsgId);
                 switch (sMsgId) {
                     case "ENB_LIST":
                         ret.setEnbList((List<EnbNodeDto>) fget.getRetList());
@@ -100,16 +101,15 @@ public class NwConfigDemon implements Runnable {
             executor.shutdown();;
         }
 
-        logger.debug("Result Equips : {}", "OK!!!");
+        // logger.debug("enbList size :: {}", ret.getEnbList().size());
+        // logger.debug("enbTree size :: {}", ret.getEnbTreeList().size());
         return ret;
     }
 
     public NwEquipNodesDto nwEquipNodes() {
         NwEquipNodesDto ret = new NwEquipNodesDto();
 
-        if (dataList.size() == 0) {
-            // ret = getNwEquipNodes();
-        } else {
+        if (dataList.size() > 0) {
             ret = dataList.get(dataList.size() - 1);
         }
 
@@ -123,7 +123,7 @@ public class NwConfigDemon implements Runnable {
                 logger.debug("current Idx : {}", currentIdx);
 
                 if (currentIdx >= 1) {
-                    Thread.currentThread().sleep(120000);
+                    Thread.currentThread().sleep(10000);
                     continue;
                 }
                 if (currentIdx >= saveMinCnt) {

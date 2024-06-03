@@ -8,6 +8,7 @@ import { getEnbTreeList, getMmeTreeList } from "api/nw/configApi.js";
 import { TypoLabel, TypoMarkLableNoLine } from "components/label/index.js";
 import { DateRangeTwoTone, PauseCircleFilledTwoTone, PlayCircleFilledTwoTone } from "@mui/icons-material";
 import KpiAnalysis from "pages/analysis/kpianalysis/index.js";
+import { getLastStatusTime } from "api/nw/monitorApi.js";
 
 const NetworkMonitoring = () => {
   // eslint-disable-next-line no-unused-vars
@@ -96,7 +97,24 @@ const NetworkMonitoring = () => {
   const [nodeAlarmList, setNodeALarmList] = useState([]);
   const [linkALarmList, setLinkALarmList] = useState([]);
 
+  // const [lastStatusTime, setLastStatusTime] = useState('');
+  const [monitorParam, setMonitorParam] = useState({});
+  const [monitorTime, setMonitorTime] = useState('');
+
+  const getMonitorTime = () => {
+    const param = {};
+    getLastStatusTime(param).then(response => response.data).then((ret) => {
+      if (ret !== undefined) {
+        if (ret.rs !== undefined) {
+          // setSelectedFromToDate({ startDate: fnStrToDate(ret.rs), endDate: addMinutes(fnStrToDate(ret.rs), 1) , searchTarget: 'kpiAnalysisFromToTime' });
+          setMonitorTime(ret.rs);
+        }
+      }
+    });
+  };
+
   useEffect(() => {
+    getMonitorTime();
     // setNode1List([...mmeList]);
     getMmeTreeList({}).then((response) => { console.log('getMmeTreeList', setMmeTreeList(response.data.rs)); });
     getEnbTreeList({}).then((response) => { console.log('getEnbTreeList', setEnbTreeList(response.data.rs)); });
@@ -158,7 +176,7 @@ const NetworkMonitoring = () => {
               <TypoMarkLableNoLine label={'KPI ANALYSIS'} style={{ width: '100%' }}/>
             </Stack>
             <Box height={'calc(100% - 30px)'} width={'100%'} gap={4} m={0} p={0} >
-              <KpiAnalysis />
+              <KpiAnalysis monitorParam={ monitorParam }/>
             </Box>
           </Box>
           <Box height={'calc(30% - 4px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >

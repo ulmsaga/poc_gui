@@ -66,7 +66,21 @@ public class NwConfigServiceImpl implements NwConfigService {
     @Override
     @EnvStatus
     public List<EquipNodeDto> getMmeList(Map<String, Object> param) {
-        return nwConfigRepository.getMmeList(param);
+        List<EquipNodeDto> ret = new ArrayList<>();
+        if (param.get("searchType") == null || param.get("searchText") == null) {
+            ret = nwConfigDemon.nwEquipNodes().getMmeList();
+        } else {
+
+            if ("".equals(param.get("searchText").toString().trim())) {
+                ret = nwConfigDemon.nwEquipNodes().getMmeList();
+                if (ret.size() == 0) {
+                    ret = nwConfigRepository.getMmeList(param);
+                }
+            } else {
+                ret = nwConfigRepository.getMmeList(param);
+            }
+        }
+        return ret;
     }
 
     @Override
@@ -107,7 +121,20 @@ public class NwConfigServiceImpl implements NwConfigService {
     @Override
     @EnvStatus
     public List<EnbNodeDto> getEnbList(Map<String, Object> param) {
-        return nwConfigRepository.getEnbList(param);
+        List<EnbNodeDto> ret = new ArrayList<>();
+        if (param.get("searchType") == null || param.get("searchText") == null) {
+            ret = nwConfigDemon.nwEquipNodes().getEnbList();
+        } else {
+            if ("".equals(param.get("searchText").toString().trim())) {
+                ret = nwConfigDemon.nwEquipNodes().getEnbList();
+                if (ret.size() == 0) {
+                    ret = nwConfigRepository.getEnbList(param);
+                }
+            } else {
+                ret = nwConfigRepository.getEnbList(param);
+            }
+        }
+        return ret;
     }
 
     @Override

@@ -11,7 +11,7 @@ export const MenuContextContainer = styled.div`
 export const ContextMenu = styled.div`
   position: absolute;
   width: 150px;
-  background-color: #5b626d;
+  background-color: #fafafb;
   border-radius: 5px;
   box-sizing: border-box;
   opacity: 1;
