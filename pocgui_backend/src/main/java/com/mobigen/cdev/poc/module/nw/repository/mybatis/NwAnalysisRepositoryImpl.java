@@ -1,5 +1,6 @@
 package com.mobigen.cdev.poc.module.nw.repository.mybatis;
 
+import com.mobigen.cdev.poc.module.common.dto.common.TrendChartDto;
 import com.mobigen.cdev.poc.module.nw.dto.EquipCaseCauseDto;
 import com.mobigen.cdev.poc.module.nw.dto.RootCauseForPivotDto;
 import org.mybatis.spring.SqlSessionTemplate;
@@ -30,5 +31,10 @@ public class NwAnalysisRepositoryImpl implements NwAnalysisRepository {
     @Override
     public List<EquipCaseCauseDto> getKpiAnalysisEquipCauseCnt(Map<String, Object> param) {
         return sqlSessionTemplatePemdb1.selectList(namespace + ".getKpiAnalysisEquipCauseCnt", param);
+    }
+
+    @Override
+    public List<TrendChartDto> getTrendKpiAndCauseAnalysis(Map<String, Object> param) {
+        return sqlSessionTemplatePemdb1.selectList(namespace + ".getTrendKpiAndCauseAnalysis", param);
     }
 }

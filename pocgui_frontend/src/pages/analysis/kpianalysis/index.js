@@ -18,6 +18,7 @@ import PopupCallFailSearch from "pages/monitoring/networkmonitoring/popup/PopupC
 import PopupEquipSearch from "popup/PopupEquipSearch";
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { fnStrToDate, formatDate } from "utils/common";
+import PopupKpiCauseTrend from "./popup/PopupKpiCauseTrend";
 
 const KpiAnalysis = ({ monitorParam }) => {
 
@@ -152,6 +153,9 @@ const KpiAnalysis = ({ monitorParam }) => {
   // Equip Search
   const [isOpenEquipSearch, setIsOpenEquipSearch] = useState(false);
   const [equipSearchParam, setEquipSearchparam] = useState({});
+  // Trend Chart
+  const [isOpenTrendChart, setIsOpenTrendChart] = useState(false);
+  const [trendChartParam, setTrendChartParam] = useState({});
 
   // eslint-disable-next-line no-unused-vars
   const openPopupStatus = (params) => {
@@ -429,8 +433,8 @@ const KpiAnalysis = ({ monitorParam }) => {
     getLastStatusTime(param).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
+          setLastStatusTime(ret.rs);
           setSelectedFromToDate({ startDate: fnStrToDate(ret.rs), endDate: addMinutes(fnStrToDate(ret.rs), 1) , searchTarget: 'kpiAnalysisFromToTime' });
-          // setMonitorTime(ret.rs);
         }
       }
     });
@@ -451,10 +455,57 @@ const KpiAnalysis = ({ monitorParam }) => {
     setClicked(true);
     setPoints({ x: e.event.pageX - gridSimpleRef.current?.getBoundingClientRect()?.left + 170, y: e.event.pageY - gridSimpleRef.current?.getBoundingClientRect()?.top + 160 });
     selectedCellRef.current = e;
-    if (e.column.parent.groupId < minKpiGroupId) {
+    if (e.column.parent.groupId >= minKpiGroupId) {
+      const param = {};
+      param.startTime = e.data.EVENT_TIME;
+      param.compareType='lastDay'
+      if (e.data.NODE2_TYPE === '' || e.data.NODE2_TYPE === '-' || e.data.NODE2_TYPE === null) {
+        param.graphType = 'NODE';
+      } else {
+        param.graphType = 'LINK';
+      }
+      param.node1Type = e.data.NODE1_TYPE;
+      param.node1List = [];
+      param.node1List.push(e.data.NODE1_ID);
+      param.node2Type = e.data.NODE2_TYPE;
+      if (param.graphType === 'LINK') {
+        param.node2List = [];
+        param.node2List.push(e.data.NODE2_ID);
+      }
+      
+      param.callTypeList = []
+      param.callTypeList.push(e.data.CALL_TYPE);
+
+      if (e.column.parent.groupId >= minCauseGroupId) {
+        // CAUSE
+        param.trendType = 'ROOT_CAUSE';
+        const tmp = e.column.colId;
+        param.failType = tmp.substr(0, tmp.length - 11);
+        param.selectedVal = tmp.replace(param.failType + '_', '');
+      } else {
+        // KPI
+        param.trendType = 'KPI';
+        param.selectedVal = e.column.colId;
+      }
+      param.selectedValType = getSelectedValType(param.selectedVal);
+      setTrendChartParam(param);
+      // 
+    } else {
       setClicked(false);
-    } 
-    
+    }
+  };
+
+  const getSelectedValType = (selectedVal) => {
+    let selectedValType = 'CNT';
+    selectedVal = selectedVal.toUpperCase();
+    if (selectedVal.indexOf('RATE') >= 0) {
+      selectedValType = 'RATE';
+    } else if (selectedVal.indexOf('CNT') >= 0 || selectedVal.indexOf('COUNT') >= 0) {
+      selectedValType = 'CNT';
+    } else if (selectedVal.indexOf('TIME') >= 0) {
+      selectedValType = 'TIME';
+    }
+    return selectedValType;
   };
 
   useEffect(() => {
@@ -529,7 +580,11 @@ const KpiAnalysis = ({ monitorParam }) => {
               <ul>
                 {/* 셀 복사 */}
                 {/* <CopyToClipboard text = { selectedCellRef.current.value } ><li>셀 복사</li></CopyToClipboard> */}
-                <li>Trend Chart 보기</li>
+                <li>
+                  <div onClick={(e) => { setIsOpenTrendChart(true); }}>
+                  Trend Chart 보기
+                  </div>
+                </li>
               </ul>
             </ContextMenu>
           )}
@@ -579,6 +634,7 @@ const KpiAnalysis = ({ monitorParam }) => {
       </Stack>
       <PopupCallFailSearch title={'Call Fail Search'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenCallFailSearch } setIsOpen={ setIsOpenCallFailSearch }/>
       <PopupEquipSearch title={'Equip Search'} params={ equipSearchParam } popupCallBack={ callBackEquipSearch } style={{ width: '100%', height: 1000 }} isOpen={ isOpenEquipSearch } setIsOpen={ setIsOpenEquipSearch }/>
+      <PopupKpiCauseTrend title={'Trend'} params={ trendChartParam } style={{ width: '100%', height: 1000 }} isOpen={ isOpenTrendChart } setIsOpen={ setIsOpenTrendChart }/>
     </Fragment>
   )
 };

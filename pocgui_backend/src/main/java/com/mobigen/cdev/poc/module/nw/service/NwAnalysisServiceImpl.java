@@ -5,6 +5,7 @@ import com.mobigen.cdev.poc.core.security.annotation.LoginUser;
 import com.mobigen.cdev.poc.core.util.annotation.EnvStatus;
 import com.mobigen.cdev.poc.core.util.common.Cutil;
 import com.mobigen.cdev.poc.module.common.dto.common.ThreadCallResult;
+import com.mobigen.cdev.poc.module.common.dto.common.TrendChartDto;
 import com.mobigen.cdev.poc.module.nw.dto.EquipCaseCauseDto;
 import com.mobigen.cdev.poc.module.nw.dto.EquipCaseCauseResultDto;
 import com.mobigen.cdev.poc.module.nw.dto.KpiAnalysisResultDto;
@@ -140,5 +141,10 @@ public class NwAnalysisServiceImpl implements NwAnalysisService {
         timeCond = Cutil.sqlInjectionFilter(timeCond);
         param.put("tableSuffix", timeCond);
         return param;
+    }
+
+    @Override
+    public List<TrendChartDto> getTrendKpiAndCauseAnalysis(Map<String, Object> param) {
+        return nwAnalysisRepository.getTrendKpiAndCauseAnalysis(param);
     }
 }

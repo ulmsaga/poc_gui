@@ -98,6 +98,7 @@ const NetworkMonitoring = () => {
   const [linkALarmList, setLinkALarmList] = useState([]);
 
   // const [lastStatusTime, setLastStatusTime] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [monitorParam, setMonitorParam] = useState({});
   const [monitorTime, setMonitorTime] = useState('');
 

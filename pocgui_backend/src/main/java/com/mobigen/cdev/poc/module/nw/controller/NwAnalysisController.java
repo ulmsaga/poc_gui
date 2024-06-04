@@ -39,4 +39,11 @@ public class NwAnalysisController {
         result.setRs(nwAnalysisService.getKpiAnalysisEquipCauseCnt(param));
         return ResponseEntity.ok(result);
     }
+
+    @RequestMapping(value = "/getTrendKpiAndCauseAnalysis", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RsResultDto> getTrendKpiAndCauseAnalysis(@RequestBody Map<String, Object> param) {
+        RsResultDto result = new RsResultDto();
+        result.setRs(nwAnalysisService.getTrendKpiAndCauseAnalysis(param));
+        return ResponseEntity.ok(result);
+    }
 }

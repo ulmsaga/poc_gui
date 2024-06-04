@@ -27,20 +27,14 @@
                 ) DESCRIPTION
             ,	CAUSE_CNT
             FROM
-                PM_EPC_ROOT_CAUSE_1M A
+                <include refid="sqlDefCauseTable" /> A
                 LEFT OUTER JOIN
                 CU_CAUSE_FAIL_TYPE B
                 ON A.FAIL_TYPE = B.FAIL_TYPE
             WHERE 1 = 1
             <include refid="sqlKpiAnalysisEventTimeCond" />
             <include refid="sqlKpiAnalysisMainCond" />
-            AND A.CALL_TYPE IN <foreach collection="callTypeList" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
-            <!--
-            AND A.NODE_TYPE = 'MME'
-            AND A.NODE_ID = '0067'
-            -->
-            AND A.MCC = 'ALL'
-            AND A.MNC = 'ALL'
+            <include refid="sqlKpiAnalysisCallTypeCond" />
             AND A.CAUSE_CNT > 0
         ) A
         GROUP BY
@@ -92,7 +86,7 @@
             WHERE 1 = 1
             <include refid="sqlKpiAnalysisEventTimeCond" />
             <include refid="sqlKpiAnalysisMainCond" />
-            AND A.CALL_TYPE IN <foreach collection="callTypeList" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+            <include refid="sqlKpiAnalysisCallTypeCond" />
         ) A
         GROUP BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
         ORDER BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
@@ -232,14 +226,28 @@
                 <when test='node1Type eq "ENB"'>
                     <!-- NODE-ENB -->
                     <if test='node1List.size > 0'>
-                        AND A.ENB_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                        <choose>
+                            <when test="node1List.size == 1">
+                                AND A.ENB_ID = #{node1List[0]}
+                            </when>
+                            <otherwise>
+                                AND A.ENB_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                            </otherwise>
+                        </choose>
                     </if>
                 </when>
                 <otherwise>
                     <!-- NODE-EPC -->
                     AND A.NODE_TYPE = #{node1Type}
                     <if test='node1List.size > 0'>
-                        AND A.NODE_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                        <choose>
+                            <when test="node1List.size == 1">
+                                AND A.NODE_ID = #{node1List[0]}
+                            </when>
+                            <otherwise>
+                                AND A.NODE_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                            </otherwise>
+                        </choose>
                     </if>
                     AND A.MCC = 'ALL'
                     AND A.MNC = 'ALL'
@@ -251,28 +259,68 @@
                 <when test='node1Type eq "ENB"'>
                     <!-- LINK-ENB -->
                     <if test='node1List.size > 0'>
-                        AND A.ENB_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                        <choose>
+                            <when test="node1List.size == 1">
+                                AND A.ENB_ID = #{node1List[0]}
+                            </when>
+                            <otherwise>
+                                AND A.ENB_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                            </otherwise>
+                        </choose>
                     </if>
                     <if test='node2Type neq "-".toString()'>
                         AND A.NODE_TYPE = #{node2Type}
                         <if test='node2List.size > 0'>
-                            AND A.NODE_ID IN <foreach collection="node2List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                            <choose>
+                                <when test="node2List.size == 1">
+                                    AND A.NODE_ID = #{node2List[0]}
+                                </when>
+                                <otherwise>
+                                    AND A.NODE_ID IN <foreach collection="node2List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                                </otherwise>
+                            </choose>
                         </if>
                     </if>
                 </when>
                 <otherwise>
                     <!-- LINK-EPC -->
                     AND A.NODE1_TYPE = #{node1Type}
-                    AND A.NODE1_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                    <if test='node1List.size > 0'>
+                        <choose>
+                            <when test="node1List.size == 1">
+                                AND A.NODE1_ID = #{node1List[0]}
+                            </when>
+                            <otherwise>
+                                AND A.NODE1_ID IN <foreach collection="node1List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
                     <if test='node2Type neq "-".toString()'>
                         AND A.NODE2_TYPE = #{node2Type}
                         <if test='node2List.size > 0'>
-                            AND A.NODE2_ID IN <foreach collection="node2List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                            <choose>
+                                <when test="node2List.size == 1">
+                                    AND A.NODE2_ID = #{node2List[0]}
+                                </when>
+                                <otherwise>
+                                    AND A.NODE2_ID IN <foreach collection="node2List" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+                                </otherwise>
+                            </choose>
                         </if>
                     </if>
                 </otherwise>
             </choose>
         </if>
+    </sql>
+    <sql id="sqlKpiAnalysisCallTypeCond">
+        <choose>
+            <when test="callTypeList.size == 1">
+                AND A.CALL_TYPE = #{callTypeList[0]}
+            </when>
+            <otherwise>
+                AND A.CALL_TYPE IN <foreach collection="callTypeList" index="index" item="item" open="(" separator="," close=")" >#{item}</foreach>
+            </otherwise>
+        </choose>
     </sql>
 
     <!-- -->
@@ -402,4 +450,141 @@
         </choose>
     </sql>
 
+    <select id="getTrendKpiAndCauseAnalysis" resultType="com.mobigen.cdev.poc.module.common.dto.common.TrendChartDto" parameterType="map" >
+        WITH RECURSIVE STD AS
+        (
+            SELECT
+                DATE_SUB(STR_TO_DATE(#{startTime}, '%Y%m%d%H%i%s'), INTERVAL 179 MINUTE) AS BASE_TIME
+            UNION ALL
+            SELECT
+                DATE_ADD(STD.BASE_TIME, INTERVAL 1 MINUTE) AS BASE_TIME
+            FROM STD
+            WHERE STD.BASE_TIME &lt; STR_TO_DATE(#{startTime}, '%Y%m%d%H%i%s')
+        )
+        SELECT
+                DATE_FORMAT(BASE_TIME, '%H:%i') AS EVENT_EXP_TIME
+            ,   DATE_FORMAT(BASE_TIME, '%Y-%m-%d %H:%i:%s') AS EVENT_TIME
+            ,	IFNULL(DATA1, 0) DATA1
+            ,	IFNULL(DATA2, 0) DATA2
+<!--            ,	CASE WHEN MAX(IFNULL(DATA1, 0)) > MAX(IFNULL(DATA2, 0)) THEN MAX(IFNULL(DATA1, 0)) ELSE MAX(IFNULL(DATA2, 0)) END MAX_DATA-->
+        FROM
+            STD
+            LEFT OUTER JOIN
+            (
+                SELECT
+                    EVENT_TIME
+                    <include refid="selectedTargetNoSumField" /> DATA1
+                FROM
+                    <if test='trendType eq "KPI".toString()'>
+                        <include refid="sqlDefKpiTable" />
+                    </if>
+                    <if test='trendType eq "ROOT_CAUSE".toString()'>
+                        <include refid="sqlDefCauseTable" />
+                    </if> A
+                WHERE 1 = 1
+                    <include refid="sqlKpiAnalysisMainCond" />
+                    <include refid="sqlKpiAnalysisCallTypeCond" />
+                    <if test='trendType eq "ROOT_CAUSE".toString()'>
+                        <include refid="sqlTrendCauseCond" />
+                        GROUP BY EVENT_TIME
+                    </if>
+            ) M1
+            ON STD.BASE_TIME = M1.EVENT_TIME
+            LEFT OUTER JOIN
+            (
+                SELECT
+                    EVENT_TIME
+                    <include refid="selectedTargetNoSumField" /> DATA2
+                FROM
+                    <if test='trendType eq "KPI".toString()'>
+                        <include refid="sqlDefKpiTable" />
+                    </if>
+                    <if test='trendType eq "ROOT_CAUSE".toString()'>
+                        <include refid="sqlDefCauseTable" />
+                    </if> A
+                WHERE 1 = 1
+                    <include refid="sqlKpiAnalysisMainCond" />
+                    <include refid="sqlKpiAnalysisCallTypeCond" />
+                    <if test='trendType eq "ROOT_CAUSE".toString()'>
+                        <include refid="sqlTrendCauseCond" />
+                        GROUP BY EVENT_TIME
+                    </if>
+            ) M2
+            ON
+                <if test='compareType eq "lastDay".toString()'>
+                    DATE_SUB(STD.BASE_TIME, INTERVAL 1 DAY) = M2.EVENT_TIME
+                </if>
+                <if test='compareType eq "lastWeek".toString()'>
+                    DATE_SUB(STD.BASE_TIME, INTERVAL 1 WEEK) = M2.EVENT_TIME
+                </if>
+        ORDER BY STD.BASE_TIME
+    </select>
+
+    <sql id="sqlDefKpiTable">
+        <if test='graphType eq "NODE".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB".toString()'>PM_ENB_KPI_1M</when>
+                <otherwise>PM_EPC_KPI_1M</otherwise>
+            </choose>
+        </if>
+        <if test='graphType eq "LINK".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB".toString()'>PM_LINK_ENB_KPI_1M</when>
+                <otherwise>PM_LINK_EPC_KPI_1M</otherwise>
+            </choose>
+        </if>
+    </sql>
+    <sql id="sqlDefCauseTable">
+        <if test='graphType eq "NODE".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB".toString()'>PM_ENB_ROOT_CAUSE_1M</when>
+                <otherwise>PM_EPC_ROOT_CAUSE_1M</otherwise>
+            </choose>
+        </if>
+        <if test='graphType eq "LINK".toString()'>
+            <choose>
+                <when test='node1Type eq "ENB".toString()'>PM_LINK_ENB_ROOT_CAUSE_1M</when>
+                <otherwise>PM_LINK_EPC_ROOT_CAUSE_1M</otherwise>
+            </choose>
+        </if>
+    </sql>
+    <sql id="sqlTrendCauseCond">
+        AND A.FAIL_TYPE = #{failType}
+        AND A.CAUSE = #{selectedVal}
+    </sql>
+
+    <sql id="selectedTargetNoSumField">
+        <choose>
+            <when test='trendType eq "ROOT_CAUSE"'>
+                ,	SUM(CAUSE_CNT)
+            </when>
+            <otherwise>
+                <choose>
+                    <when test="selectedVal == 'SUCCESS_RATE'">
+                        , CASE WHEN IFNULL(ATTEMPT_CNT, 0) != 0 THEN ROUND(((IFNULL(SUCCESS_CNT, 0) / ATTEMPT_CNT) * 100), 2) ELSE 0 END
+                    </when>
+                    <when test="selectedVal == 'DROP_RATE'">
+                        , CASE WHEN IFNULL(DATA_SUCESS_CNT, 0) + IFNULL(IMS_SUCESS_CNT,0) != 0 THEN ROUND(((IFNULL(DROP_CNT, 0) / (IFNULL(DATA_SUCESS_CNT, 0) + IFNULL(IMS_SUCESS_CNT,0))) * 100), 2) ELSE 0 END
+                    </when>
+                    <when test="selectedVal == 'DATA_SUCCESS_RATE'">
+                        , CASE WHEN IFNULL(DATA_ATTEMPT_CNT, 0) != 0 THEN ROUND(((IFNULL(DATA_SUCESS_CNT, 0) / DATA_ATTEMPT_CNT) * 100), 2) ELSE 0 END
+                    </when>
+                    <when test="selectedVal == 'IMS_SUCCESS_RATE'">
+                        , CASE WHEN IFNULL(IMS_ATTEMPT_CNT, 0) != 0 THEN ROUND(((IFNULL(IMS_SUCESS_CNT, 0) / IMS_ATTEMPT_CNT) * 100), 2) ELSE 0 END
+                    </when>
+                    <when test="selectedVal == 'GAP_TIME'">
+                        , CASE WHEN  IFNULL(ATTEMPT_CNT, 0) !=  0 THEN ROUND((GAP_TIME / ATTEMPT_CNT), 3) ELSE 0 END
+                    </when>
+                    <when test="selectedVal == 'DELAYED_GAP_CNT'">
+                        , NVL(GAP_TIMEOVER_CNT, '0')
+                    </when>
+                    <otherwise>
+                        <if test="selectedValType == 'CNT'">
+                            , NVL(${selectedVal}, 0)
+                        </if>
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </sql>
 </mapper>

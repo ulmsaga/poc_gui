@@ -1,5 +1,6 @@
 package com.mobigen.cdev.poc.module.nw.service;
 
+import com.mobigen.cdev.poc.module.common.dto.common.TrendChartDto;
 import com.mobigen.cdev.poc.module.nw.dto.EnbNodeDto;
 import com.mobigen.cdev.poc.module.nw.dto.EquipNodeDto;
 import com.mobigen.cdev.poc.module.nw.dto.TreeNodeDto;
@@ -13,4 +14,5 @@ public interface NwConfigService {
 
     List<TreeNodeDto> getMmeTreeList(Map<String, Object> param);
     List<TreeNodeDto> getEnbTreeList(Map<String, Object> param);
+
 }
