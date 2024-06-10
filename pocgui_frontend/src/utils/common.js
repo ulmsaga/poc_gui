@@ -373,7 +373,7 @@ const getExcelFile = ( excelApiUri, searchParam, colDefs, downloadFileName, aler
     .then(response => response.data)
     .then((ret) => {
       let fileName = (ret.rs !== undefined) ? ret.rs.file_name : '';
-      let URI = '/dgw_service/common/filemanage/fileDownload';
+      let URI = '/poc_service/common/filemanage/fileDownload';
       axios.post(
         `${URI}`
         , { targetFile: ret.rs.target_file, targetPathKey: ret.rs.target_path_key, fileName: ret.rs.file_name, fileExt: ret.rs.file_ext }
@@ -410,7 +410,7 @@ const fileDownload = (targetFile, fileName, fileExt, protectFileFlag, useDateTim
   if (protectFileFlag === undefined || protectFileFlag === null) protectFileFlag = "N";
   if (useDateTimeToFileName === undefined || useDateTimeToFileName === null) useDateTimeToFileName = true;
 
-  let URI = '/dgw_service/common/filemanage/fileDownload';
+  let URI = '/poc_service/common/filemanage/fileDownload';
       axios.post(
         `${URI}`
         , { targetFile: targetFile, targetPathKey: "", fileName: fileName, fileExt: fileExt, protectFile: protectFileFlag }

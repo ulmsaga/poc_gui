@@ -1,14 +1,22 @@
-import { Box, Button, Grid, Stack } from "@mui/material";
+import { Box, Button, Grid, OutlinedInput, Stack } from "@mui/material";
+import { getPacketFile, getSignalCallLogXdr } from "api/nw/searchApi";
 import { AutoCompleteCheck } from "components/autocomplete";
 import { DatePickerFromTo } from "components/datepicker";
 import GridMain from "components/grid/GridMain";
 import { TypoLabel } from "components/label";
 import SelectBox from "components/select/SelectBox";
 import { callTypeList, periodList } from "data/common";
-import { add } from "date-fns";
-import React, { Fragment, useEffect, useState } from "react";
+import { add, addMinutes, differenceInMinutes } from "date-fns";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
+import { fileDownload, fnStrToDate, formatDate } from "utils/common";
+import { callLogCols } from "./data/callLogData";
+import useMessage from "hooks/useMessage";
+
 
 const CallFailSearch = ({ params }) => {
+
+  const [imsi, setImsi] = useState('');
+  const { alert } = useMessage();
 
   // date-picker
   const [selectedFromToDate, setSelectedFromToDate] = useState({
@@ -28,20 +36,9 @@ const CallFailSearch = ({ params }) => {
   // period
   const [period, setPeriod] = useState('1M');
 
-  // grid
-  const [rowData, setRowData] = useState([
-    { make: "Tesla", model: "Model Y", price: 64950, electric: true },
-    { make: "Ford", model: "F-Series", price: 33850, electric: false },
-    { make: "Toyota", model: "Corolla", price: 29600, electric: false },
-  ]);
-  
-  // Column Definitions: Defines the columns to be displayed.
-  const [colDefs, setColDefs] = useState([
-    { field: "make" },
-    { field: "model" },
-    { field: "price" },
-    { field: "electric" }
-  ]);
+  const colDefs = useMemo(() => callLogCols, []);
+  const [callLogMainData, setCallLogMainData] = useState([]);
+
 
   // Call Type
   const [ selectedCallTypes, setSelectedCallTypes ] = useState([...callTypeList]);
@@ -49,24 +46,104 @@ const CallFailSearch = ({ params }) => {
     setSelectedCallTypes(selected);
   };
 
-  const searchClick = () => {};
+  const initGridMain = () => {
+    setCallLogMainData([]);
+  };
+
+  const searchClick = () => {
+    const param = {};
+    param.isValid = true;
+    param.nonValidMsg = '';
+
+    param.searchType = params.searchType !== undefined ? params.searchType : 'CALL_FAIL';
+
+    param.timeCond = period;
+    param.startTime = formatDate(selectedFromToDate.startDate, 'yyyyMMddHHmm00');
+    param.endTime = formatDate(selectedFromToDate.endDate, 'yyyyMMddHHmm00');
+    if (param.timeCond === '1M' && param.startTime === param.endTime) {
+      param.isValid = false;
+      param.nonValidMsg = '시작 시간과 종료 시간을 다르게 설정하세요.\n';
+    }
+    if (param.startTime === param.endTime) {
+      param.isValid = false;
+      param.nonValidMsg = param.nonValidMsg + '종료 시간이 시작 시간보다 빠릅니다. 변경 후 조회 해 주시기 바랍니다.\n';
+    }
+    param.diffOneMin = false;
+    if (param.timeCond === '1M') {
+      const diffMin = differenceInMinutes(selectedFromToDate.endDate, selectedFromToDate.startDate);
+      if (diffMin === 1) {
+        param.diffOneMin = true;
+      }
+    }
+
+    param.callTypeList = [];
+    selectedCallTypes.forEach((item) => {
+      param.callTypeList.push(item.code);
+    });
+    if (param.callTypeList.length === 0) {
+      param.isValid = false;
+      param.nonValidMsg = param.nonValidMsg + 'CALL TYPE을 1건 이상 선택하세요.\n';
+    }
+
+    param.imsi = imsi;
+    if (imsi.trim() === '') {
+      param.isValid = false;
+      param.nonValidMsg = param.nonValidMsg + 'imis / mdn을 입력 해 주시기 바랍니다.\n';
+    }
+
+    if (param.isValid === false) {
+      alert(param.nonValidMsg);
+      return;
+    }
+
+    initGridMain();
+    getSignalCallLogXdr(param).then((response) => response.data).then((ret) => {
+      if (ret !== undefined) {
+        if (ret.rs !== undefined) {
+          if (ret.result === 1) {
+            if (ret.rs?.list?.length === 0) {
+              alert('조회 결과가 없습니다.');
+              return;
+            }
+            setCallLogMainData(ret.rs);
+          }
+        }
+      }
+    });
+
+  };
   const excelDownload = () => {};
 
+  const gridMainDblClick = (e) => {
+    const param = {
+      imsi: e.data.imsi,
+      startTime: e.data.event_time,
+    };
+    getPacketFile(param).then((response) => response.data).then((ret) => {
+      if (ret !== undefined) {
+        if (ret.rs !== undefined) {
+          if (ret.result === 1) {
+            fileDownload(ret.rs.target_file, ret.rs.file_name, ret.rs.file_ext, 'Y', true, alert);
+          }
+        }
+      }
+    });
+  };
+
+  const [searchTrigger, setSearchTrigger] = useState(false);
   useEffect(() => {
-    // setNode1List([...mmeList]);
-    setRowData([
-      { make: "Tesla", model: "Model Y", price: 64950, electric: true },
-      { make: "Ford", model: "F-Series", price: 33850, electric: false },
-      { make: "Toyota", model: "Corolla", price: 29600, electric: false },
-    ]);
-    setColDefs([
-      { field: "make" },
-      { field: "model" },
-      { field: "price" },
-      { field: "electric" }
-    ]);
+    if (params?.startTime !== undefined && params?.startTime !== null && params?.startTime !== '') {
+      setSelectedFromToDate({ ...selectedFromToDate, startDate: fnStrToDate(params.startTime), endDate: addMinutes(fnStrToDate(params.startTime), 1) });
+    }
+    setImsi(params.imsi);
+    setSearchTrigger(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (searchTrigger) searchClick();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTrigger]);
 
   return (
     <Fragment>
@@ -92,11 +169,9 @@ const CallFailSearch = ({ params }) => {
             <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
               <Stack direction={'row'} spacing={0.2}>
                 <TypoLabel label={'IMSI / MDN'} />
+                <OutlinedInput value={ imsi } onChange={(e) => {}} sx={{ width: 388, borderRadius: 0 }} />
               </Stack>
-            </Stack>
-            {/* ROW3 */}
-            <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
-            <Stack direction={'row'} spacing={0.2}>
+              <Stack direction={'row'} spacing={0.2}>
                 <TypoLabel label={'CALL TYPE'} />
                 <AutoCompleteCheck data={ JSON.parse(JSON.stringify(callTypeList)) } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 388 } />
               </Stack>
@@ -107,8 +182,9 @@ const CallFailSearch = ({ params }) => {
             <GridMain
               className={'ag-theme-balham'}
               style={{ height: '650px' }}
-              rowData={rowData}
-              columnDefs={colDefs}
+              rowData={ callLogMainData }
+              columnDefs={ colDefs }
+              onCellDoubleClicked={ gridMainDblClick }
             />
           </Stack>
         </Box>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import TreeView from "./TreeView";
 import { forEach } from "lodash";
 
-const TreeEquipType = ({ data, alarmList, openPopupStatus }) => {
+const TreeEquipType = ({ data, alarmList, dblClickNode }) => {
   const [expanded, setExpanded] = useState([]);
 
   const flatten = (data, depth = 1, parentId = null, main = []) => {
@@ -61,7 +61,7 @@ const TreeEquipType = ({ data, alarmList, openPopupStatus }) => {
   };
 
   const filterSet = () => {
-    console.log("expanded", expanded);
+    // console.log("expanded", expanded);
     let renderSet = flattenData.filter(
       (item) =>
         item.depth === 1 ||
@@ -90,7 +90,7 @@ const TreeEquipType = ({ data, alarmList, openPopupStatus }) => {
       const node = getItemById(flattenData, item.id);
       if (node?.main?.length !== undefined && node?.main?.length > 0) {
         node.main.forEach((id) => {
-          console.log("expenedId", id);
+          // console.log("expenedId", id);
           if (!expanded.includes(id)) {
             // setExpanded([...expanded, id]);
             existNewExpanded = true;
@@ -110,7 +110,7 @@ const TreeEquipType = ({ data, alarmList, openPopupStatus }) => {
   }, [alarmList]);
 
   return (
-    <TreeView tree={filterSet()} handleExpand={handleExpand} openPopupStatus={ openPopupStatus }/>
+    <TreeView tree={filterSet()} handleExpand={handleExpand} dblClickNode={ dblClickNode }/>
   );
 };
 

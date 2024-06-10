@@ -20,7 +20,7 @@ import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { fnStrToDate, formatDate } from "utils/common";
 import PopupKpiCauseTrend from "./popup/PopupKpiCauseTrend";
 
-const KpiAnalysis = ({ monitorParam }) => {
+const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
 
   const { alert, confirm } = useMessage();
 
@@ -59,12 +59,19 @@ const KpiAnalysis = ({ monitorParam }) => {
   const [selectedNode2, setSelectedNode2] = useState([]);
   const [node1List, setNode1List] = useState([]);
   const [node2List, setNode2List] = useState([]);
+  const [node1Input, setNode1Input] = useState('');
+  const [node2Input, setNode2Input] = useState('');
 
   const [kpiAnalysisData, setKpiAnalysisData] = useState([]);
 
   const node1TypeChange = (e) => {
     setSearchTarget1(e.target);
     getNode2TypeList(e.target);
+
+    setSelectedNode1([]);
+    setSelectedNode2([]);
+    setNode1Input('');
+    setNode2Input('');
 
     let target = {};
 
@@ -96,6 +103,8 @@ const KpiAnalysis = ({ monitorParam }) => {
   };
 
   const node2TypeChange = (e) => {
+    setSelectedNode2([]);
+    setNode2Input('');
     setSearchTarget2(e.target);
     getNode2List(e.target);
   };
@@ -125,6 +134,7 @@ const KpiAnalysis = ({ monitorParam }) => {
   const searchNodeTypeClick = (e, targetNumName) => {
     // alert('searchNodeTypeClick');
     const params = {};
+    params.nodeTarget = targetNumName;
     if (targetNumName === 'node1') {
       params.nodeType = searchTarget1.value;
       params.selectedNode = JSON.parse(JSON.stringify(selectedNode1));
@@ -145,7 +155,8 @@ const KpiAnalysis = ({ monitorParam }) => {
   
 
   // Call Fail Search
-  const [isOpenCallFailSearch, setIsOpenCallFailSearch] = useState(false);
+  const [ isOpenCallFailSearch, setIsOpenCallFailSearch ] = useState(false);
+  const [ callFailParam, setCallFailParam ] = useState({});
   // Popup Status
   // eslint-disable-next-line no-unused-vars
   const [isOpenPopupStatus, setIsOpenPopupStatus] = useState(false);
@@ -163,8 +174,28 @@ const KpiAnalysis = ({ monitorParam }) => {
     setIsOpenPopupStatus(true);
   };
 
-  const callBackEquipSearch = (ret) => {
-    setSelectedNode1(ret);
+  
+
+  const callBackEquipSearch = (retRows, params) => {
+    if (params.nodeTarget === 'node1') {
+      setSelectedNode1(retRows);
+      if (params.nodeType === 'ENB') {
+        let tmp = retRows[0].description;
+        if (retRows.length > 1) {
+          tmp = tmp + ' 외 ' + (retRows.length - 1) + '건';
+        }
+        setNode1Input(tmp);
+      }
+    } else if (params.nodeTarget === 'node2') {
+      setSelectedNode2(retRows);
+      if (params.nodeType === 'ENB') {
+        let tmp = retRows[0].description;
+        if (retRows.length > 1) {
+          tmp = tmp + ' 외 ' + (retRows.length - 1) + '건';
+        }
+        setNode2Input(tmp);
+      }
+    }
   };
 
   // Grid
@@ -189,38 +220,38 @@ const KpiAnalysis = ({ monitorParam }) => {
     {
       headerName: '접속',
       children: [
-        {headerName: '시도호', field: 'ATTEMPT_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공호', field: 'SUCCESS_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공율(%)', field: 'SUCCESS_RATE', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
+        {headerName: '시도호(건)', field: 'ATTEMPT_CNT', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공호(건)', field: 'SUCCESS_CNT', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공율(%)', field: 'SUCCESS_RATE', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
       ]
     },
     {
       headerName: 'DATA',
       children: [
-        {headerName: '시도호', field: 'DATA_ATTEMPT_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공호', field: 'DATA_SUCCESS_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공율(%)', field: 'DATA_SUCCESS_RATE', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
+        {headerName: '시도호(건)', field: 'DATA_ATTEMPT_CNT', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공호(건)', field: 'DATA_SUCCESS_CNT', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공율(%)', field: 'DATA_SUCCESS_RATE', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
       ]
     },
     {
       headerName: 'IMS',
       children: [
-        {headerName: '시도호', field: 'IMS_ATTEMPT_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공호', field: 'IMS_SUCCESS_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: '성공율(%)', field: 'IMS_SUCCESS_RATE', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
+        {headerName: '시도호(건)', field: 'IMS_ATTEMPT_CNT', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공호(건)', field: 'IMS_SUCCESS_CNT', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: '성공율(%)', field: 'IMS_SUCCESS_RATE', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
       ]
     },
     {
       headerName: 'CD',
       children: [
-        {headerName: 'CD호', field: 'DROP_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
-        {headerName: 'CD율(%)', field: 'DROP_RATE', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: 'CD호(건)', field: 'DROP_CNT', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
+        {headerName: 'CD율(%)', field: 'DROP_RATE', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }},
       ]
     },
     {
       headerName: '',
       children: [
-        {headerName: 'DETACH', field: 'DETACH_CNT', minWidth: 80, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
+        {headerName: 'DETACH(건)', field: 'DETACH_CNT', minWidth: 80, width: 90, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
       ]
     }
   ], []);
@@ -369,51 +400,20 @@ const KpiAnalysis = ({ monitorParam }) => {
     getKpiAnalysis(param).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
-          if (ret.rs?.causeList !== null && ret.rs?.causeList !== undefined) rootCauseAddedCols(ret.rs.causeList);
-          if (ret.rs?.list !== null && ret.rs?.list !== undefined) setKpiAnalysisData([...ret.rs.list]);
+          if (ret.result === 1) {
+            if (ret.rs?.list?.length === 0) {
+              alert('조회 결과가 없습니다.');
+              return;
+            }
+            if (ret.rs?.causeList !== null && ret.rs?.causeList !== undefined) rootCauseAddedCols(ret.rs.causeList);
+            if (ret.rs?.list !== null && ret.rs?.list !== undefined) setKpiAnalysisData([...ret.rs.list]);
+          }
         }
       }
     });
   };
 
-  const gridKpiCellDbClick = (rowData) => {
-    const param = {};
-
-    param.startTime = rowData.data.EVENT_TIME;
-    if (rowData.data.NODE2_TYPE === '' || rowData.data.NODE2_TYPE === '-' || rowData.data.node2_type === null) {
-      param.graphType = 'NODE'
-    } else {
-      param.graphType = 'LINK'
-    }
-    param.node1Type = rowData.data.NODE1_TYPE;
-    param.node1Id = rowData.data.NODE1_ID;
-    param.node2Type = rowData.data.NODE2_TYPE;
-
-    if (param.graphType === 'LINK') {
-      param.node2Id = rowData.data.NODE2_ID
-    }
-    param.callType = rowData.data.CALL_TYPE;
-    // selectedVal
-    // failType
-    let tmp = rowData.colDef.field
-    param.failType = tmp.substr(0, tmp.length - 11)
-    param.selectedVal = tmp.replace(param.failType + '_', '');
-
-    initGridEquips();
-    getKpiAnalysisEquipCauseCnt(param).then(response => response.data).then((ret) => {
-      if (ret !== undefined) {
-        if (ret.rs !== undefined) {
-          const data = ret.rs
-          if (data?.imsi !== null && data?.imsi !== undefined) setImsi(data.imsi);
-          if (data?.enb !== null && data?.enb !== undefined) setEnb(data.enb);
-          if (data?.mme !== null && data?.mme !== undefined) setMme(data.mme);
-          if (data?.sgw !== null && data?.sgw !== undefined) setSgw(data.sgw);
-          if (data?.pgw !== null && data?.pgw !== undefined) setPgw(data.pgw);
-        }
-      }
-    });
-    
-  };
+  
 
   const initGridMain = () => {
     setKpiAnalysisData([]);
@@ -449,14 +449,8 @@ const KpiAnalysis = ({ monitorParam }) => {
   const minKpiGroupId = 3;
   const minCauseGroupId = 8;
 
-  const onCellCustomContextMenu = (e) => {
-    // if (!useContextMenu) return;
-    if (e.rowIndex === undefined || e?.rowIndex < 0 || e.value === undefined || e?.value === "") return;
-    setClicked(true);
-    setPoints({ x: e.event.pageX - gridSimpleRef.current?.getBoundingClientRect()?.left + 170, y: e.event.pageY - gridSimpleRef.current?.getBoundingClientRect()?.top + 160 });
-    selectedCellRef.current = e;
-    if (e.column.parent.groupId >= minKpiGroupId) {
-      const param = {};
+  const setTrendParam = (e) => {
+    const param = {};
       param.startTime = e.data.EVENT_TIME;
       param.compareType='lastDay'
       if (e.data.NODE2_TYPE === '' || e.data.NODE2_TYPE === '-' || e.data.NODE2_TYPE === null) {
@@ -486,10 +480,85 @@ const KpiAnalysis = ({ monitorParam }) => {
         // KPI
         param.trendType = 'KPI';
         param.selectedVal = e.column.colId;
+        if (e.column.colId === 'DATA_SUCCESS_CNT') param.selectedVal = 'DATA_SUCESS_CNT';
+        if (e.column.colId === 'IMS_SUCCESS_CNT') param.selectedVal = 'IMS_SUCESS_CNT';
       }
       param.selectedValType = getSelectedValType(param.selectedVal);
+
+      const groupColId = e.column.parent.groupId * 1;
+      if (groupColId >= minCauseGroupId) {
+        param.headerName = e.column.colDef.headerName;
+      } else {
+        if (e.column?.parent?.providedColumnGroup?.colGroupDef?.headerName !== undefined) {
+          param.headerName = e.column?.parent?.providedColumnGroup?.colGroupDef?.headerName + ' ' + e.column.colDef.headerName;
+        } else {
+          param.headerName = e.column.colDef.headerName;
+        }
+      }
+      
       setTrendChartParam(param);
-      // 
+  };
+
+  const gridKpiCellDbClick = (e) => {
+    const groupColId = e.column.parent.groupId * 1;
+    if (groupColId < minKpiGroupId) return;
+
+    if (groupColId >= minCauseGroupId) {
+      getSelectedPathRootCause(e);
+    } else {
+      setTrendParam(e);
+      setIsOpenTrendChart(true);
+    }
+  };
+
+  const getSelectedPathRootCause = (e) => {
+    const param = {};
+
+    param.startTime = e.data.EVENT_TIME;
+    if (e.data.NODE2_TYPE === '' || e.data.NODE2_TYPE === '-' || e.data.node2_type === null) {
+      param.graphType = 'NODE'
+    } else {
+      param.graphType = 'LINK'
+    }
+    param.node1Type = e.data.NODE1_TYPE;
+    param.node1Id = e.data.NODE1_ID;
+    param.node2Type = e.data.NODE2_TYPE;
+
+    if (param.graphType === 'LINK') {
+      param.node2Id = e.data.NODE2_ID
+    }
+    param.callType = e.data.CALL_TYPE;
+    // selectedVal
+    // failType
+    let tmp = e.colDef.field
+    param.failType = tmp.substr(0, tmp.length - 11)
+    param.selectedVal = tmp.replace(param.failType + '_', '');
+
+    setCallFailParam(param);
+
+    initGridEquips();
+    getKpiAnalysisEquipCauseCnt(param).then(response => response.data).then((ret) => {
+      if (ret !== undefined) {
+        if (ret.rs !== undefined) {
+          const data = ret.rs
+          if (data?.imsi !== null && data?.imsi !== undefined) setImsi(data.imsi);
+          if (data?.enb !== null && data?.enb !== undefined) setEnb(data.enb);
+          if (data?.mme !== null && data?.mme !== undefined) setMme(data.mme);
+          if (data?.sgw !== null && data?.sgw !== undefined) setSgw(data.sgw);
+          if (data?.pgw !== null && data?.pgw !== undefined) setPgw(data.pgw);
+        }
+      }
+    });
+  };
+
+  const onCellCustomContextMenu = (e) => {
+    if (e.rowIndex === undefined || e?.rowIndex < 0 || e.value === undefined || e?.value === "") return;
+    setClicked(true);
+    setPoints({ x: e.event.pageX - gridSimpleRef.current?.getBoundingClientRect()?.left + 170, y: e.event.pageY - gridSimpleRef.current?.getBoundingClientRect()?.top + 160 });
+    selectedCellRef.current = e;
+    const groupColId = e.column.parent.groupId * 1;
+    if (groupColId >= minKpiGroupId) {
+      setTrendParam(e);
     } else {
       setClicked(false);
     }
@@ -508,8 +577,13 @@ const KpiAnalysis = ({ monitorParam }) => {
     return selectedValType;
   };
 
+  
+  const gridImsiCellDbClick = (e) => {
+    setCallFailParam( {...callFailParam, searchType: 'CALL_FAIL', imsi: e.data.std_name} );
+    setIsOpenCallFailSearch(true)
+  };
+
   useEffect(() => {
-    // console.log("useEffect :: " + monitorParam);
     getDefaultTime();
     getMmeList({}).then((response) => { 
       setMmeList(response.data.rs)
@@ -527,6 +601,47 @@ const KpiAnalysis = ({ monitorParam }) => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const [searchTrigger, setSearchTrigger] = useState(false);
+  useEffect(() => {
+    console.log(monitorParam);
+    if (monitorParam?.monitorTime !== null && monitorParam?.monitorTime !== undefined && monitorParam?.monitorTime !== '') {
+      setSelectedFromToDate({ ...selectedFromToDate, startDate: fnStrToDate(monitorParam.monitorTime), endDate: addMinutes(fnStrToDate(monitorParam.monitorTime), 1) });
+      setNode1List([]);
+      setNode2List([]);
+      let existNode1 = false; 
+
+      if (monitorParam.state.nodeType === 'MME') {
+        node1TypeChange({ target: { value: 'MME', label: 'MME', node: 'MME' } });
+        forEach(mmeList, (item) => {
+          if (item.node_exp_id === monitorParam.id) {
+            setSelectedNode1([item]);
+            setNode1Input(item.description);
+            existNode1 = true;
+            return true;
+          }
+        });
+      } else if (monitorParam.state.nodeType === 'ENB') {
+        node1TypeChange({ target: { value: 'ENB', label: 'ENB', node: 'ENB' } });
+        forEach(enbList, (item) => {
+          if (item.enb_id === monitorParam.id) {
+            setSelectedNode1([item]);
+            setNode1Input(item.description);
+            existNode1 = true;
+            return true;
+          }
+        });
+      }
+      if (existNode1) setSearchTrigger(!searchTrigger);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callKpiFlag]);
+  
+  useEffect(() => {
+    if (monitorParam?.monitorTime === null || monitorParam?.monitorTime === undefined || monitorParam?.monitorTime === '') return;
+    searchClick();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTrigger]);
 
   return (
     <Fragment>
@@ -553,14 +668,14 @@ const KpiAnalysis = ({ monitorParam }) => {
             <TypoLabel label={'대상장비1'} />
             <SelectBox options={ nodeTypeList } value={ searchTarget1.value } onChange={ node1TypeChange }/>
             { (searchTarget1.value !== 'ENB' && searchTarget1.value !== '-' ) && <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 287 } groupFilter={'group_filter'} /> }
-            { (searchTarget1.value === 'ENB' || searchTarget1.value === '-' ) && <OutlinedInput value={""} onChange={(e) => {}} sx={{ width: 287, borderRadius: 0 }} disabled /> }
+            { (searchTarget1.value === 'ENB' || searchTarget1.value === '-' ) && <OutlinedInput value={ node1Input } onChange={(e) => {}} sx={{ width: 287, borderRadius: 0 }} disabled /> }
             { (searchTarget1.value !== '-') && <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node1') }} /> }
           </Stack>
           <Stack direction={'row'} spacing={0.2}>
             <TypoLabel label={'대상장비2'} />
             <SelectBox options={ node2TypeList } value={ searchTarget2.value } onChange={ node2TypeChange }/>
             { (searchTarget2.value !== 'ENB' && searchTarget2.value !== '-') && <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 287 } groupFilter={'group_filter'} /> }
-            { (searchTarget2.value === 'ENB' || searchTarget2.value === '-') && <OutlinedInput value={""} onChange={(e) => {}} sx={{ width: 287, borderRadius: 0 }} disabled /> }
+            { (searchTarget2.value === 'ENB' || searchTarget2.value === '-') && <OutlinedInput value={ node2Input } onChange={(e) => {}} sx={{ width: 287, borderRadius: 0 }} disabled /> }
             { (searchTarget2.value !== '-')  && <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node2') }} /> }
           </Stack>
         </Stack>
@@ -578,11 +693,9 @@ const KpiAnalysis = ({ monitorParam }) => {
           {clicked && (
             <ContextMenu top={points.y} left={points.x}>
               <ul>
-                {/* 셀 복사 */}
-                {/* <CopyToClipboard text = { selectedCellRef.current.value } ><li>셀 복사</li></CopyToClipboard> */}
                 <li>
-                  <div onClick={(e) => { setIsOpenTrendChart(true); }}>
-                  Trend Chart 보기
+                  <div style={{ cursor: 'pointer' }} onClick={(e) => { setIsOpenTrendChart(true); }} >
+                    Trend Chart 보기
                   </div>
                 </li>
               </ul>
@@ -606,6 +719,7 @@ const KpiAnalysis = ({ monitorParam }) => {
           style={{ height: '100%', width: '100%' }}
           rowData={ imsi }
           columnDefs={equipImsi}
+          onCellDoubleClicked={ gridImsiCellDbClick }
         />
         <GridMain
           className={'ag-theme-balham'}
@@ -632,7 +746,7 @@ const KpiAnalysis = ({ monitorParam }) => {
           columnDefs={equipPgw}
         />
       </Stack>
-      <PopupCallFailSearch title={'Call Fail Search'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenCallFailSearch } setIsOpen={ setIsOpenCallFailSearch }/>
+      <PopupCallFailSearch title={'Call Fail Search'} params={ callFailParam } style={{ width: '100%', height: 1000 }} isOpen={ isOpenCallFailSearch } setIsOpen={ setIsOpenCallFailSearch }/>
       <PopupEquipSearch title={'Equip Search'} params={ equipSearchParam } popupCallBack={ callBackEquipSearch } style={{ width: '100%', height: 1000 }} isOpen={ isOpenEquipSearch } setIsOpen={ setIsOpenEquipSearch }/>
       <PopupKpiCauseTrend title={'Trend'} params={ trendChartParam } style={{ width: '100%', height: 1000 }} isOpen={ isOpenTrendChart } setIsOpen={ setIsOpenTrendChart }/>
     </Fragment>

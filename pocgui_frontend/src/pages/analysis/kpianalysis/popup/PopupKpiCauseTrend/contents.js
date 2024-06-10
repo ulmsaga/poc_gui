@@ -1,51 +1,20 @@
 import { Box, Grid, Stack } from "@mui/material";
-import { ResponsiveLine } from "@nivo/line";
 import React, { Fragment, useEffect, useState } from "react";
-import { testData } from "./testData";
 import { getTrendKpiAndCauseAnalysis } from "api/nw/analysisApi";
-import { forEach } from "lodash";
+import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const KpiCauseTrend = ({ params }) => {
 
-  
-  const line1Color = '#ff0000';
+  const [chartData, setChartData] = useState([]);
 
   const getTrendData = () => {
-    // getTrendKpiAndCauseAnalysis(params).then((response) => {};
     getTrendKpiAndCauseAnalysis(params).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
-          makeTrendData(ret.rs);
+          setChartData(ret.rs);
         }
       }
     });
-  };
-
-  const [chartData, setChartData] = useState([]);
-
-  const makeTrendData = (dataList) => {
-    const currDataId = '현재 ' + params.selectedVal;
-    const lastDataId = '과거 ' + params.selectedVal;
-    const trendData = [];
-    const currData = {id: currDataId, data: []};
-    const lastData = {id: lastDataId, data: []};
-
-    console.log(dataList)
-    
-    dataList.forEach( item => {
-      currData.data.push({
-        x: item?.event_exp_time,
-        y: item?.data1
-      });
-      lastData.data.push({
-        x: item?.event_exp_time,
-        y: item?.data2
-      });
-    });
-    
-    trendData.push(currData, lastData);
-    console.log(trendData)
-    setChartData(trendData);
   };
 
   useEffect(() => {
@@ -58,79 +27,58 @@ const KpiCauseTrend = ({ params }) => {
       <Grid item sx={{ width: '100%' }}>
         <Box height={'100%'} width={'100%'} gap={4} marginTop={0.5} marginRight={0.5} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
           <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '300px' }}>
-            <ResponsiveLine
-              data={ chartData } 
-              margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-              pointSymbol={function noRefCheck(){}}
-              colors={ ['skyblue', 'gray'] }  // color를 props로 받아서 설정해줍니다.
-              theme={{  // theme에서 x, y축 글씨 색을 바꿔줍니다.
-                textColor: 'blue',
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={ chartData }
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
               }}
-              enableArea={true}
-              enableSlices={'x'}
-              // enableGridX={true}
-              // enableSlicesLabels={ false }
-              xScale={{ type: 'point' }}
-              yScale={{
-                  type: 'linear',
-                  min: 'auto',
-                  max: 'auto',
-                  stacked: false,
-                  reverse: false
-              }}
-              yFormat='>-.2f'
-              curve='catmullRom'  // 선 종류를 설정해줍니다. (라이브러리 문서 참고)
-              axisTop={null}
-              axisRight={null}
-              axisBottom={{
-                orient: 'bottom',
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: -90,  // x축 텍스트를 회전시켜줍니다. (세로)
-                legend: '',  // x 축 단위를 표시합니다.
-                legendOffset: 60,
-                legendPosition: 'middle',
-              }}
-              axisLeft={{
-                orient: 'left',
-                tickSize: 5,
-                tickPadding: 5,
-                tickRotation: 0,
-                legend: '',  // y축 왼쪽에 표시될 단위입니다.
-                legendOffset: -55,
-                legendPosition: 'middle',
-              }}
-              pointSize={5}
-              pointColor={{ theme: 'background' }}
-              pointBorderWidth={2}
-              pointBorderColor={{ from: 'serieColor' }}
-              pointLabelYOffset={-12}
-              useMesh={true}
-              legends={[]} // 그래프 오른쪽의 포인트를 지워줍니다.
-            />
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="event_exp_time" />
+                <YAxis domain={[0, dataMax => Math.ceil(Math.max(...chartData.map(item => item.data1), ...chartData.map(item => item.data2)) * 1.1)]} />
+                <Tooltip
+                  contentStyle={{ fontWeight: 'bold' }}
+                  formatter={(value, name, props) => {
+                    const newName = name === 'data1' ? '<현재> ' + params.headerName : '<과거> ' + params.headerName;
+                    const color = name === 'data1' ? '#1E90FF' : '#808080';
+                    let formattedValue = '';
+                    if (!params.headerName.includes('(%)') && !params.headerName.includes('(건)')) {
+                      if (params.selectedVal.includes('RATE')) {
+                        params.unit = '%';
+                      } else {
+                        params.unit = '건';
+                      }
+                      formattedValue = params.unit === '건' ? Number(value).toLocaleString() : value;
+                    } else {
+                      params.unit = '';
+                      formattedValue = params.headerName.includes('(건)') ? Number(value).toLocaleString() : value;
+                    }
+                    
+                    return [
+                      <span style={{ color }}>{newName + ': ' + formattedValue + params.unit}</span>
+                    ];
+                  }}
+                />
+                <Legend 
+                  formatter={(value, entry) => {
+                    const color = value === 'data1' ? '#1E90FF' : '#808080';
+                    return <span style={{ color }}>{value === 'data1' ? '<현재> ' + params.headerName : '<과거> ' + params.headerName}</span>;
+                  }}
+                />
+                {/* <Area type="monotone" dataKey="data1" stroke="#3CB371" strokeWidth={2} fill="none" dot={false} activeDot={{ r: 2 }} /> */}
+                <Area type="monotone" dataKey="data1" stroke="#1E90FF" strokeWidth={2} fill="none" dot={false} activeDot={{ r: 2 }} />
+                <Area type="monotone" dataKey="data2" stroke="#D3D3D3" strokeWidth={1} fill="#D0D0D0" dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
           </Stack>
         </Box>
       </Grid>
     </Fragment>
   );
 }
-
-const getColoredAxis = color => {
-  return {
-    axis: {
-      ticks: {
-        line: {
-          stroke: color
-        },
-        text: { fill: color }
-      },
-      legend: {
-        text: {
-          fill: color
-        }
-      }
-    }
-  };
-};
 
 export default KpiCauseTrend;

@@ -12,4 +12,114 @@
             DATE_FORMAT(EVENT_TIME, '%Y%m%d%H%i%s') EVENT_TIME
         FROM V_PM_TOPOLOGY_LAST_TIME
     </select>
+
+    <select id="getCurAlarm1M" resultType="com.mobigen.cdev.poc.module.nw.dto.NwAlarmDto" parameterType="map">
+        SELECT
+            CASE
+                WHEN A.THRESHOLD_LEVEL &lt;= B.CRITICAL THEN 'CR'
+                ELSE
+                    CASE
+                        WHEN A.THRESHOLD_LEVEL &lt;= B.MAJOR AND A.THRESHOLD_LEVEL &gt; B.CRITICAL THEN 'MJ'
+                        ELSE
+                            CASE WHEN A.THRESHOLD_LEVEL &lt;= B.MINOR THEN 'MN' END
+                    END
+            END GRADE
+        ,	DATE_FORMAT(A.EVENT_TIME, '%Y%m%d%H%i%s') EVENT_TIME
+        ,	DATE_FORMAT(A.EVENT_TIME, '%Y-%m-%d %H:%i:%s') EVENT_EXP_TIME
+        ,	A.GRAPH_TYPE
+        ,	A.LOCATION
+        ,	NODE1_TYPE
+        ,	NODE1_ID
+        ,	IFNULL(C.NODE_NAME, '-') NODE1_NAME
+        ,	IFNULL(CASE WHEN NODE1_TYPE = 'ENB' THEN CONCAT( C.BRANCH_NAME, '-', C.TEAM_NAME, '-', C.PART_NAME) ELSE C.MTSO_NAME END, '-') NODE1_ORG
+        ,	REPLACE(NODE2_TYPE, 'ALL', '-') NODE2_TYPE
+        ,	REPLACE(NODE2_ID, 'ALL', '-') NODE2_ID
+        ,	IFNULL(D.NODE_NAME, '-') NODE2_NAME
+        ,	D.MTSO_NAME NODE2_ORG
+        ,	A.CALL_TYPE
+        ,	A.ALARM_TYPE_CODE
+        ,	A.ALARM_SUBTYPE_CODE
+        ,	A.ALARM_CLASS
+        ,	A.ALARM_NAME
+        ,	CASE WHEN E.OPERATOR = '&lt;' THEN '낮음' WHEN E.OPERATOR = '&gt;' THEN '높음' ELSE '' END OPERATOR_RESULT
+        ,	A.CURRENT_VALUE
+        ,	A.THRESHOLD_LEVEL
+        ,   CONCAT(
+                CASE
+                    WHEN B.MINOR = 9 THEN E.LV10
+                    WHEN B.MINOR = 8 THEN E.LV9
+                    WHEN B.MINOR = 7 THEN E.LV8
+                    WHEN B.MINOR = 6 THEN E.LV7
+                    WHEN B.MINOR = 5 THEN E.LV6
+                    WHEN B.MINOR = 4 THEN E.LV5
+                    WHEN B.MINOR = 3 THEN E.LV4
+                    WHEN B.MINOR = 2 THEN E.LV3
+                    WHEN B.MINOR = 1 THEN E.LV2
+                END
+            ,   ' '
+            ,   CASE WHEN E.OPERATOR = '&lt;' THEN '이상' WHEN E.OPERATOR = '&gt;' THEN '이하' ELSE '' END
+            ) NORMAL_CASE
+        ,	A.CURRENT_EXPRESSION
+        ,	A.CONTINUE_CNT
+        ,	IFNULL(B.ALARM_YN, 'N') ALARM_YN
+        FROM
+            FM_ALARM A
+            LEFT OUTER JOIN FM_ALARM_THRESHOLD E
+            ON A.ALARM_CLASS = E.ALARM_CLASS
+            LEFT OUTER JOIN CU_STD_THRESHOLD B
+            ON A.ALARM_CLASS = B.ALARM_CLASS
+            LEFT OUTER JOIN
+            (
+                <include refid="sqlClEnbForSubTable" />
+                UNION
+                <include refid="sqlClMmeFOrSubTable" />
+            ) C
+            ON A.NODE1_TYPE = C.NODE_TYPE
+            AND A.NODE1_ID = C.NODE_ID
+            LEFT OUTER JOIN
+            (
+                <include refid="sqlClMmeFOrSubTable" />
+            ) D
+            ON A.NODE2_TYPE = D.NODE_TYPE
+            AND A.NODE2_ID = D.NODE_ID
+        WHERE 1 = 1
+        AND A.EVENT_TIME = DATE_FORMAT(#{monitorTime}, '%Y%m%d%H%i%s')
+        AND A.ALARM_TYPE_CODE IN ('00')
+        AND A.THRESHOLD_LEVEL &lt;= B.MINOR
+        AND A.STAT_TYPE = '1M'
+        AND B.USE_YN = 'Y'
+        AND B.APPLY_YN = 'Y'
+        AND A.CONTINUE_CNT >= B.CONTINUE_CNT
+        ORDER BY THRESHOLD_LEVEL, CASE WHEN GRAPH_TYPE = 'NODE' THEN 0 ELSE 1 END , NODE1_TYPE
+    </select>
+
+    <sql id="sqlClEnbForSubTable">
+        SELECT
+            'ENB' NODE_TYPE
+        ,	A.ENB_ID NODE_ID
+        ,	A.BTS_NAME NODE_NAME
+        ,	IFNULL(E.MTSO_ID, '-') MTSO_ID, IFNULL(A.MTSO_NAME, '-') MTSO_NAME
+        ,	A.BRANCH_ID, B.BRANCH_NAME
+        ,	A.OPTEAM_ID, C.TEAM_NAME
+        ,	A.PART_ID, D.PART_NAME
+        FROM
+        CL_ENB A
+        LEFT OUTER JOIN CM_BRANCH B ON A.BRANCH_ID = B.BRANCH_ID
+        LEFT OUTER JOIN CM_TEAM C ON A.OPTEAM_ID = C.TEAM_ID
+        LEFT OUTER JOIN CM_PART D ON A.PART_ID = D.PART_ID
+        LEFT OUTER JOIN CB_MTSO E ON A.MTSO_NAME = E.MTSO_NAME
+        WHERE 1 = 1
+    </sql>
+    <sql id="sqlClMmeFOrSubTable">
+        SELECT
+            'MME' NODE_TYPE
+        ,	A.MME_ID NODE_ID
+        ,	CASE WHEN IFNULL(A.MME_ID, '0') = '0' THEN '-' ELSE CONCAT('MME', '#', LPAD(A.MME_ID * 1, 2, '0')) END NODE_NAME
+        ,	A.MTSO_ID, IFNULL(B.MTSO_NAME, '-') MTSO_NAME
+        ,	null BRANCH_ID, null BRANCH_NAME
+        ,	null OPTEAM_ID, null TEAM_NAME
+        ,	null PART_ID, null PART_NAME
+        FROM CL_MME A
+        LEFT OUTER JOIN CB_MTSO B ON A.MTSO_ID = B.MTSO_ID
+    </sql>
 </mapper>

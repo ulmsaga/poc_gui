@@ -22,9 +22,9 @@ const PopupEquipSearch = ({ title, params, style, isOpen, setIsOpen, popupCallBa
     setIsOpen(false);
   };
 
-  const contentCallBack = (ret) => {
-    if (ret !== undefined && ret !== null && ret !== '') {
-      popupCallBack(ret);
+  const contentCallBack = (retRows, params ) => {
+    if (retRows !== undefined && retRows !== null && retRows !== '') {
+      popupCallBack(retRows, params);
     }
     close();
   };

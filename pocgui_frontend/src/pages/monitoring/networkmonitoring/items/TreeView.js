@@ -4,9 +4,9 @@ import 'react-virtualized-tree/lib/main.css'
 import { AutoSizer, List } from "react-virtualized";
 import TreeItem from "./TreeItem";
 
-const TreeView = ({ tree, handleExpand, openPopupStatus }) => {
-  const doubleClick = (item) => {
-    openPopupStatus(item);
+const TreeView = ({ tree, handleExpand, dblClickNode }) => {
+  const onDoubleClick = (item) => {
+    dblClickNode(item);
   };
   return (
     <AutoSizer>
@@ -19,7 +19,7 @@ const TreeView = ({ tree, handleExpand, openPopupStatus }) => {
           rowRenderer={({ style, key, index }) => {
             const item = tree[index];
             return (
-              <div style={style} key={key} onDoubleClick={ () => { doubleClick(item) } }>
+              <div style={style} key={key} onDoubleClick={ () => { onDoubleClick(item) } }>
                 <TreeItem
                   item={item}
                   handleExpand={handleExpand}

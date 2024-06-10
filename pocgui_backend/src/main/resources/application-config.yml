@@ -36,7 +36,7 @@ file:
       excel: C:\Users\ZZ14932\Documents\
     upload:
       excel: C:\Users\ZZ14932\Documents\
-      docu: C:\Users\ZZ14932\Documents\
+      docu: /Users/sclee1115/Project/Dev/poc_gui/98.data/
     log:
       main: C:\Users\ZZ14932\Documents\
       etc: C:\Users\ZZ14932\Documents\

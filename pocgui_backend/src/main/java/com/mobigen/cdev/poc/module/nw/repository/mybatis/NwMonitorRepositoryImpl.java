@@ -1,8 +1,10 @@
 package com.mobigen.cdev.poc.module.nw.repository.mybatis;
 
+import com.mobigen.cdev.poc.module.nw.dto.NwAlarmDto;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Map;
 
 @Repository
@@ -17,5 +19,10 @@ public class NwMonitorRepositoryImpl implements NwMonitorRepository {
     @Override
     public String getLastStatusTime(Map<String, Object> param) {
         return sqlSessionTemplatePemdb1.selectOne(namespace + ".getLastStatusTime");
+    }
+
+    @Override
+    public List<NwAlarmDto> getCurAlarm1M(Map<String, Object> param) {
+        return sqlSessionTemplatePemdb1.selectList(namespace + ".getCurAlarm1M", param);
     }
 }

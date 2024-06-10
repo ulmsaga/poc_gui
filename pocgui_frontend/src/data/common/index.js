@@ -4,13 +4,13 @@ const periodList = [
 ];
 
 const callTypeList = [
-  { key: 'ATTACH', value: 'ATTACH', label: 'ATTACH'},
-  { key: 'SRMO', value: 'SRMO', label: 'SRMO'},
-  { key: 'SRMT', value: 'SRMT', label: 'SRMT'},
-  { key: 'TAU', value: 'TAU', label: 'TAU'},
-  { key: 'PAGING', value: 'PAGING', label: 'PAGING'},
-  { key: 'ESRMO', value: 'ESRMO', label: 'ESRMO'},
-  { key: 'ESRMT', value: 'ESRMT', label: 'ESRMT'}
+  { key: 'ATTACH', value: 'ATTACH', label: 'ATTACH', code: '1'},
+  { key: 'SRMO', value: 'SRMO', label: 'SRMO', code: '3'},
+  { key: 'SRMT', value: 'SRMT', label: 'SRMT', code: '4'},
+  { key: 'TAU', value: 'TAU', label: 'TAU', code: '5'},
+  { key: 'PAGING', value: 'PAGING', label: 'PAGING', code: '6'},
+  { key: 'ESRMO', value: 'ESRMO', label: 'ESRMO', code: '7'},
+  { key: 'ESRMT', value: 'ESRMT', label: 'ESRMT', code: '8'},
 ];
 
 const nodeTypeList = [

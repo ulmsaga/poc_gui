@@ -24,4 +24,11 @@ public class NwMonitorController {
         result.setRs(nwMonitorService.getLastStatusTime(param));
         return ResponseEntity.ok(result);
     }
+
+    @RequestMapping(value = "/getCurAlarm1M")
+    public ResponseEntity<RsResultDto> getCurAlarm1M(@RequestBody Map<String, Object> param) {
+        RsResultDto result = new RsResultDto();
+        result.setRs(nwMonitorService.getCurAlarm1M(param));
+        return ResponseEntity.ok(result);
+    }
 }

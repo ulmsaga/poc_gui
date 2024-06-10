@@ -58,7 +58,7 @@
             , 	NODE1_TYPE, NODE1_ID, NODE1_NAME, NODE1_EXP_ID
             ,	NODE2_TYPE, NODE2_ID, NODE2_NAME, NODE2_EXP_ID
             ,   CALL_TYPE
-                <include refid="sqlKpiAnalysisCaclulatedSumKpiColumns" />
+                <include refid="sqlKpiAnalysisCaclulatedKpiColumns" />
             <if test="pivotCauseList.size > 0">
             ,   <foreach item="item" index="index" collection="pivotCauseList" open="" separator="," close="">
                     SUM(CASE WHEN CAUSE = #{item} THEN CAUSE_CNT ELSE 0 END) ${item}
@@ -106,7 +106,7 @@
                     ,	A.NODE_TYPE NODE1_TYPE
                     ,	A.NODE_ID NODE1_ID
                     ,	CONCAT(A.NODE_TYPE, '_', A.NODE_ID) NODE1_NAME
-                    ,	CASE WHEN NVL(A.NODE_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE_TYPE, '#', LPAD(A.NODE_ID * 1, 2, '0')) END NODE1_EXP_ID
+                    ,	CASE WHEN IFNULL(A.NODE_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE_TYPE, '#', LPAD(A.NODE_ID * 1, 2, '0')) END NODE1_EXP_ID
                 </otherwise>
             </choose>
             ,	'-' NODE2_TYPE
@@ -126,39 +126,39 @@
                     ,	A.NODE_TYPE NODE2_TYPE
                     ,	A.NODE_ID NODE2_ID
                     ,	CONCAT(A.NODE_TYPE, '_', A.NODE_ID) NODE2_NAME
-                    ,	CASE WHEN NVL(A.NODE_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE_TYPE, '#', LPAD(A.NODE_ID * 1, 2, '0')) END NODE2_EXP_ID
+                    ,	CASE WHEN IFNULL(A.NODE_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE_TYPE, '#', LPAD(A.NODE_ID * 1, 2, '0')) END NODE2_EXP_ID
                 </when>
                 <otherwise>
                     <!-- NODE1 -->
                     ,	A.NODE1_TYPE NODE1_TYPE
                     ,	A.NODE1_ID NODE1_ID
                     ,	CONCAT(A.NODE1_TYPE, '_', A.NODE1_ID) NODE1_NAME
-                    ,	CASE WHEN NVL(A.NODE1_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE1_TYPE, '#', LPAD(A.NODE1_ID * 1, 2, '0')) END NODE1_EXP_ID
+                    ,	CASE WHEN IFNULL(A.NODE1_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE1_TYPE, '#', LPAD(A.NODE1_ID * 1, 2, '0')) END NODE1_EXP_ID
                     <!-- NODE2 -->
                     ,	A.NODE2_TYPE NODE2_TYPE
                     ,	A.NODE2_ID NODE2_ID
                     ,	CONCAT(A.NODE2_TYPE, '_', A.NODE2_ID) NODE2_NAME
-                    ,	CASE WHEN NVL(A.NODE2_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE2_TYPE, '#', LPAD(A.NODE2_ID * 1, 2, '0')) END NODE2_EXP_ID
+                    ,	CASE WHEN IFNULL(A.NODE2_ID, '0') = '0' THEN '-' ELSE CONCAT(A.NODE2_TYPE, '#', LPAD(A.NODE2_ID * 1, 2, '0')) END NODE2_EXP_ID
                 </otherwise>
             </choose>
         </if>
 
     </sql>
 
-    <sql id="sqlKpiAnalysisCaclulatedSumKpiColumns">
-        ,	IFNULL(SUM(ATTEMPT_CNT), 0) ATTEMPT_CNT
-        ,	IFNULL(SUM(SUCCESS_CNT), 0) SUCCESS_CNT
-        ,	CASE IFNULL(SUM(ATTEMPT_CNT), 0) WHEN 0 THEN '0' ELSE ROUND((SUM(SUCCESS_CNT) / SUM(ATTEMPT_CNT)) * 100, 2) END SUCCESS_RATE
+    <sql id="sqlKpiAnalysisCaclulatedKpiColumns">
+        ,	IFNULL(ATTEMPT_CNT, 0) ATTEMPT_CNT
+        ,	IFNULL(SUCCESS_CNT, 0) SUCCESS_CNT
+        ,	CASE IFNULL(ATTEMPT_CNT, 0) WHEN 0 THEN '0' ELSE ROUND((SUCCESS_CNT / ATTEMPT_CNT) * 100, 2) END SUCCESS_RATE
         ,	IFNULL(DROP_CNT, 0) DROP_CNT
-        ,	CASE WHEN SUM(DATA_SUCCESS_CNT) + SUM(IMS_SUCCESS_CNT) != 0 AND SUM(DROP_CNT) != 0 THEN ROUND(((SUM(DROP_CNT) / (SUM(DATA_SUCCESS_CNT) + SUM(IMS_SUCCESS_CNT))) * 100), 2) ELSE 0 END DROP_RATE
-        , 	IFNULL(SUM(DATA_ATTEMPT_CNT), 0) DATA_ATTEMPT_CNT
-        , 	IFNULL(SUM(DATA_SUCCESS_CNT), 0) DATA_SUCCESS_CNT
-        , 	CASE WHEN SUM(DATA_ATTEMPT_CNT) != 0 AND SUM(DATA_SUCCESS_CNT) != 0 THEN ROUND(((SUM(DATA_SUCCESS_CNT) / SUM(DATA_ATTEMPT_CNT)) * 100), 2) ELSE 0 END DATA_SUCCESS_RATE
-        ,	IFNULL(SUM(IMS_ATTEMPT_CNT), 0) IMS_ATTEMPT_CNT
-        ,	IFNULL(SUM(IMS_SUCCESS_CNT), 0) IMS_SUCCESS_CNT
-        , 	CASE WHEN SUM(IMS_ATTEMPT_CNT) != 0 AND SUM(IMS_SUCCESS_CNT) != 0 THEN ROUND(((SUM(IMS_SUCCESS_CNT) / SUM(IMS_ATTEMPT_CNT)) * 100), 2) ELSE 0 END IMS_SUCCESS_RATE
+        ,	CASE WHEN DATA_SUCCESS_CNT + IMS_SUCCESS_CNT != 0 AND DROP_CNT != 0 THEN ROUND(((DROP_CNT / (DATA_SUCCESS_CNT + IMS_SUCCESS_CNT)) * 100), 2) ELSE 0 END DROP_RATE
+        , 	IFNULL(DATA_ATTEMPT_CNT, 0) DATA_ATTEMPT_CNT
+        , 	IFNULL(DATA_SUCCESS_CNT, 0) DATA_SUCCESS_CNT
+        , 	CASE WHEN DATA_ATTEMPT_CNT != 0 AND DATA_SUCCESS_CNT != 0 THEN ROUND(((DATA_SUCCESS_CNT / DATA_ATTEMPT_CNT) * 100), 2) ELSE 0 END DATA_SUCCESS_RATE
+        ,	IFNULL(IMS_ATTEMPT_CNT, 0) IMS_ATTEMPT_CNT
+        ,	IFNULL(IMS_SUCCESS_CNT, 0) IMS_SUCCESS_CNT
+        , 	CASE WHEN IMS_ATTEMPT_CNT != 0 AND IMS_SUCCESS_CNT != 0 THEN ROUND(((IMS_SUCCESS_CNT / IMS_ATTEMPT_CNT) * 100), 2) ELSE 0 END IMS_SUCCESS_RATE
         <if test="addDetachCnt=='OK'">
-        ,	IFNULL(SUM(DETACH_CNT), 0) DETACH_CNT
+        ,	IFNULL(DETACH_CNT, 0) DETACH_CNT
         </if>
     </sql>
 
@@ -347,7 +347,6 @@
                         IFNULL(IMSI, 'NULL') IMSI
                     </when>
                     <when test = 'targetNodeType eq "UEM".toString()'>
-                        <!-- DECODE(IFNULL(IWF_ID, '-'), '-', 'NULL', NVL(MODEL_NAME, '-')) IWF_ID -->
                         CASE
                             WHEN
                                 IFNULL(IWF_ID, '-') = '-' THEN 'NULL'
@@ -356,7 +355,6 @@
                         END IWF_ID
                     </when>
                     <when test = 'targetNodeType eq "VLAN".toString()'>
-                        <!-- DECODE(IFNULL(VLAN_ID, '0_0000'), '0_0000', 'NULL', IFNULL(VLAN_ID, '-')) VLAN_ID -->
                         CASE
                             WHEN
                                 IFNULL(VLAN_ID, '-') = '-' THEN 'NULL'
@@ -576,11 +574,11 @@
                         , CASE WHEN  IFNULL(ATTEMPT_CNT, 0) !=  0 THEN ROUND((GAP_TIME / ATTEMPT_CNT), 3) ELSE 0 END
                     </when>
                     <when test="selectedVal == 'DELAYED_GAP_CNT'">
-                        , NVL(GAP_TIMEOVER_CNT, '0')
+                        , IFNULL(GAP_TIMEOVER_CNT, '0')
                     </when>
                     <otherwise>
                         <if test="selectedValType == 'CNT'">
-                            , NVL(${selectedVal}, 0)
+                            , IFNULL(${selectedVal}, 0)
                         </if>
                     </otherwise>
                 </choose>

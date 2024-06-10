@@ -5,7 +5,7 @@ import com.mobigen.cdev.poc.core.base.dto.BaseFile;
 public class FileDto extends BaseFile {
     private static final long serialVersionUID = -4299942090049957605L;
 
-    public static final String FILE_ENC_KEY = "dgwshfkd2023^_";
+    public static final String FILE_ENC_KEY = "pocshfkd2023^_";
 
     private String client_file_name;
     private Long file_size;

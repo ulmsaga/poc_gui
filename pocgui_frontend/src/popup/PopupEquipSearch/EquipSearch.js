@@ -136,7 +136,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
   const removeSelectedTarget = (e) => {
     const delList = JSON.parse(JSON.stringify(selectedDestRows));
     delList.forEach((e) => {
-      setSelectedTargetRows((target) => target.filter(item => item.value !== e.value));
+      setDestRows((target) => target.filter(item => item.value !== e.value));
     });
   };
 
@@ -211,7 +211,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
         </Stack>
         <Stack spacing={0.5} p={0} sx={{ verticalAlign: 'middle' }}>
           <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ justifyContent: 'right', verticalAlign: 'middle', height: '34px' }}>
-            <ButtonStd label={'적용'} color='primary' iconType='confirm' onClick={ (e) => {contentCallBack( destRows )} } />
+            <ButtonStd label={'적용'} color='primary' iconType='confirm' onClick={ (e) => {contentCallBack( destRows, params )} } />
             <ButtonStd label={'닫기'} color={'secondary'} iconType='close' onClick={ (e) => {contentCallBack()} } />
           </Stack>
         </Stack>
