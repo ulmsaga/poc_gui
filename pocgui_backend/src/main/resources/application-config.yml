@@ -134,15 +134,15 @@ server:
 file:
   path:
     create:
-      excel: /local/BOS-GUI/temp/files/create/excel/
+      excel: /local/POC-GUI/temp/files/create/excel/
     download:
-      excel: /local/BOS-GUI/temp/files/download/excel/
+      excel: /local/POC-GUI/temp/files/download/excel/
     upload:
-      excel: /local/BOS-GUI/temp/files/upload/excel/
-      docu: /local/BOS-GUI/temp/files/upload/docu/
+      excel: /local/POC-GUI/temp/files/upload/excel/
+      docu: /local/POC-GUI/temp/files/upload/docu/
     log:
-      main: /local/BOS-GUI/temp/logs/
-      etc: /local/BOS-GUI/temp/logs/etc/
+      main: /local/POC-GUI/temp/logs/
+      etc: /local/POC-GUI/temp/logs/etc/
 tango:
   sso:
     login:
