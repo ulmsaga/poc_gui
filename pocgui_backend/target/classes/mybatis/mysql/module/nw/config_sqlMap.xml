@@ -104,11 +104,11 @@
         from
         (
             select
-                A.branch_id
+                CONCAT('BRANCH_', A.branch_id) branch_id
             ,	B.branch_name
-            ,	A.opteam_id
+            ,	CONCAT('TEAM_', A.opteam_id) opteam_id
             ,	C.team_name opteam_name
-            ,	A.part_id
+            ,	CONCAT('PART_', A.part_id) part_id
             ,	D.part_name
             ,	A.mtso_name
             ,	E.mtso_id
@@ -135,6 +135,6 @@
             where 1 = 1
             and opr_status = 'ACT'
         ) A
-        where A.row_num &lt; 4000
+<!--        where A.row_num &lt; 4000-->
     </sql>
 </mapper>

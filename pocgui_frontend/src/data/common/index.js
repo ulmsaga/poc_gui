@@ -29,4 +29,7 @@ const mmeList = [
 
 const enbList = [];
 
-export { periodList, callTypeList, nodeTypeList, mmeList, enbList }
+const NODE_TYPE_PATTERN_EPC = 'EPC';
+const NODE_TYPE_PATTERN_ENB = 'ENB';
+
+export { periodList, callTypeList, nodeTypeList, mmeList, enbList, NODE_TYPE_PATTERN_ENB, NODE_TYPE_PATTERN_EPC }

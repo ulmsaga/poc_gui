@@ -1,4 +1,4 @@
-import { FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
+import { Alarm, FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
 import { Button, OutlinedInput, Stack } from "@mui/material";
 import { getKpiAnalysis, getKpiAnalysisEquipCauseCnt } from "api/nw/analysisApi";
 import { getEnbList, getMmeList } from "api/nw/configApi";
@@ -610,29 +610,77 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
       setNode1List([]);
       setNode2List([]);
       let existNode1 = false; 
+      let existNode2 = false; 
 
-      if (monitorParam.state.nodeType === 'MME') {
-        node1TypeChange({ target: { value: 'MME', label: 'MME', node: 'MME' } });
-        forEach(mmeList, (item) => {
-          if (item.node_exp_id === monitorParam.id) {
-            setSelectedNode1([item]);
-            setNode1Input(item.description);
-            existNode1 = true;
-            return true;
-          }
-        });
-      } else if (monitorParam.state.nodeType === 'ENB') {
-        node1TypeChange({ target: { value: 'ENB', label: 'ENB', node: 'ENB' } });
-        forEach(enbList, (item) => {
-          if (item.enb_id === monitorParam.id) {
-            setSelectedNode1([item]);
-            setNode1Input(item.description);
-            existNode1 = true;
-            return true;
-          }
-        });
+      if (monitorParam.callFromMonitorType === 'EQUIP') {
+        // EQUIP (TREE) DOUBLE CLICK
+        if (monitorParam.state.nodeType === 'MME') {
+          node1TypeChange({ target: { value: 'MME', label: 'MME', node: 'MME' } });
+          forEach(mmeList, (item) => {
+            if (item.node_exp_id === monitorParam.id) {
+              setSelectedNode1([item]);
+              setNode1Input(item.description);
+              existNode1 = true;
+              return true;
+            }
+          });
+        } else if (monitorParam.state.nodeType === 'ENB') {
+          node1TypeChange({ target: { value: 'ENB', label: 'ENB', node: 'ENB' } });
+          forEach(enbList, (item) => {
+            if (item.enb_id === monitorParam.id) {
+              setSelectedNode1([item]);
+              setNode1Input(item.description);
+              existNode1 = true;
+              return true;
+            }
+          });
+        }
+
+        if (existNode1) setSearchTrigger(!searchTrigger);
+      } else if (monitorParam.callFromMonitorType === 'ALARM') {
+        // ALARM GRID DOUBLE CLICK
+        // NODE1
+        const node1Type = monitorParam.node1_type;
+        if (node1Type === 'MME') {
+          node1TypeChange({ target: { value: 'MME', label: 'MME', node: 'MME' } });
+          forEach(mmeList, (item) => {
+            if (item.node_exp_id === monitorParam.node1_key) {
+              setSelectedNode1([item]);
+              setNode1Input(item.description);
+              existNode1 = true;
+              return true;
+            }
+          });
+        } else if (node1Type === 'ENB') {
+          node1TypeChange({ target: { value: 'ENB', label: 'ENB', node: 'ENB' } });
+          forEach(enbList, (item) => {
+            if (item.enb_id === monitorParam.node1_key) {
+              setSelectedNode1([item]);
+              setNode1Input(item.description);
+              existNode1 = true;
+              return true;
+            }
+          });
+        }
+
+        if (monitorParam.graph_type === 'LINK') {
+          // graphType === 'NODE' && NODE2
+          node2TypeChange({ target: { value: 'MME', label: 'MME', node: 'MME' } });
+          forEach(mmeList, (item) => {
+            if (item.node_exp_id === monitorParam.node2_key) {
+              setSelectedNode2([item]);
+              setNode2Input(item.description);
+              existNode2 = true;
+              return true;
+            }
+          });
+          if (existNode1 && existNode2) setSearchTrigger(!searchTrigger);
+        } else {
+          // graphType === 'NODE'
+          if (existNode1) setSearchTrigger(!searchTrigger);
+        }
       }
-      if (existNode1) setSearchTrigger(!searchTrigger);
+      
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callKpiFlag]);

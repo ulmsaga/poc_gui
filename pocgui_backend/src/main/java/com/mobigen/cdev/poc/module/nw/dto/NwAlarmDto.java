@@ -12,10 +12,12 @@ public class NwAlarmDto extends BaseObject {
     private String event_exp_time;
     private String graph_type;
     private String location;
+    private String node1_key;
     private String node1_type;
     private String node1_id;
     private String node1_name;
     private String node1_org;
+    private String node2_key;
     private String node2_type;
     private String node2_id;
     private String node2_name;
@@ -231,5 +233,21 @@ public class NwAlarmDto extends BaseObject {
 
     public void setAlarm_yn(String alarm_yn) {
         this.alarm_yn = alarm_yn;
+    }
+
+    public String getNode1_key() {
+        return node1_key;
+    }
+
+    public void setNode1_key(String node1_key) {
+        this.node1_key = node1_key;
+    }
+
+    public String getNode2_key() {
+        return node2_key;
+    }
+
+    public void setNode2_key(String node2_key) {
+        this.node2_key = node2_key;
     }
 }

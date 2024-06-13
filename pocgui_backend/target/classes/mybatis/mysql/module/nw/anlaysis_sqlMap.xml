@@ -333,7 +333,7 @@
             (
                 <include refid="sqlKpiAnalysisEquipCauseCnt" />
             ) A
-        ORDER BY CASE WHEN STD_VALUE = '합계' THEN '0' ELSE STD_VALUE END
+        ORDER BY CAUSE_CNT DESC, CASE WHEN STD_VALUE = '합계' THEN '0' ELSE STD_VALUE END
     </select>
 
     <sql id="sqlKpiAnalysisEquipCauseCnt">

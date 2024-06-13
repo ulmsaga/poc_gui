@@ -8,6 +8,8 @@ import { TypoLabel, TypoLableNoLine, TypoMarkLableNoLine } from "components/labe
 import { DateRangeTwoTone, FiberManualRecordTwoTone, PauseCircleFilledTwoTone, PlayCircleFilledTwoTone } from "@mui/icons-material";
 import KpiAnalysis from "pages/analysis/kpianalysis/index.js";
 import { getCurAlarm1M, getLastStatusTime } from "api/nw/monitorApi.js";
+import { fnDateToFormatStr, fnStrToDate } from "utils/common.js";
+import { NODE_TYPE_PATTERN_ENB, NODE_TYPE_PATTERN_EPC } from "data/common/index.js";
 
 const NetworkMonitoring = () => {
   // eslint-disable-next-line no-unused-vars
@@ -21,17 +23,15 @@ const NetworkMonitoring = () => {
   // eslint-disable-next-line no-unused-vars
   const [enbAlarmList, setEnbAlarmList] = useState([]);
   
-  // Popup Status
-  // const [isOpenPopupStatus, setIsOpenPopupStatus] = useState(false);
-
-  
-  
   const [filterCrCnt, setFilterCrCnt] = useState(0);
   const [filterMjCnt, setFilterMjCnt] = useState(0);
   const [filterMnCnt, setFilterMnCnt] = useState(0);
 
-  const [nodeCheck, setNodeCheck] = useState(true);
-  const [linkCheck, setLinkCheck] = useState(true);
+  // FILTER CHECK
+  const [nodeFilterCheck, setNodeFilterCheck] = useState(true);
+  const [linkFilterCheck, setLinkFilterCheck] = useState(true);
+
+  const [isMonitoring, setIsMonitoring] = useState(true);
 
   const nodeAlarmCols = [
     {
@@ -95,39 +95,59 @@ const NetworkMonitoring = () => {
   // eslint-disable-next-line no-unused-vars
   const [monitorParam, setMonitorParam] = useState({});
   const [monitorTime, setMonitorTime] = useState('');
+  const [monitorFormatTime, setMonitorFormatTime] = useState('');
 
-  const getMonitorTime = () => {
+  const getMonitorTime = (isSetAndRun) => {
     const param = {};
+    if (isSetAndRun === undefined || isSetAndRun === null || isSetAndRun === '') isSetAndRun = false;
     getLastStatusTime(param).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
           console.log('getMonitorTime', ret.rs);
           setMonitorTime(ret.rs);
+          setMonitorFormatTime(fnDateToFormatStr(fnStrToDate(ret.rs), 'yyyy-MM-dd HH:mm'));
+          if (isSetAndRun) {
+            getMonitorAlarm(ret.rs);
+          }
         }
       }
     });
   };
 
-  const getMonitorAlarm = () => {
+  const getMonitorAlarm = (sTime) => {
     const param = {
       monitorTime: monitorTime
     };
+
+    if (sTime !== undefined || sTime !== null || sTime !== '') {
+      param.monitorTime = sTime;
+    }
+
     console.log('getMonitorAlarm', param.monitorTime);
     getCurAlarm1M(param).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
 
+          console.log('nodeFilterCheck ::', nodeFilterCheck);
+
           setAlarmList(ret.rs);
-          setGridMainData(ret.rs);
-          // filterData();
-          // setGradeCnt();
+          filterData(ret.rs);
         }
       }
     });
   };
 
-  const setGradeCnt = () => {
-    const data = JSON.parse(JSON.stringify(gridMainData));
+  const setEquipAlarm = (list) => {
+    const data = JSON.parse(JSON.stringify(list));
+    const filterMmeAlarmList = data.filter(item => (item.node1_type === 'MME' || item.node2_type === 'MME'));
+    const filterEnbAlarmList = data.filter(item => (item.node1_type === 'ENB'));
+    // set 처리시 한박자 늦게 동작 하는 듯... 처리 필요
+    setMmeAlarmList(filterMmeAlarmList);
+    setEnbAlarmList(filterEnbAlarmList);
+  };
+
+  const setGradeCnt = (list) => {
+    const data = JSON.parse(JSON.stringify(list));
     const filterCrCnt = data.filter(item => item.grade === 'CR').length;
     const filterMjCnt = data.filter(item => item.grade === 'MJ').length;
     const filterMnCnt = data.filter(item => item.grade === 'MN').length;
@@ -137,14 +157,18 @@ const NetworkMonitoring = () => {
     setFilterMnCnt(filterMnCnt);
   };
 
-  const filterData = () => {
-    console.log('checke ::', nodeCheck, linkCheck);
+  const filterData = (list) => {
+    // console.log('checked ::', nodeFilterCheck, linkFilterCheck);
+    console.log('filter nodeFilterCheck : ', nodeFilterCheck, 'linkFilterCheck', linkFilterCheck);
     
-    const filteredData = alarmList.filter(item => {
-      if (nodeCheck && item.graph_type === 'NODE') {
+    if (list === undefined || list === null || list === '') list = JSON.parse(JSON.stringify(alarmList));
+    const tmp = JSON.parse(JSON.stringify(list));
+
+    const filteredData = tmp.filter(item => {
+      if (nodeFilterCheck && item.graph_type === 'NODE') {
         return true;
       }
-      if (linkCheck && item.graph_type === 'LINK') {
+      if (linkFilterCheck && item.graph_type === 'LINK') {
         return true;
       }
       return false;
@@ -152,58 +176,92 @@ const NetworkMonitoring = () => {
 
     console.log(filteredData);
     setGridMainData(filteredData);
+    setGradeCnt(filteredData);
+    setEquipAlarm(filteredData)
   };
 
+  const nodeFilterCheckChange = (event) => {
+    setNodeFilterCheck(event.target.checked);
+  };
+  const linkFilterCheckChange = (event) => {
+    setLinkFilterCheck(event.target.checked);
+  };
+  
   const [callKpiFlag, setCallKpiFlag] = useState(false);
   const dblClickNode = (params) => {
-    // alert(params.name);
-    // setIsOpenPopupStatus(true);
-    // console.log('dblClickNode', params);
+    params.callFromMonitorType = 'EQUIP';
     params.monitorTime = monitorTime;
     setMonitorParam(params);
     setCallKpiFlag(!callKpiFlag);
   };
 
+  const [searchTargetMmeId, setSearchTargetMmeId] = useState('');
+  const [searchTargetEnbId, setSearchTargetEnbId] = useState('');
+  const gridAlarmCellDbClick = (rows) => {
+    console.log('gridAlarmCellDbClick', rows);
+    if (rows.data.node1_type === 'MME') {
+      setSearchTargetMmeId(rows.data.node1_key);
+    } else if (rows.data.node1_type === 'ENB') {
+      setSearchTargetEnbId(rows.data.node1_key);
+      if (rows.data.node2_type === 'MME') {
+        setSearchTargetMmeId(rows.data.node2_key);
+      }
+    }
+
+    const param = rows.data;
+    param.callFromMonitorType = 'ALARM';
+    param.monitorTime = monitorTime;
+    setMonitorParam(param);
+    setCallKpiFlag(!callKpiFlag);
+  };
+
   useEffect(() => {
-    getMonitorTime();
     getMmeTreeList({}).then((response) => {
       setMmeTreeList(response.data.rs);
     });
     getEnbTreeList({}).then((response) => {
       setEnbTreeList(response.data.rs)
     });
+    getMonitorTime(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [pollingCnt, setPollingCnt] = useState(0);
+  const updatePollingCnt = (cnt) => {
+    setPollingCnt(cnt);
+  };
+
+  const tmpRef = useRef(0);
   useEffect(() => {
-    getMonitorAlarm();
+    if (isMonitoring) {
+      const interval = setInterval(() => {
+        console.log('tmpRef.current ::', tmpRef.current);
+        if (tmpRef.current > 100) {
+          tmpRef.current = 1;
+        } else {
+          tmpRef.current = tmpRef.current + 1;
+        }
+        updatePollingCnt(tmpRef.current);
+      }, 60000);
+      return () => {
+        clearInterval(interval);
+      };
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monitorTime]);
+  }, [isMonitoring]);
 
   useEffect(() => {
-    // filterData();
-    setGradeCnt();
+    console.log('pollingCnt ::', pollingCnt);
+    if (pollingCnt > 0) {
+      getMonitorTime(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gridMainData]);
+  }, [pollingCnt]);
 
   useEffect(() => {
     filterData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeCheck, linkCheck]);
-
-  const inputRef = useRef(null)
-
-  useEffect(() => {
-      let resizeObserverEntries = []
-      const observer = new ResizeObserver((entries)=>{
-          resizeObserverEntries = entries
-      })
-      if(inputRef.current) observer.observe(inputRef.current)
-      return () => {
-          resizeObserverEntries.forEach((entry)=>entry.target.remove())
-          observer.disconnect()
-      }
-  },[])
+  }, [nodeFilterCheck, linkFilterCheck]);
 
   return (
     <Fragment>
@@ -213,24 +271,24 @@ const NetworkMonitoring = () => {
             <Stack direction={'row'} spacing={0} p={0} marginTop={0.6} sx={{ justifyContent: 'space-between', verticalAlign: 'middle', height: '100%' }}>
               <Stack direction={'row'} spacing={0} p={0} sx={{ verticalAlign: 'middle', height: '100%' }}>
                 <TypoMarkLableNoLine label={'감시'} style={{ width: '100%', paddingRight: '10px' }}/>
-                <TypoLabel label={'2021-09-01 10:00'} variant={'h3'} style={{ height: '26px', width: '130px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', border: '0.5px solid #9fa2a7' /*, background: '#e6f4ff'*/ , borderRadius: '0px' }}/>
-                <IconButton size={ 'small' } color='primary' onClick={ () => {} }>
+                <TypoLabel label={ monitorFormatTime } variant={'h3'} style={{ height: '26px', width: '130px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', border: '0.5px solid #9fa2a7' /*, background: '#e6f4ff'*/ , borderRadius: '0px' }}/>
+                <IconButton size={ 'small' } color='primary' onClick={ () => { getMonitorTime(true) } }>
                   <DateRangeTwoTone fontSize='small' htmlColor="#3ea2b3" />
                 </IconButton>
               </Stack>
-              <IconButton size={ 'small' } color='primary' onClick={ () => {} }>
-                { (true) && <PauseCircleFilledTwoTone fontSize='small' htmlColor="#3ea2b3" />}
-                { (false) && <PlayCircleFilledTwoTone fontSize='small' htmlColor="#3ea2b3" />}
+              <IconButton size={ 'small' } color='primary' onClick={ () => {setIsMonitoring(!isMonitoring)} }>
+                { (isMonitoring) && <PauseCircleFilledTwoTone fontSize='small' htmlColor="#3ea2b3" />}
+                { (!isMonitoring) && <PlayCircleFilledTwoTone fontSize='small' htmlColor="#3ea2b3" />}
               </IconButton>
             </Stack>
           </Box>
           {/* TREE1 */}
           <Box height={'calc(50% - 31px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }} >
-            <TreeEquipType data={ mmeTreeList } alarmList={ mmeAlarmList } dblClickNode={ dblClickNode }/>
+            <TreeEquipType nodeTypePattern={ NODE_TYPE_PATTERN_EPC } data={ mmeTreeList } alarmList={ mmeAlarmList } dblClickNode={ dblClickNode } searchTargetItemId={ searchTargetMmeId } setSearchTargetItemId={ setSearchTargetMmeId }/>
           </Box>
           {/* TREE2 */}
           <Box height={'calc(50% - 31px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }} >
-            <TreeEquipType data={ enbTreeList } alarmList={ enbAlarmList } dblClickNode={ dblClickNode }/>
+            <TreeEquipType nodeTypePattern={ NODE_TYPE_PATTERN_ENB } data={ enbTreeList } alarmList={ enbAlarmList } dblClickNode={ dblClickNode } searchTargetItemId={ searchTargetEnbId } setSearchTargetItemId={ setSearchTargetEnbId } />
           </Box>
         </Grid>
         <Grid item sx={{ width: 'calc(100% - 310px)'}}>
@@ -252,11 +310,8 @@ const NetworkMonitoring = () => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={nodeCheck}
-                          onChange={(event) => {
-                            console.log('node', 'event.target.checked', event.target.checked);
-                            setNodeCheck(event.target.checked);
-                          }}
+                          checked={ nodeFilterCheck }
+                          onChange={ nodeFilterCheckChange }
                           color="primary"
                           sx={{ paddingTop: 0, transform: 'scale(0.8)'}}
                         />
@@ -267,11 +322,8 @@ const NetworkMonitoring = () => {
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={linkCheck}
-                          onChange={(event) => {
-                            console.log('link', 'event.target.checked', event.target.checked);
-                            setLinkCheck(event.target.checked);
-                          }}
+                          checked={ linkFilterCheck }
+                          onChange={ linkFilterCheckChange }
                           color="primary"
                           sx={{ paddingTop: 0, transform: 'scale(0.8)'}}
                         />
@@ -296,6 +348,7 @@ const NetworkMonitoring = () => {
                   getSelectedData={ (e) => {} }
                   // onGridReady={onGridReady}
                   // onModelUpdated={onGridReady}
+                  onCellDoubleClicked={ gridAlarmCellDbClick }
                 />
               </Stack>
             </Stack>

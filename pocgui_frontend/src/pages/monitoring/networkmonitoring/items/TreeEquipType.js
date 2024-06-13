@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import TreeView from "./TreeView";
 import { forEach } from "lodash";
+// eslint-disable-next-line no-unused-vars
+import { NODE_TYPE_PATTERN_ENB, NODE_TYPE_PATTERN_EPC } from "data/common";
 
-const TreeEquipType = ({ data, alarmList, dblClickNode }) => {
+const TreeEquipType = ({ nodeTypePattern, data, alarmList, dblClickNode, searchTargetItemId, setSearchTargetItemId }) => {
   const [expanded, setExpanded] = useState([]);
 
   const flatten = (data, depth = 1, parentId = null, main = []) => {
@@ -53,12 +55,33 @@ const TreeEquipType = ({ data, alarmList, dblClickNode }) => {
   const setNodeStatus = (arr, id, property, value) => {
     forEach(arr, (item) => {
       if (item.id === id) {
-        item.state[property] = value;
+        if (property === 'alarmGrade') {
+          item.state[property] = chkAlarmGramde(item.state[property], value);
+        } else {
+          item.state[property] = value;
+        }
         // console.log("arr[item].status[property]", item.state[property]);
         return true;
       }
     });
   };
+
+  const chkAlarmGramde = (curr, next) => {
+    if (curr === undefined) return next;
+    if (next === undefined) return curr;
+
+    let currGrade = 0;
+    let nextGrade = 0;
+    if (curr === 'CR') currGrade = 3;
+    if (curr === 'MJ') currGrade = 2;
+    if (curr === 'MN') currGrade = 1;
+    if (next === 'CR') nextGrade = 3;
+    if (next === 'MJ') nextGrade = 2;
+    if (next === 'MN') nextGrade = 1;
+
+    if (nextGrade > currGrade) return next;
+    return curr;
+  }
 
   const filterSet = () => {
     // console.log("expanded", expanded);
@@ -86,8 +109,18 @@ const TreeEquipType = ({ data, alarmList, dblClickNode }) => {
   const drawAlarm = () => {
     const tmpExpanded = [...expanded];
     let existNewExpanded = false;
+    let matchNode = 'node1';
     alarmList.forEach((item) => {
-      const node = getItemById(flattenData, item.id);
+      matchNode = 'node1';
+      let node = getItemById(flattenData, item.node1_key); 
+      if (node === null && nodeTypePattern === NODE_TYPE_PATTERN_EPC) {
+        // node1 or node2
+        node = getItemById(flattenData, item.node2_key);
+        if (node !== null) matchNode = 'node2';
+      }
+
+      if (node === null) return;
+
       if (node?.main?.length !== undefined && node?.main?.length > 0) {
         node.main.forEach((id) => {
           // console.log("expenedId", id);
@@ -99,18 +132,58 @@ const TreeEquipType = ({ data, alarmList, dblClickNode }) => {
           }
         });
       }
-      setNodeStatus(flattenData, item.id, 'alarmGrade', item.alarmGrade);
+      if (matchNode === 'node1') {
+        setNodeStatus(flattenData, item.node1_key, 'alarmGrade', item.grade);
+      } else {
+        setNodeStatus(flattenData, item.node2_key, 'alarmGrade', item.grade);
+      }
+      
     });
     if (existNewExpanded) setExpanded(tmpExpanded);
+    setReloadTrigger(!reloadTrigger);
   };
  
   useEffect(() => {
+    forEach(flattenData, (item) => {
+      item.state.alarmGrade = 'NR';
+    });
+
     drawAlarm();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alarmList]);
 
+  useEffect(() => {
+    if (searchTargetItemId === '' || searchTargetItemId === null) return;
+    
+    // console.log('expanded : ', expanded);
+    // console.log('searchTargetItemId : ', searchTargetItemId);
+
+    const tmpExpanded = [...expanded];
+    let existNewExpanded = false;
+    const node = getItemById(flattenData, searchTargetItemId);
+    if (node === null) return;
+    if (node?.main?.length !== undefined && node?.main?.length > 0) {
+      node.main.forEach((id) => {
+        if (!expanded.includes(id)) {
+          existNewExpanded = true;
+          tmpExpanded.push(id);
+          setNodeStatus(flattenData, id, 'expanded', true);
+        }
+      });
+    }
+    if (existNewExpanded) setExpanded(tmpExpanded);
+    // setReloadTrigger(!reloadTrigger);
+
+    // setTimeout(() => {
+    //   setReloadTrigger(!reloadTrigger);
+    // }, 1000);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTargetItemId]);
+
+  const [reloadTrigger, setReloadTrigger] = useState(false);
   return (
-    <TreeView tree={filterSet()} handleExpand={handleExpand} dblClickNode={ dblClickNode }/>
+    <TreeView tree={ filterSet() } handleExpand={ handleExpand } reloadTrigger={ !reloadTrigger } dblClickNode={ dblClickNode } searchTargetItemId={ searchTargetItemId } setSearchTargetItemId={ setSearchTargetItemId } />
   );
 };
 

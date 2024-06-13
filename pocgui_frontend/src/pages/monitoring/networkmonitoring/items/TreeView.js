@@ -4,10 +4,14 @@ import 'react-virtualized-tree/lib/main.css'
 import { AutoSizer, List } from "react-virtualized";
 import TreeItem from "./TreeItem";
 
-const TreeView = ({ tree, handleExpand, dblClickNode }) => {
+const TreeView = ({ tree, handleExpand, dblClickNode, reloadTrigger, searchTargetItemId, setSearchTargetItemId }) => {
   const onDoubleClick = (item) => {
     dblClickNode(item);
   };
+  
+  const scrollToIndex = tree.findIndex(item => item.id === searchTargetItemId);
+  setSearchTargetItemId('');
+
   return (
     <AutoSizer>
       {({ height, width }) => (
@@ -25,10 +29,13 @@ const TreeView = ({ tree, handleExpand, dblClickNode }) => {
                   handleExpand={handleExpand}
                   // isRenaming={renamin === item.id}
                   // doubleClick={ doubleClick }
+                  reloadTrigger={ reloadTrigger }
                 />
               </div>
             );
           }}
+          scrollToIndex={ scrollToIndex }
+          scrollToAlignment="start"
         />
       )}
     </AutoSizer>
