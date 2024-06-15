@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="info" monitorInterval="1800">
     <Properties>
-        <Property name="PRODUCT_NAME">BOS-GUI</Property>
+        <Property name="PRODUCT_NAME">POC-GUI</Property>
         <Property name="LOG_FORMAT">%d{yyyy-MM-dd HH:mm:ss} %p %m%n</Property>
         <Property name="BASE_DIR">/local/${PRODUCT_NAME}/temp/logs</Property>
         <Property name="BASE_BACKUP_DIR">/local/${PRODUCT_NAME}/temp/logs/bak</Property>

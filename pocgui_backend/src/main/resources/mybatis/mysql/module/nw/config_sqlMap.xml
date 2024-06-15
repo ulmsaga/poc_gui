@@ -39,12 +39,12 @@
             end mtso_last
         ,   'MME' node_type
         ,	A.mme_id node_id
-        ,	concat('MME#', lpad(cast(mme_id as integer), 2, '0')) node_exp_id
+        ,	concat('MME#', lpad(cast(mme_id as unsigned), 2, '0')) node_exp_id
         ,	A.mme_name node_name
         ,   A.mme_id value
-        ,   concat('MME#', lpad(cast(mme_id as integer), 2, '0')) label
+        ,   concat('MME#', lpad(cast(mme_id as unsigned), 2, '0')) label
         ,   concat(B.mtso_name, ' (', A.mtso_id, ')') group_filter
-        ,   concat(B.mtso_name, ' (', A.mtso_id, ')', ' - MME#', lpad(cast(mme_id as integer), 2, '0')) description
+        ,   concat(B.mtso_name, ' (', A.mtso_id, ')', ' - MME#', lpad(cast(mme_id as unsigned), 2, '0')) description
         from
             <include refid="cl_mme" /> A
             left outer join <include refid="cb_mtso" /> B

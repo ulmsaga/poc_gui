@@ -1,4 +1,4 @@
-import { Alarm, FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
+import { FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
 import { Button, OutlinedInput, Stack } from "@mui/material";
 import { getKpiAnalysis, getKpiAnalysisEquipCauseCnt } from "api/nw/analysisApi";
 import { getEnbList, getMmeList } from "api/nw/configApi";

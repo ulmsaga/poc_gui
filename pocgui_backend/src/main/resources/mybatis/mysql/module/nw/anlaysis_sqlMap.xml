@@ -88,7 +88,13 @@
             <include refid="sqlKpiAnalysisMainCond" />
             <include refid="sqlKpiAnalysisCallTypeCond" />
         ) A
-        GROUP BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
+        GROUP BY EVENT_TIME
+        ,   NODE1_TYPE, NODE1_ID, NODE1_NAME, NODE1_EXP_ID
+        ,   NODE2_TYPE, NODE2_ID, NODE2_NAME, NODE2_EXP_ID
+        ,   CALL_TYPE
+        <!-- 2024.06.13 Config Cause :: Error From Workstation -->
+        ,   ATTEMPT_CNT, SUCCESS_CNT, DROP_CNT, DATA_ATTEMPT_CNT, DATA_SUCCESS_CNT, IMS_ATTEMPT_CNT, IMS_SUCCESS_CNT, DETACH_CNT
+        <!-- 2024.06.13 Config Cause :: Error From Workstation -->
         ORDER BY EVENT_TIME, NODE1_TYPE, NODE1_ID, NODE2_TYPE, NODE2_ID, CALL_TYPE
     </sql>
 

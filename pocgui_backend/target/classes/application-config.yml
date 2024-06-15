@@ -13,7 +13,7 @@ server:
 #local
 spring:
   pid:
-    file: C:\Users\ZZ14932\Documents\poc.pid
+    file: /Users/sclee1115/Project/Dev/poc_gui/98.data/poc.pid
   config:
     activate:
       on-profile: config-local
@@ -31,15 +31,15 @@ server:
 file:
   path:
     create:
-      excel: C:\Users\ZZ14932\Documents\
+      excel: /Users/sclee1115/Project/Dev/poc_gui/98.data/
     download:
-      excel: C:\Users\ZZ14932\Documents\
+      excel: /Users/sclee1115/Project/Dev/poc_gui/98.data/
     upload:
-      excel: C:\Users\ZZ14932\Documents\
+      excel: /Users/sclee1115/Project/Dev/poc_gui/98.data/
       docu: /Users/sclee1115/Project/Dev/poc_gui/98.data/
     log:
-      main: C:\Users\ZZ14932\Documents\
-      etc: C:\Users\ZZ14932\Documents\
+      main: /Users/sclee1115/Project/Dev/poc_gui/98.data/
+      etc: /Users/sclee1115/Project/Dev/poc_gui/98.data/
 
 sms:
   server:
@@ -120,7 +120,7 @@ poc:
 #prod
 spring:
   pid:
-    file: /local/BOS-GUI/poc.pid
+    file: /local/POC-GUI/poc.pid
   config:
     activate:
       on-profile: config-prod
@@ -134,15 +134,15 @@ server:
 file:
   path:
     create:
-      excel: /local/BOS-GUI/temp/files/create/excel/
+      excel: /local/POC-GUI/temp/files/create/excel/
     download:
-      excel: /local/BOS-GUI/temp/files/download/excel/
+      excel: /local/POC-GUI/temp/files/download/excel/
     upload:
-      excel: /local/BOS-GUI/temp/files/upload/excel/
-      docu: /local/BOS-GUI/temp/files/upload/docu/
+      excel: /local/POC-GUI/temp/files/upload/excel/
+      docu: /local/POC-GUI/temp/files/upload/docu/
     log:
-      main: /local/BOS-GUI/temp/logs/
-      etc: /local/BOS-GUI/temp/logs/etc/
+      main: /local/POC-GUI/temp/logs/
+      etc: /local/POC-GUI/temp/logs/etc/
 tango:
   sso:
     login:

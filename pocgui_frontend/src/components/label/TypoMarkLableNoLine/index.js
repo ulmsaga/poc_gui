@@ -1,7 +1,7 @@
 import React from 'react';
 import { styled } from '@mui/material/styles';
 import { Stack } from '@mui/material';
-import { FiberManualRecordTwoTone, LabelImportantTwoTone, MoreVertTwoTone } from '@mui/icons-material';
+import { FiberManualRecordTwoTone } from '@mui/icons-material';
 
 const TypographyStyled = styled('div')(({ theme, variant }) => ({
   ...theme.typography[variant]

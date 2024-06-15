@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { styled } from '@mui/material/styles';
-
+// eslint-disable-next-line no-unused-vars
 const TypographyStyled = styled('div')(({ theme, variant }) => ({
   ...theme.typography[variant]
 }));

@@ -369,24 +369,27 @@
 			select
 				A.user_id, A.user_name
 			,	A.phone, A.email
-			,	A.role_id, A.role_name, A.role_desc
+<!--			,	A.role_id, A.role_name, A.role_desc-->
+			,	MIN(A.role_id) role_id
+			,	(select role_name from CM_ROLE where role_id = MIN(A.role_id)) role_name
+			,	(select role_desc from CM_ROLE where role_id = MIN(A.role_id)) role_desc
 			,	B.module_id
-			,	min(nvl(target_use_lv, 5)) target_use_lv
-			,	min(nvl(target_read_lv, 5)) target_read_lv
-			,	min(nvl(target_create_lv, 5)) target_create_lv
-			,	min(nvl(target_modify_lv, 5)) target_modify_lv
-			,	min(nvl(target_delete_lv, 5)) target_delete_lv
-			,	min(nvl(target_confirm_lv, 5)) target_confirm_lv
-			,	min(nvl(target_func01_lv, 5)) target_func01_lv
-			,	min(nvl(target_func02_lv, 5)) target_func02_lv
-			,	min(nvl(target_func03_lv, 5)) target_func03_lv
-			,	min(nvl(target_func04_lv, 5)) target_func04_lv
-			,	min(nvl(target_func05_lv, 5)) target_func05_lv
-			,	min(nvl(target_func06_lv, 5)) target_func06_lv
-			,	min(nvl(target_func07_lv, 5)) target_func07_lv
-			,	min(nvl(target_func08_lv, 5)) target_func08_lv
-			,	min(nvl(target_func09_lv, 5)) target_func09_lv
-			,	min(nvl(target_func10_lv, 5)) target_func10_lv
+			,	min(ifnull(target_use_lv, 5)) target_use_lv
+			,	min(ifnull(target_read_lv, 5)) target_read_lv
+			,	min(ifnull(target_create_lv, 5)) target_create_lv
+			,	min(ifnull(target_modify_lv, 5)) target_modify_lv
+			,	min(ifnull(target_delete_lv, 5)) target_delete_lv
+			,	min(ifnull(target_confirm_lv, 5)) target_confirm_lv
+			,	min(ifnull(target_func01_lv, 5)) target_func01_lv
+			,	min(ifnull(target_func02_lv, 5)) target_func02_lv
+			,	min(ifnull(target_func03_lv, 5)) target_func03_lv
+			,	min(ifnull(target_func04_lv, 5)) target_func04_lv
+			,	min(ifnull(target_func05_lv, 5)) target_func05_lv
+			,	min(ifnull(target_func06_lv, 5)) target_func06_lv
+			,	min(ifnull(target_func07_lv, 5)) target_func07_lv
+			,	min(ifnull(target_func08_lv, 5)) target_func08_lv
+			,	min(ifnull(target_func09_lv, 5)) target_func09_lv
+			,	min(ifnull(target_func10_lv, 5)) target_func10_lv
 			from
 			(
 				select

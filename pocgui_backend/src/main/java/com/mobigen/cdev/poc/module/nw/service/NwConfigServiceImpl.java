@@ -43,7 +43,7 @@ public class NwConfigServiceImpl implements NwConfigService {
         String envStatus = env.getProperty("spring.profiles.active");
 
 
-        if ("local".equals(envStatus)) {
+        // if ("local".equals(envStatus)) {
             //Run Demon (dev, prod)
             boolean isRun = nwConfigDemon.isRun();
             if(!isRun){
@@ -61,7 +61,7 @@ public class NwConfigServiceImpl implements NwConfigService {
                 if(!awakenDemonIsAlive) awakenDemon.start();
             }
             */
-        }
+        // }
     }
 
     @Override

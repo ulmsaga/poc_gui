@@ -13,7 +13,7 @@ server:
 #local
 spring:
   pid:
-    file: C:\Users\ZZ14932\Documents\poc.pid
+    file: /Users/sclee1115/Project/Dev/poc_gui/98.data/poc.pid
   config:
     activate:
       on-profile: config-local
@@ -31,15 +31,15 @@ server:
 file:
   path:
     create:
-      excel: C:\Users\ZZ14932\Documents\
+      excel: /Users/sclee1115/Project/Dev/poc_gui/98.data/
     download:
-      excel: C:\Users\ZZ14932\Documents\
+      excel: /Users/sclee1115/Project/Dev/poc_gui/98.data/
     upload:
-      excel: C:\Users\ZZ14932\Documents\
+      excel: /Users/sclee1115/Project/Dev/poc_gui/98.data/
       docu: /Users/sclee1115/Project/Dev/poc_gui/98.data/
     log:
-      main: C:\Users\ZZ14932\Documents\
-      etc: C:\Users\ZZ14932\Documents\
+      main: /Users/sclee1115/Project/Dev/poc_gui/98.data/
+      etc: /Users/sclee1115/Project/Dev/poc_gui/98.data/
 
 sms:
   server:
@@ -120,7 +120,7 @@ poc:
 #prod
 spring:
   pid:
-    file: /local/BOS-GUI/poc.pid
+    file: /local/POC-GUI/poc.pid
   config:
     activate:
       on-profile: config-prod

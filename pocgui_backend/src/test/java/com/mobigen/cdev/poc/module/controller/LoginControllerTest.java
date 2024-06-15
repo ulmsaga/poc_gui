@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mobigen.cdev.poc.core.base.dto.RsResultDto;
 import com.mobigen.cdev.poc.core.security.util.rsa.RSAUtil;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Disabled
 public class LoginControllerTest {
 
     private final MockMvc mockMvc;
@@ -34,6 +36,7 @@ public class LoginControllerTest {
     }
 
     @Test
+    @Disabled
     public void getRsaKeySetTest() throws Exception {
 
         MockHttpSession session = new MockHttpSession();

@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 
 import { styled } from "@mui/material/styles";
 import { Button } from "@mui/material";
-import { BackspaceOutlined, CancelOutlined, CheckCircleOutline, CheckOutlined, DownloadOutlined, SearchOutlined } from "@mui/icons-material";
+import { CancelOutlined, CheckOutlined, DownloadOutlined, SearchOutlined } from "@mui/icons-material";
 import PropTypes from "prop-types";
 
 const ButtonStyled = styled(Button)(({ theme, variant }) => ({

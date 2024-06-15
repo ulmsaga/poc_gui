@@ -9,7 +9,7 @@
       "name": "pemdb1.datasource",
       "type": "javax.sql.DataSource",
       "sourceType": "com.mobigen.cdev.poc.config.DataSourcePemdb1Config",
-      "sourceMethod": "dataSourcePemdb1()"
+      "sourceMethod": "public javax.sql.DataSource dataSourcePemdb1() "
     }
   ],
   "properties": [

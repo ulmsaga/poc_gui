@@ -20,6 +20,7 @@ pemdb1:
   jpa:
     hibernate:
       database: mariadb
+      # database: mysql
       # 절대 바꾸지 말 것!!! ddl-auto: none으로 고정
       ddl-auto: none
       naming:
@@ -46,7 +47,6 @@ pemdb1:
     password: tndfPans2013^_
     # jdbc-url: jdbc:mariadb://175.126.73.136:3306/pemdb1
     jdbc-url: jdbc:log4jdbc:mariadb://175.126.73.136:3306/pemdb1
-    # jdbc-url: jdbc:log4jdbc:mysql://192.168.100.216:3307/pemdb1?useUnicode=true&serverTimezone=Asia/Seoul&allowMultiQueries=true
 ---
 #dev
 spring:
@@ -58,7 +58,7 @@ pemdb1:
   datasource:
     username: pem
     password: tndfPans2013^_
-    jdbc-url: jdbc:mariadb://175.126.73.136:3306/pemdb1
+    jdbc-url: jdbc:log4jdbc:mysql://192.168.100.216:3307/pemdb1?useUnicode=true&serverTimezone=Asia/Seoul&allowMultiQueries=true
 
 ---
 #prod
@@ -71,4 +71,4 @@ pemdb1:
   datasource:
     username: pem
     password: tndfPans2013^_
-    jdbc-url: jdbc:mariadb://175.126.73.136:3306/pemdb1
+    jdbc-url: jdbc:log4jdbc:mysql://192.168.100.216:3307/pemdb1?useUnicode=true&serverTimezone=Asia/Seoul&allowMultiQueries=true
