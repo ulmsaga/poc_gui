@@ -115,7 +115,7 @@ const HeaderRightContent = () => {
         </Popper>
       </Stack>
       <Stack direction={"row"} spacing={0}>
-        <Typography variant="subtitle1" paddingTop={1} paddingLeft={0.6} width={68}>{remainExpMin + '분 ' + remainExpSec + '초'}</Typography>
+        <Typography variant="subtitle1" paddingTop={1} paddingLeft={0.6} width={76}>{remainExpMin + '분 ' + remainExpSec + '초'}</Typography>
         <IconButton onClick={extendPeriod}>
           <UpdateOutlined />
         </IconButton>

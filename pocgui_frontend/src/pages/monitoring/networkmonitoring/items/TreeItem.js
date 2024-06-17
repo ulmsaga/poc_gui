@@ -2,10 +2,16 @@ import { AddOutlined, AodOutlined, CircleSharp, RemoveOutlined, SettingsInputAnt
 import { Tooltip } from "@mui/material";
 import React, { useEffect } from "react";
 
-const TreeItem = ({ item, handleExpand, reloadTrigger }) => {
+const TreeItem = ({ item, handleExpand, reloadTrigger, isSelected, onDoubleClick, setSelectedItemId }) => {
   useEffect(() => {
     // console.log("TreeItem", item);
   }, [reloadTrigger]);
+
+  const onNodeDoubleClick = (item) => {
+    setSelectedItemId(item.id);
+    onDoubleClick(item);
+  };
+
   return (
     <div
       style={{ marginLeft: item.depth * 15, cursor: item.state.lastDepth ? 'pointer' : 'default'}}
@@ -13,7 +19,7 @@ const TreeItem = ({ item, handleExpand, reloadTrigger }) => {
     >
       {/* <div onClick={() => setClicked(!clicked)}> */}
       <Tooltip title={ item.name } arrow placement="left">
-      <div style={{ textOverflow: 'ellipsis',  overflow: 'hidden', whiteSpace: 'nowrap'}}>
+      <div style={{ textOverflow: 'ellipsis',  overflow: 'hidden', whiteSpace: 'nowrap', backgroundColor: isSelected ? 'lightblue' : 'transparent'}} onDoubleClick={ () => { onNodeDoubleClick(item) } } >
         { !item.state.lastDepth && item.state.expanded && <RemoveOutlined fontSize="9" sx={{ paddingTop: 0.2, paddingRight: 0.4 }}/> }
         { !item.state.lastDepth && !item.state.expanded && <AddOutlined fontSize="9" sx={{ paddingTop: 0.2, paddingRight: 0.4 }}/> }
         { item.state.lastDepth && item.state.alarmGrade === 'CR' && <CircleSharp fontSize='small' style={{ marginTop: '2px', paddingTop: '6px' }} sx={{ color: '#FF6347' }}/> }

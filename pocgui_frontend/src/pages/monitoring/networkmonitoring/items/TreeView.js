@@ -12,6 +12,13 @@ const TreeView = ({ tree, handleExpand, dblClickNode, reloadTrigger, searchTarge
   const scrollToIndex = tree.findIndex(item => item.id === searchTargetItemId);
   setSearchTargetItemId('');
 
+  const [selectedItemId, setSelectedItemId] = React.useState(null);
+
+  const handleItemDblClick = (item) => {
+    setSearchTargetItemId(item.id);
+    dblClickNode(item);
+  };
+
   return (
     <AutoSizer>
       {({ height, width }) => (
@@ -23,13 +30,15 @@ const TreeView = ({ tree, handleExpand, dblClickNode, reloadTrigger, searchTarge
           rowRenderer={({ style, key, index }) => {
             const item = tree[index];
             return (
-              <div style={style} key={key} onDoubleClick={ () => { onDoubleClick(item) } }>
+              // <div style={style} key={key} onDoubleClick={ () => { onDoubleClick(item) } }>
+              <div style={style} key={key}>
                 <TreeItem
                   item={item}
                   handleExpand={handleExpand}
-                  // isRenaming={renamin === item.id}
-                  // doubleClick={ doubleClick }
                   reloadTrigger={ reloadTrigger }
+                  isSelected={ item.id === selectedItemId }
+                  setSelectedItemId = { setSelectedItemId }
+                  onDoubleClick={ handleItemDblClick }
                 />
               </div>
             );

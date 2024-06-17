@@ -1,22 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 // material-ui
 import {
   Button,
-  Checkbox,
-  // Divider,
-  FormControlLabel,
   FormHelperText,
   Grid,
-  Link,
   IconButton,
   InputAdornment,
   InputLabel,
   OutlinedInput,
   Stack,
-  Typography
 } from '@mui/material';
 
 // third party
@@ -308,26 +302,6 @@ const AuthLogin = () => {
                 {formik.errors.password}
               </FormHelperText>
             )}
-          </Stack>
-        </Grid>
-
-        <Grid item xs={12} sx={{ mt: -1 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={isChekRemeberId}
-                  onChange={(event) => setIsChekRemeberId(event.target.checked)}
-                  name="checked"
-                  color="primary"
-                  size="small"
-                />
-              }
-              label={<Typography variant="h6">Keep me sign in</Typography>}
-            />
-            <Link variant="h6" component={RouterLink} to="" color="text.primary">
-              Forgot Password?
-            </Link>
           </Stack>
         </Grid>
         {formik.errors.submit && (
