@@ -7,6 +7,7 @@ import com.mobigen.cdev.poc.module.nw.dto.EquipNodeDto;
 import com.mobigen.cdev.poc.module.nw.dto.NwEquipNodesDto;
 import com.mobigen.cdev.poc.module.nw.dto.TreeNodeDto;
 import com.mobigen.cdev.poc.module.nw.process.NwConfigDemon;
+import com.mobigen.cdev.poc.module.nw.process.NwCongifDemonAwaken;
 import com.mobigen.cdev.poc.module.nw.repository.mybatis.NwConfigRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import java.util.Map;
 public class NwConfigServiceImpl implements NwConfigService {
 
     private final NwConfigRepository nwConfigRepository;
+    private final NwCongifDemonAwaken nwCongifDemonAwaken;
     private final Environment env;
 
     private final NwConfigDemon nwConfigDemon;
@@ -32,9 +34,10 @@ public class NwConfigServiceImpl implements NwConfigService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    public NwConfigServiceImpl(NwConfigRepository nwConfigRepository, NwConfigDemon nwConfigDemon, Environment env) {
+    public NwConfigServiceImpl(NwConfigRepository nwConfigRepository, NwConfigDemon nwConfigDemon, NwCongifDemonAwaken nwCongifDemonAwaken, Environment env) {
         this.nwConfigRepository = nwConfigRepository;
         this.nwConfigDemon = nwConfigDemon;
+        this.nwCongifDemonAwaken = nwCongifDemonAwaken;
         this.env = env;
     }
 
@@ -52,15 +55,13 @@ public class NwConfigServiceImpl implements NwConfigService {
                 boolean demonIsAlive = demon.isAlive();
                 if(!demonIsAlive) demon.start();
             }
-            /*
-            isRun = awakenProcess.isRun();
+            isRun = nwCongifDemonAwaken.isRun();
             if(!isRun){
-                awakenProcess.setRun(true);
-                Thread awakenDemon = new Thread(awakenProcess);
+                nwCongifDemonAwaken.setRun(true);
+                Thread awakenDemon = new Thread(nwCongifDemonAwaken);
                 boolean awakenDemonIsAlive = awakenDemon.isAlive();
                 if(!awakenDemonIsAlive) awakenDemon.start();
             }
-            */
         // }
     }
 

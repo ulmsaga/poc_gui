@@ -1,6 +1,5 @@
 package com.mobigen.cdev.poc.module.nw.process;
 
-import com.google.common.collect.Maps;
 import com.mobigen.cdev.poc.core.exception.RsRuntimeException;
 import com.mobigen.cdev.poc.module.common.dto.common.ThreadCallResult;
 import com.mobigen.cdev.poc.module.nw.dto.EnbNodeDto;
@@ -8,9 +7,7 @@ import com.mobigen.cdev.poc.module.nw.dto.EquipNodeDto;
 import com.mobigen.cdev.poc.module.nw.dto.NwEquipNodesDto;
 import com.mobigen.cdev.poc.module.nw.dto.TreeNodeDto;
 import com.mobigen.cdev.poc.module.nw.repository.mybatis.NwConfigRepository;
-import com.mobigen.cdev.poc.module.nw.thread.KpiAnalysisEquipCauseCntThread;
 import com.mobigen.cdev.poc.module.nw.thread.NwEquipNodesThread;
-import com.sun.source.tree.Tree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -19,20 +16,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Component
 public class NwConfigDemon implements Runnable {
 
     private volatile boolean isRun = false;
 
-    private ConcurrentMap<String, NwEquipNodesDto> dataMap = Maps.newConcurrentMap();
+    // private ConcurrentMap<String, NwEquipNodesDto> dataMap = Maps.newConcurrentMap();
+    @SuppressWarnings("FieldMayBeFinal")
     private List<NwEquipNodesDto> dataList = new CopyOnWriteArrayList<>();
-    private Map<Integer, String> keyMap;
+    // private Map<Integer, String> keyMap;
 
     private int currentIdx = 0;
-    private int saveMinCnt = 5;
+    @SuppressWarnings("FieldCanBeLocal")
+    private final int saveMinCnt = 5;
     private boolean overMax = false;
+    @SuppressWarnings("FieldCanBeLocal")
+    private final int THREAD_SLEEP = 1800000;
 
     private final NwConfigRepository nwConfigRepository;
 
@@ -50,6 +54,7 @@ public class NwConfigDemon implements Runnable {
         isRun = run;
     }
 
+    @SuppressWarnings({"unchecked", "CommentedOutCode"})
     private NwEquipNodesDto getNwEquipNodes() {
         NwEquipNodesDto ret = new NwEquipNodesDto();
         Map<String, Object> param = new HashMap<>();
@@ -98,7 +103,7 @@ public class NwConfigDemon implements Runnable {
             } catch (Exception e) {
                 throw new RsRuntimeException("err.common.RsRuntimeException");
             }
-            executor.shutdown();;
+            executor.shutdown();
         }
 
         // logger.debug("enbList size :: {}", ret.getEnbList().size());
@@ -116,6 +121,7 @@ public class NwConfigDemon implements Runnable {
         return ret;
     }
 
+    @SuppressWarnings({"AccessStaticViaInstance", "BusyWait", "ConstantValue"})
     @Override
     public void run() {
         try {
@@ -123,7 +129,7 @@ public class NwConfigDemon implements Runnable {
                 logger.debug("current Idx : {}", currentIdx);
 
                 if (currentIdx >= 1) {
-                    Thread.currentThread().sleep(10000);
+                    Thread.currentThread().sleep(THREAD_SLEEP);
                     continue;
                 }
                 if (currentIdx >= saveMinCnt) {
@@ -144,6 +150,5 @@ public class NwConfigDemon implements Runnable {
             e.printStackTrace();
         }
     }
-
 
 }
