@@ -87,3 +87,5 @@ Temporary Items
 .project
 
 /.idea
+.classpath
+.factorypath

@@ -316,7 +316,7 @@ const NetworkMonitoring = () => {
                           sx={{ paddingTop: 0, transform: 'scale(0.8)'}}
                         />
                       }
-                      label="NODE 체크"
+                      label="NODE"
                       labelPlacement="end"
                     />
                     <FormControlLabel
@@ -328,7 +328,7 @@ const NetworkMonitoring = () => {
                           sx={{ paddingTop: 0, transform: 'scale(0.8)'}}
                         />
                       }
-                      label="LINK 체크"
+                      label="LINK"
                       labelPlacement="end"
                     />
                     <FiberManualRecordTwoTone fontSize='small' style={{ marginTop: '2px' }} sx={{ paddingTop: 0.2, color: '#FF6347' }}/>
