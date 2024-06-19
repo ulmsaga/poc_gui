@@ -362,45 +362,43 @@ const getHeaderInfoForExcel = ( param, headerL, groupL ) => {
   if(groupL!==undefined && groupL!==null){
 
     groupL.forEach((v, k) => {
-      let fIdx=v.fromIndex
-      let tIdx=v.toIndex
-      let gTitle=v.title.replace(/<br>/gi, " ")
-      let grpAreaFIdx=0
-      // let grpAreaTIdx=0
+      let fIdx=v.fromIndex;
+      let tIdx=v.toIndex;
+      let gTitle=v.title.replace(/<br>/gi, " ");
+      if (gTitle === undefined || gTitle === null || gTitle === '') gTitle = '-';
+      let grpAreaFIdx=0;
 
-      // if(!_.isNumber(fIdx)){
       if(!isNum(fIdx)){
         headerL.forEach((v, k) => {
           if(v.key===fIdx && k >= grpAreaFIdx){
-            fIdx=k
+            fIdx=k;
           }
           if(v.key===tIdx && k >= grpAreaFIdx && k >= fIdx){
-            tIdx=k
+            tIdx=k;
           }
           if (tIdx > grpAreaFIdx) {
-            grpAreaFIdx = fIdx
-            grpAreaFIdx = tIdx
+            grpAreaFIdx = fIdx;
+            grpAreaFIdx = tIdx;
           }
         });
       }
       
-      let fR=0
-      let tR=0
-      let valid=true
+      let fR=0;
+      let tR=0;
+      let valid=true;
       for(let i=0;i<hiddenL.length;i++){
         if(fIdx === hiddenL[i] || tIdx === hiddenL[i]){
-          valid=false
-          continue
+          valid=false;
+          continue;
         }
         
-        if(fIdx>hiddenL[i]) fR=fR+1
-        if(tIdx>hiddenL[i]) tR=tR+1
+        if(fIdx>hiddenL[i]) fR=fR+1;
+        if(tIdx>hiddenL[i]) tR=tR+1;
       }
       
       if(valid) {
-        fIdx=fIdx-fR
-        tIdx=tIdx-tR
-        // group.append(fIdx+":"+tIdx+":"+gTitle+",");
+        fIdx=fIdx-fR;
+        tIdx=tIdx-tR;
         group = group + fIdx+":"+tIdx+":"+gTitle+",";
       }
     });
@@ -426,6 +424,10 @@ const getExcelFile = ( excelApiUri, searchParam, colDefs, downloadFileName, aler
   custAxios.post(excelApiUri, paramXls)
     .then(response => response.data)
     .then((ret) => {
+      if (ret.result === -1) {
+        alert(ret.errorMessage + '\n관리자에게 문의해 주시기 바랍니다.');
+        return;
+      }
       let fileName = (ret.rs !== undefined) ? ret.rs.file_name : '';
       let URI = '/poc_service/common/filemanage/fileDownload';
       axios.post(

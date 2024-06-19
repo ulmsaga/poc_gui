@@ -33,6 +33,13 @@ public class NwAnalysisController {
         return ResponseEntity.ok(result);
     }
 
+    @RequestMapping(value = "/getKpiAnalysisExcel", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RsResultDto> getKpiAnalysisExcel(@RequestBody Map<String, Object> param) {
+        RsResultDto result = new RsResultDto();
+        result.setRs(nwAnalysisService.getKpiAnalysisExcel(param));
+        return ResponseEntity.ok(result);
+    }
+
     @RequestMapping(value = "/getKpiAnalysisEquipCauseCnt", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RsResultDto> getKpiAnalysisEquipCauseCnt(@RequestBody Map<String, Object> param) {
         RsResultDto result = new RsResultDto();

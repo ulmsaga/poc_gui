@@ -10,6 +10,7 @@ import KpiAnalysis from "pages/analysis/kpianalysis/index.js";
 import { getCurAlarm1M, getLastStatusTime } from "api/nw/monitorApi.js";
 import { fnDateToFormatStr, fnStrToDate } from "utils/common.js";
 import { NODE_TYPE_PATTERN_ENB, NODE_TYPE_PATTERN_EPC } from "data/common/index.js";
+import PopupSetLastDate from "./popup/PopupSetLastDate.js/index.js";
 
 const NetworkMonitoring = () => {
   // eslint-disable-next-line no-unused-vars
@@ -32,6 +33,22 @@ const NetworkMonitoring = () => {
   const [linkFilterCheck, setLinkFilterCheck] = useState(true);
 
   const [isMonitoring, setIsMonitoring] = useState(true);
+
+  // POPUP SET LAST DATE FOR MONITORING
+  const [isOpenPopupLastDate, setIsOpenPopupLastDate] = useState(false);
+
+  const [alarmList, setAlarmList] = useState([]);
+  const [gridMainData, setGridMainData] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [monitorParam, setMonitorParam] = useState({});
+  const [monitorTime, setMonitorTime] = useState('');
+  const [monitorFormatTime, setMonitorFormatTime] = useState('');
+
+  const [callKpiFlag, setCallKpiFlag] = useState(false);
+  const [searchTargetMmeId, setSearchTargetMmeId] = useState('');
+  const [searchTargetEnbId, setSearchTargetEnbId] = useState('');
+  const [pollingCnt, setPollingCnt] = useState(0);
+  const tmpRef = useRef(0);
 
   const nodeAlarmCols = [
     {
@@ -88,14 +105,7 @@ const NetworkMonitoring = () => {
     {headerName: '연속', field: 'continue_cnt', minWidth: 80, width: 100, suppressAutoSize: true, valueFormatter: '(value * 1).toLocaleString()', cellStyle: { textAlign: 'right' }}
   ];
   
-  const [alarmList, setAlarmList] = useState([]);
-  const [gridMainData, setGridMainData] = useState([]);
-
-  // const [lastStatusTime, setLastStatusTime] = useState('');
-  // eslint-disable-next-line no-unused-vars
-  const [monitorParam, setMonitorParam] = useState({});
-  const [monitorTime, setMonitorTime] = useState('');
-  const [monitorFormatTime, setMonitorFormatTime] = useState('');
+  
 
   const getMonitorTime = (isSetAndRun) => {
     const param = {};
@@ -187,7 +197,6 @@ const NetworkMonitoring = () => {
     setLinkFilterCheck(event.target.checked);
   };
   
-  const [callKpiFlag, setCallKpiFlag] = useState(false);
   const dblClickNode = (params) => {
     params.callFromMonitorType = 'EQUIP';
     params.monitorTime = monitorTime;
@@ -195,8 +204,7 @@ const NetworkMonitoring = () => {
     setCallKpiFlag(!callKpiFlag);
   };
 
-  const [searchTargetMmeId, setSearchTargetMmeId] = useState('');
-  const [searchTargetEnbId, setSearchTargetEnbId] = useState('');
+  
   const gridAlarmCellDbClick = (rows) => {
     console.log('gridAlarmCellDbClick', rows);
     if (rows.data.node1_type === 'MME') {
@@ -226,12 +234,22 @@ const NetworkMonitoring = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [pollingCnt, setPollingCnt] = useState(0);
   const updatePollingCnt = (cnt) => {
     setPollingCnt(cnt);
   };
 
-  const tmpRef = useRef(0);
+  const callBackFromPopupSetLastDate = (ret) => {
+    // alert( fnDateToFormatStr(ret, 'yyyyMMddHHmmss') );
+    if (ret !== undefined) {
+      setIsMonitoring(false);
+      const tmpMonitorTime = fnDateToFormatStr(ret, 'yyyyMMddHHmmss');
+      const tmpMonitorFormatTime = fnDateToFormatStr(ret, 'yyyy-MM-dd HH:mm');
+      setMonitorTime(tmpMonitorTime);
+      setMonitorFormatTime(tmpMonitorFormatTime);
+      getMonitorAlarm(tmpMonitorTime);
+    }
+  };
+  
   useEffect(() => {
     if (isMonitoring) {
       const interval = setInterval(() => {
@@ -271,8 +289,8 @@ const NetworkMonitoring = () => {
             <Stack direction={'row'} spacing={0} p={0} marginTop={0.6} sx={{ justifyContent: 'space-between', verticalAlign: 'middle', height: '100%' }}>
               <Stack direction={'row'} spacing={0} p={0} sx={{ verticalAlign: 'middle', height: '100%' }}>
                 <TypoMarkLableNoLine label={'감시'} style={{ width: '100%', paddingRight: '10px' }}/>
-                <TypoLabel label={ monitorFormatTime } variant={'h3'} style={{ height: '26px', width: '130px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', border: '0.5px solid #9fa2a7' /*, background: '#e6f4ff'*/ , borderRadius: '0px' }}/>
-                <IconButton size={ 'small' } color='primary' onClick={ () => { getMonitorTime(true) } }>
+                <TypoLabel label={ monitorFormatTime } style={{ height: '26px', width: '130px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', border: '0.5px solid #9fa2a7' /*, background: '#e6f4ff'*/ , borderRadius: '0px' }}/>
+                <IconButton size={ 'small' } color='primary' onClick={ () => { setIsOpenPopupLastDate(true) } }>
                   <DateRangeTwoTone fontSize='small' htmlColor="#3ea2b3" />
                 </IconButton>
               </Stack>
@@ -356,6 +374,7 @@ const NetworkMonitoring = () => {
         </Grid>
       </Grid>
       {/* <PopupEquipStatus title={'Equip Status'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenPopupStatus } setIsOpen={ setIsOpenPopupStatus }/> */}
+      <PopupSetLastDate title={'과거 알람 조회'} params={{ monitorTime: monitorTime }} style={{ width: 500, height: 800, left: 100, top: '-100px' }} isOpen={ isOpenPopupLastDate } setIsOpen={ setIsOpenPopupLastDate } callBackFn={ callBackFromPopupSetLastDate }/>
     </Fragment>
   );
 };

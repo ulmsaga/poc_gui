@@ -1,6 +1,8 @@
 package com.mobigen.cdev.poc.module.nw.service;
 
 import com.mobigen.cdev.poc.core.exception.RsRuntimeException;
+import com.mobigen.cdev.poc.core.file.dto.ExcelDto;
+import com.mobigen.cdev.poc.core.file.excel.handler.ExcelDefaultExceptionHandler;
 import com.mobigen.cdev.poc.core.security.annotation.LoginUser;
 import com.mobigen.cdev.poc.core.util.annotation.EnvStatus;
 import com.mobigen.cdev.poc.core.util.common.Cutil;
@@ -37,6 +39,8 @@ public class NwAnalysisServiceImpl implements NwAnalysisService {
     }
 
     @Override
+    @LoginUser
+    @EnvStatus
     public KpiAnalysisResultDto getKpiAnalysis(Map<String, Object> param) {
         KpiAnalysisResultDto ret = new KpiAnalysisResultDto();
         setKpiAnalysisParam(param);
@@ -48,6 +52,33 @@ public class NwAnalysisServiceImpl implements NwAnalysisService {
         ret.setList(list);
         ret.setCauseList((List<RootCauseForPivotDto>)param.get("causeList"));
         return ret;
+    }
+
+    @Override
+    @EnvStatus
+    public ExcelDto getKpiAnalysisExcel(Map<String, Object> param) {
+        ExcelDto excelDto = new ExcelDto();
+
+        setKpiAnalysisParam(param);
+
+        try {
+            ExcelDefaultExceptionHandler excelDefaultExceptionHandler = new ExcelDefaultExceptionHandler(param);
+            nwAnalysisRepository.getKpiAnalysisExcel(param, excelDefaultExceptionHandler);
+
+            if ("".equals(String.valueOf(param.get("sheetName")))) param.put("sheetName", "sheet1");
+            if ("".equals(String.valueOf(param.get("fileName")))) param.put("fileName", param.get("sheetName"));
+            if ("".equals(String.valueOf(param.get("fileExt")))) param.put("fileExt", "xlsx");
+
+            excelDto.setFile_ext(String.valueOf(param.get("fileExt")));
+            excelDto.setFile_name(String.valueOf(param.get("fileName")));
+            excelDto.setTarget_path_key(ExcelDto.FILE_PATH_CREATE_EXCEL);
+            excelDto.setTarget_file(excelDefaultExceptionHandler.execute());
+
+        } catch (Exception e) {
+            throw new RsRuntimeException("error.common.excel.file");
+        }
+
+        return excelDto;
     }
 
     @Override

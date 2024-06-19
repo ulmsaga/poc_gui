@@ -1,5 +1,6 @@
 package com.mobigen.cdev.poc.module.nw.repository.mybatis;
 
+import com.mobigen.cdev.poc.core.file.excel.handler.ExcelDefaultExceptionHandler;
 import com.mobigen.cdev.poc.module.common.dto.common.TrendChartDto;
 import com.mobigen.cdev.poc.module.nw.dto.EquipCaseCauseDto;
 import com.mobigen.cdev.poc.module.nw.dto.RootCauseForPivotDto;
@@ -26,6 +27,11 @@ public class NwAnalysisRepositoryImpl implements NwAnalysisRepository {
     @Override
     public List<?> getKpiAnalysis(Map<String, Object> param) {
         return sqlSessionTemplatePemdb1.selectList(namespace + ".getKpiAnalysis", param);
+    }
+
+    @Override
+    public void getKpiAnalysisExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh) {
+        sqlSessionTemplatePemdb1.select(namespace + ".getKpiAnalysisExcel", param, rh);
     }
 
     @Override

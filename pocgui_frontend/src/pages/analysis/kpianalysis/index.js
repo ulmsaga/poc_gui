@@ -1,6 +1,6 @@
 import { FileDownloadOutlined, SearchOutlined } from "@mui/icons-material";
 import { Button, OutlinedInput, Stack } from "@mui/material";
-import { getKpiAnalysis, getKpiAnalysisEquipCauseCnt } from "api/nw/analysisApi";
+import { getKpiAnalysis, getKpiAnalysisEquipCauseCnt, getKpiAnalysisExcel } from "api/nw/analysisApi";
 import { getEnbList, getMmeList } from "api/nw/configApi";
 import { getLastStatusTime } from "api/nw/monitorApi";
 import { AutoCompleteCheck, AutoCompleteGroup } from "components/autocomplete";
@@ -17,12 +17,12 @@ import { forEach, split } from "lodash";
 import PopupCallFailSearch from "pages/monitoring/networkmonitoring/popup/PopupCallFailSearch.js";
 import PopupEquipSearch from "popup/PopupEquipSearch";
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { fnStrToDate, formatDate } from "utils/common";
+import { fnStrToDate, formatDate, getExcelFile } from "utils/common";
 import PopupKpiCauseTrend from "./popup/PopupKpiCauseTrend";
 
 const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
 
-  const { alert, confirm } = useMessage();
+  const { alert } = useMessage();
 
   // Period
   const [period, setPeriod] = useState('1M');
@@ -320,17 +320,8 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
   const [sgw, setSgw] = useState([]);
   const [pgw, setPgw] = useState([]);
   
-  const excelDownload = () => {
-    // Alert({ title: 'Excel Download', message: 'Excel Download', callback: (e) => { console.log(e); } });
-    // confirm({ title: 'Excel Download', message: 'Excel Download', callback: callback });
-    confirm('Excel Download', callback);
-  };
-  const callback = (ret) => {
-    alert(ret);
-  };
-
-  const searchClick = () => {
-    const param = {};
+  const getParams = (param) => {
+    if (param === undefined) param = {};
     param.isValid = true;
     param.nonValidMsg = '';
 
@@ -388,9 +379,22 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
       param.nonValidMsg = param.nonValidMsg + 'CALL TYPE을 1건 이상 선택하세요.\n';
     }
 
-    // Show DetachCnt
     param.addDetachCnt = 'OK';
 
+    return param;
+  };
+
+  const excelDownload = () => {
+    const param = getParams();
+    if (param.isValid === false) {
+      alert(param.nonValidMsg);
+      return;
+    }
+    getExcelFile(getKpiAnalysisExcel(), param, analysisCols, 'KPI_ANALYSIS', alert);
+  };
+
+  const searchClick = () => {
+    const param = getParams();
     if (param.isValid === false) {
       alert(param.nonValidMsg);
       return;
