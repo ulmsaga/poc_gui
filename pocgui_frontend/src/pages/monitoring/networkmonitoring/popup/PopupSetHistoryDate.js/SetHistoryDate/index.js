@@ -5,7 +5,7 @@ import React, { Fragment, useState } from "react";
 import { fnStrToDate } from "utils/common";
 
 
-const SetLastDate = ({ params, callBackComp }) => {
+const SetHistoryDate = ({ params, callBackComp }) => {
 
   const [selectedDate, setSelectedDate] = useState(() => {
     new Date();
@@ -48,4 +48,4 @@ const SetLastDate = ({ params, callBackComp }) => {
   );
 }
 
-export default SetLastDate;
+export default SetHistoryDate;

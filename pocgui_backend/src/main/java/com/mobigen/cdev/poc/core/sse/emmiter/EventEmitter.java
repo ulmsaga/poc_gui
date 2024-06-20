@@ -2,9 +2,12 @@ package com.mobigen.cdev.poc.core.sse.emmiter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.mobigen.cdev.poc.module.nw.dto.NwAlarmResultDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -20,7 +23,9 @@ public class EventEmitter extends SseEmitter {
   private final Logger logger = LoggerFactory.getLogger(this.getClass());
   private List<?> dataList = new CopyOnWriteArrayList<>();
 
-  public static final String DEFAULT_EVENT_NAME = "sseDgwHistory";
+  private Map<String, List<?>> latestData = new HashMap<>();
+
+  public static final String DEFAULT_EVENT_NAME = NwAlarmResultDto.SSE_TYPE_NW_ALARM;
 
   public SseEmitter add(SseEmitter emitter) {
     this.emitterList.add(emitter);
@@ -56,6 +61,14 @@ public class EventEmitter extends SseEmitter {
     });
   }
 
+  public Map<String, List<?>> getLatestData() {
+    return latestData;
+  }
+
+  public void setLatestData(Map<String, List<?>> latestData) {
+    this.latestData = latestData;
+  }
+
   public void sendData(List<?> dataList, String eventName) {
     this.dataList = dataList;
     emitterList.forEach(emitter -> {
@@ -74,18 +87,20 @@ public class EventEmitter extends SseEmitter {
   public void connectAndSendExistData(SseEmitter emitter, String eventName) {
     try {
       logger.debug("emitter info : {}", emitter.toString());
-      boolean existRetryList = false;
-      if (this.dataList != null) {
-        if (this.dataList.size() > 0) {
-          existRetryList = true;
+      boolean existDataList = false;
+
+      List<?> tmplist = latestData.get(eventName);
+      if (tmplist != null) {
+        if (tmplist.size() > 0) {
+          existDataList = true;
         }
       }
 
-      if (existRetryList) {
+      if (existDataList) {
         logger.debug("emitter.send existRetryList: {}", this.dataList.size());
         emitter.send(SseEmitter.event()
             .name(eventName)
-            .data(this.dataList));
+            .data(tmplist));
       } else {
         logger.debug("emitter.send INIT: {}", "OK");
         emitter.send(SseEmitter.event()

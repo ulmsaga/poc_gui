@@ -3,7 +3,7 @@ import { PollOutlined } from "@mui/icons-material";
 import { Dialog, DialogContent, DialogTitle, IconButton, Paper } from "@mui/material";
 import React from "react";
 import Draggable from "react-draggable";
-import SetLastDate from "./SetLastDate";
+import SetHistoryDate from "./SetHistoryDate";
 
 function PaperComponent(props) {
   return (
@@ -16,7 +16,7 @@ function PaperComponent(props) {
   );
 }
 
-const PopupSetLastDate = ({ title, params, style, isOpen, setIsOpen, callBackFn }) => {
+const PopupSetHistoryDate = ({ title, params, style, isOpen, setIsOpen, callBackFn }) => {
   const close = () => {
     setIsOpen(false);
   };
@@ -56,10 +56,10 @@ const PopupSetLastDate = ({ title, params, style, isOpen, setIsOpen, callBackFn 
       </IconButton>
       <DialogContent dividers sx={{ paddingLeft: 0, paddingRight: 2, paddingTop: 0.5, paddingBottom: 0.5}}>
         {/* <CallFailSearch params={ params } /> */}
-        <SetLastDate params={ params } callBackComp={ callBackComp } />
+        <SetHistoryDate params={ params } callBackComp={ callBackComp } />
       </DialogContent>
     </Dialog>
   );
 }
 
-export default PopupSetLastDate;
+export default PopupSetHistoryDate;

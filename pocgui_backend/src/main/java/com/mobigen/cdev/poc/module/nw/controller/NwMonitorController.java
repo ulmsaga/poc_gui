@@ -25,10 +25,10 @@ public class NwMonitorController {
         return ResponseEntity.ok(result);
     }
 
-    @RequestMapping(value = "/getCurAlarm1M")
-    public ResponseEntity<RsResultDto> getCurAlarm1M(@RequestBody Map<String, Object> param) {
+    @RequestMapping(value = "/getNwAlarm1M")
+    public ResponseEntity<RsResultDto> getNwAlarm1M(@RequestBody Map<String, Object> param) {
         RsResultDto result = new RsResultDto();
-        result.setRs(nwMonitorService.getCurAlarm1M(param));
+        result.setRs(nwMonitorService.getNwAlarm1M(param));
         return ResponseEntity.ok(result);
     }
 }

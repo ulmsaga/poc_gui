@@ -45,24 +45,22 @@ public class NwConfigServiceImpl implements NwConfigService {
     public void initialize(){
         String envStatus = env.getProperty("spring.profiles.active");
 
+        if ("none".equals(envStatus)) return;
 
-        // if ("local".equals(envStatus)) {
-            //Run Demon (dev, prod)
-            boolean isRun = nwConfigDemon.isRun();
-            if(!isRun){
-                nwConfigDemon.setRun(true);
-                Thread demon = new Thread(nwConfigDemon);
-                boolean demonIsAlive = demon.isAlive();
-                if(!demonIsAlive) demon.start();
-            }
-            isRun = nwCongifDemonAwaken.isRun();
-            if(!isRun){
-                nwCongifDemonAwaken.setRun(true);
-                Thread awakenDemon = new Thread(nwCongifDemonAwaken);
-                boolean awakenDemonIsAlive = awakenDemon.isAlive();
-                if(!awakenDemonIsAlive) awakenDemon.start();
-            }
-        // }
+        boolean isRun = nwConfigDemon.isRun();
+        if(!isRun){
+            nwConfigDemon.setRun(true);
+            Thread demon = new Thread(nwConfigDemon);
+            boolean demonIsAlive = demon.isAlive();
+            if(!demonIsAlive) demon.start();
+        }
+        isRun = nwCongifDemonAwaken.isRun();
+        if(!isRun){
+            nwCongifDemonAwaken.setRun(true);
+            Thread awakenDemon = new Thread(nwCongifDemonAwaken);
+            boolean awakenDemonIsAlive = awakenDemon.isAlive();
+            if(!awakenDemonIsAlive) awakenDemon.start();
+        }
     }
 
     @Override

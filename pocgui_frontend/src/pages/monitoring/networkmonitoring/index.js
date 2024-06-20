@@ -1,5 +1,5 @@
 import { Box, Checkbox, FormControlLabel, Grid, IconButton, Stack, Tooltip } from "@mui/material";
-import React, { Fragment, useEffect, useRef, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import GridMain from "components/grid/GridMain";
 import useMessage from "hooks/useMessage";
 import TreeEquipType from "./items/TreeEquipType.js";
@@ -7,10 +7,10 @@ import { getEnbTreeList, getMmeTreeList } from "api/nw/configApi.js";
 import { TypoLabel, TypoLableNoLine, TypoMarkLableNoLine } from "components/label/index.js";
 import { DateRangeTwoTone, FiberManualRecordTwoTone, PauseCircleFilledTwoTone, PlayCircleFilledTwoTone } from "@mui/icons-material";
 import KpiAnalysis from "pages/analysis/kpianalysis/index.js";
-import { getCurAlarm1M, getLastStatusTime } from "api/nw/monitorApi.js";
+import { getNwAlarm1M, getLastStatusTime } from "api/nw/monitorApi.js";
 import { fnDateToFormatStr, fnStrToDate } from "utils/common.js";
 import { NODE_TYPE_PATTERN_ENB, NODE_TYPE_PATTERN_EPC } from "data/common/index.js";
-import PopupSetLastDate from "./popup/PopupSetLastDate.js/index.js";
+import PopupSetHistoryDate from "./popup/PopupSetHistoryDate.js/index.js";
 
 const NetworkMonitoring = () => {
   // eslint-disable-next-line no-unused-vars
@@ -24,6 +24,7 @@ const NetworkMonitoring = () => {
   // eslint-disable-next-line no-unused-vars
   const [enbAlarmList, setEnbAlarmList] = useState([]);
   
+  // FILTER COUNT
   const [filterCrCnt, setFilterCrCnt] = useState(0);
   const [filterMjCnt, setFilterMjCnt] = useState(0);
   const [filterMnCnt, setFilterMnCnt] = useState(0);
@@ -32,10 +33,12 @@ const NetworkMonitoring = () => {
   const [nodeFilterCheck, setNodeFilterCheck] = useState(true);
   const [linkFilterCheck, setLinkFilterCheck] = useState(true);
 
+  // MONITORING
   const [isMonitoring, setIsMonitoring] = useState(true);
+  const [isReRun, setIsReRun] = useState(false);
 
   // POPUP SET LAST DATE FOR MONITORING
-  const [isOpenPopupLastDate, setIsOpenPopupLastDate] = useState(false);
+  const [isOpenPopupHistoryDate, setIsOpenPopupHistoryDate] = useState(false);
 
   const [alarmList, setAlarmList] = useState([]);
   const [gridMainData, setGridMainData] = useState([]);
@@ -47,8 +50,6 @@ const NetworkMonitoring = () => {
   const [callKpiFlag, setCallKpiFlag] = useState(false);
   const [searchTargetMmeId, setSearchTargetMmeId] = useState('');
   const [searchTargetEnbId, setSearchTargetEnbId] = useState('');
-  const [pollingCnt, setPollingCnt] = useState(0);
-  const tmpRef = useRef(0);
 
   const nodeAlarmCols = [
     {
@@ -133,15 +134,13 @@ const NetworkMonitoring = () => {
       param.monitorTime = sTime;
     }
 
-    console.log('getMonitorAlarm', param.monitorTime);
-    getCurAlarm1M(param).then(response => response.data).then((ret) => {
+    getNwAlarm1M(param).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
-
-          console.log('nodeFilterCheck ::', nodeFilterCheck);
-
-          setAlarmList(ret.rs);
-          filterData(ret.rs);
+          if (ret.rs.alarmList !== undefined && ret.rs.alarmList !== null && ret.rs.alarmList !== '') {
+            setAlarmList(ret.rs.alarmList);
+            filterData(ret.rs.alarmList);
+          }
         }
       }
     });
@@ -223,22 +222,8 @@ const NetworkMonitoring = () => {
     setCallKpiFlag(!callKpiFlag);
   };
 
-  useEffect(() => {
-    getMmeTreeList({}).then((response) => {
-      setMmeTreeList(response.data.rs);
-    });
-    getEnbTreeList({}).then((response) => {
-      setEnbTreeList(response.data.rs)
-    });
-    getMonitorTime(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const updatePollingCnt = (cnt) => {
-    setPollingCnt(cnt);
-  };
-
-  const callBackFromPopupSetLastDate = (ret) => {
+  
+  const callBackFromPopupSetHistoryDate = (ret) => {
     // alert( fnDateToFormatStr(ret, 'yyyyMMddHHmmss') );
     if (ret !== undefined) {
       setIsMonitoring(false);
@@ -250,32 +235,126 @@ const NetworkMonitoring = () => {
     }
   };
   
-  useEffect(() => {
-    if (isMonitoring) {
-      const interval = setInterval(() => {
-        console.log('tmpRef.current ::', tmpRef.current);
-        if (tmpRef.current > 100) {
-          tmpRef.current = 1;
-        } else {
-          tmpRef.current = tmpRef.current + 1;
+  const callbackSseEvent = (data) => {
+    if (!isMonitoring) return;
+
+    if (data === "OK" || data === "200") {
+      getMonitorTime(true);
+    }
+
+    const tmpMonitorTime = data.monitor_time;
+    console.log('tmpMonitorTime', tmpMonitorTime);
+    setMonitorTime(tmpMonitorTime);
+    setMonitorFormatTime(fnDateToFormatStr(fnStrToDate(tmpMonitorTime), 'yyyy-MM-dd HH:mm'));
+    setAlarmList(data.alarmList);
+    filterData(data.alarmList);
+  };
+  
+  // ====================================================================================================
+  // SSE EVENT
+  const eventSource = useRef();
+  const reconnectFrequencySecond = useRef(1);
+  const SSE_TYPE_NW_ALARM= 'nwAlarmResultList';
+  eventSource.current = {};
+  const setupEventSource = useCallback(() => {
+    eventSource.current = new EventSource('/poc_service/sse/subscribe')
+    .addEventListener(SSE_TYPE_NW_ALARM, (event) => {
+      const data = JSON.parse(event.data);
+      if (data === "OK" || data === "200") {
+        callbackSseEvent(data);
+      } else {
+        if (data?.length === undefined || data?.length === null) return;
+        if (data?.length > 0) {
+          callbackSseEvent(data[0]);
         }
-        updatePollingCnt(tmpRef.current);
-      }, 60000);
-      return () => {
-        clearInterval(interval);
-      };
+      }
+    });
+    return () => {
+      eventSource.current.close();
+      console.log('[sse] close useCallback => current close & status :: ', eventSource.current.readyState);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+ 
+  eventSource.current.onopen = (e) => {
+    console.log("SSE connection opened");
+    reconnectFrequencySecond.current = 1;
+  }
+  
+  eventSource.current.onerror = (e) => {
+    console.log('[sse] error :: ', e);
+    eventSource.current.close();
+    console.log('[sse] error => current close & status :: ', eventSource.current.readyState);
+    reConnectFunc();
+  }
+  
+  const isFunction = (functionTOCheck) => {
+    return functionTOCheck && {}.toString.call(functionTOCheck) === '[object Function]';
+  };
+  const debounce = (func, wait) => {
+    let timeout;
+    let waitFunc;
+  
+    return function () {
+      console.log('[sse] debounce');
+      if (isFunction(wait)) {
+        waitFunc = wait;
+      } else {
+        waitFunc = () => {
+          return wait;
+        }
+      }
+      const later = () => {
+        console.log('[sse] call later');
+        timeout = null;
+        func.apply();
+      }
+      clearTimeout(timeout);
+      console.log('[sse] wait seconds :: ', waitFunc());
+      timeout = setTimeout(later, waitFunc());
+    }
+  }
+  
+  const reConnectFunc = debounce(() => {
+    setupEventSource();
+    reconnectFrequencySecond.current *= 2;
+    console.log('[sse] reconnectFrequencySecond :: ', reconnectFrequencySecond.current);
+    if (reconnectFrequencySecond.current > 64) {
+      reconnectFrequencySecond.current = 64;
+    }
+  }, () => {
+    console.log('[sse] reconnectFrequencySecond X 1000 :: ', reconnectFrequencySecond.current * 1000);
+    return reconnectFrequencySecond.current * 1000;
+  });
+  // SSE EVENT
+  // ====================================================================================================
+
+  useEffect(() => {
+    getMmeTreeList({}).then((response) => {
+      setMmeTreeList(response.data.rs);
+    });
+    getEnbTreeList({}).then((response) => {
+      setEnbTreeList(response.data.rs)
+    });
+    setTimeout(() => setupEventSource(), 1000);
+    return () => {
+      eventSource.current.close();
+      console.log('[sse] close useEffect => current close & status :: ', eventSource.current.readyState);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  
+
+  useEffect(() => {
+    if (isMonitoring && isReRun) {
+      getMonitorTime(true);
+    } else {
+      setIsReRun(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMonitoring]);
-
-  useEffect(() => {
-    console.log('pollingCnt ::', pollingCnt);
-    if (pollingCnt > 0) {
-      getMonitorTime(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pollingCnt]);
-
+  
   useEffect(() => {
     filterData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -290,7 +369,7 @@ const NetworkMonitoring = () => {
               <Stack direction={'row'} spacing={0} p={0} sx={{ verticalAlign: 'middle', height: '100%' }}>
                 <TypoMarkLableNoLine label={'감시'} style={{ width: '100%', paddingRight: '10px' }}/>
                 <TypoLabel label={ monitorFormatTime } style={{ height: '26px', width: '130px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', border: '0.5px solid #9fa2a7' /*, background: '#e6f4ff'*/ , borderRadius: '0px' }}/>
-                <IconButton size={ 'small' } color='primary' onClick={ () => { setIsOpenPopupLastDate(true) } }>
+                <IconButton size={ 'small' } color='primary' onClick={ () => { setIsOpenPopupHistoryDate(true) } }>
                   <DateRangeTwoTone fontSize='small' htmlColor="#3ea2b3" />
                 </IconButton>
               </Stack>
@@ -374,7 +453,7 @@ const NetworkMonitoring = () => {
         </Grid>
       </Grid>
       {/* <PopupEquipStatus title={'Equip Status'} params={{}} style={{ width: '100%', height: 1000 }} isOpen={ isOpenPopupStatus } setIsOpen={ setIsOpenPopupStatus }/> */}
-      <PopupSetLastDate title={'과거 알람 조회'} params={{ monitorTime: monitorTime }} style={{ width: 500, height: 800, left: 100, top: '-100px' }} isOpen={ isOpenPopupLastDate } setIsOpen={ setIsOpenPopupLastDate } callBackFn={ callBackFromPopupSetLastDate }/>
+      <PopupSetHistoryDate title={'과거 알람 조회'} params={{ monitorTime: monitorTime }} style={{ width: 500, height: 800, left: 100, top: '-100px' }} isOpen={ isOpenPopupHistoryDate } setIsOpen={ setIsOpenPopupHistoryDate } callBackFn={ callBackFromPopupSetHistoryDate }/>
     </Fragment>
   );
 };
