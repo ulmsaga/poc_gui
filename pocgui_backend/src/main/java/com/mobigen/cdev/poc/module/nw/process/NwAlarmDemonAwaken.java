@@ -43,10 +43,10 @@ public class NwAlarmDemonAwaken implements Runnable {
                     if (!demonIsAlive) demon.start();
 
                     if (nwAlarmDemonFailCnt > MAX_FAIL_CNT) {
-                        logger.info("nwAlarmDemon was shutdown {} times by exception.", nwAlarmDemonFailCnt);
+                        logger.info("NwAlarmDemon was shutdown {} times by exception.", nwAlarmDemonFailCnt);
                     }
                 } else {
-                    logger.debug("nwAlarmDemonAwaken is tried and nwAlarmDemon' status is OK!!");
+                    logger.debug("NwAlarmDemonAwaken is tried and NwAlarmDemon' status is OK!!");
                 }
             }
         } catch (Exception e) {

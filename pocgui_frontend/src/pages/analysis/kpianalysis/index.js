@@ -699,7 +699,7 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
     <Fragment>
       {/* CONDS */}
       <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle' }}>
-        <Stack direction={'row'} spacing={0} sx={{ justifyContent: 'space-between', height: '26px' }}>
+        <Stack direction={'row'} spacing={0} sx={{ justifyContent: 'space-between', height: '30px' }}>
           {/* ROW1 CONDS */}
           <Stack direction={'row'} spacing={1.5}>
             <Stack direction={'row'} spacing={0.2} sx={{ verticalAlign: 'middle' }}>
@@ -715,24 +715,24 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
           </Stack>
         </Stack>
         {/* ROW2 */}
-        <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
+        <Stack direction={'row'} spacing={1.5}  sx={{ height: '30px' }}>
           <Stack direction={'row'} spacing={0.2}>
             <TypoLabel label={'대상장비1'} />
             <SelectBox options={ nodeTypeList } value={ searchTarget1.value } onChange={ node1TypeChange }/>
             { (searchTarget1.value !== 'ENB' && searchTarget1.value !== '-' ) && <AutoCompleteGroup data={ node1List } selectedList={ selectedNode1 } onChange={ onChangeNode1 } width={ 301 } groupFilter={'group_filter'} /> }
-            { (searchTarget1.value === 'ENB' || searchTarget1.value === '-' ) && <OutlinedInput value={ node1Input } onChange={(e) => {}} sx={{ width: 287, borderRadius: 0 }} disabled /> }
+            { (searchTarget1.value === 'ENB' || searchTarget1.value === '-' ) && <OutlinedInput value={ node1Input } onChange={(e) => {}} sx={{ width: 301, borderRadius: 0 }} disabled /> }
             { (searchTarget1.value !== '-') && <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node1') }} /> }
           </Stack>
           <Stack direction={'row'} spacing={0.2}>
             <TypoLabel label={'대상장비2'} />
             <SelectBox options={ node2TypeList } value={ searchTarget2.value } onChange={ node2TypeChange }/>
-            { (searchTarget2.value !== 'ENB' && searchTarget2.value !== '-') && <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 287 } groupFilter={'group_filter'} /> }
-            { (searchTarget2.value === 'ENB' || searchTarget2.value === '-') && <OutlinedInput value={ node2Input } onChange={(e) => {}} sx={{ width: 287, borderRadius: 0 }} disabled /> }
+            { (searchTarget2.value !== 'ENB' && searchTarget2.value !== '-') && <AutoCompleteGroup data={ node2List } selectedList={ selectedNode2 } onChange={ onChangeNode2 } width={ 200 } groupFilter={'group_filter'} /> }
+            { (searchTarget2.value === 'ENB' || searchTarget2.value === '-') && <OutlinedInput value={ node2Input } onChange={(e) => {}} sx={{ width: 200, borderRadius: 0 }} disabled /> }
             { (searchTarget2.value !== '-')  && <ButtonIconHelp iconType="search" onClick={ (e) => { searchNodeTypeClick(e, 'node2') }} /> }
           </Stack>
         </Stack>
         {/* ROW3 */}
-        <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
+        <Stack direction={'row'} spacing={1.5}  sx={{ height: '30px' }}>
         <Stack direction={'row'} spacing={0.2}>
             <TypoLabel label={'CALL TYPE'} />
             <AutoCompleteCheck data={ JSON.parse(JSON.stringify(callTypeList)) } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 402 } />
@@ -765,7 +765,7 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
         </div>
       </Stack>
       {/* GRID PATH */}
-      <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: 'calc(40% - 92px)' }}>
+      <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: 'calc(40% - 104px)' }}>
         <GridMain
           className={'ag-theme-balham'}
           style={{ height: '100%', width: '100%' }}

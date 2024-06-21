@@ -4,7 +4,7 @@ import { forEach } from "lodash";
 // eslint-disable-next-line no-unused-vars
 import { NODE_TYPE_PATTERN_ENB, NODE_TYPE_PATTERN_EPC } from "data/common";
 
-const TreeEquipType = ({ nodeTypePattern, data, alarmList, dblClickNode, searchTargetItemId, setSearchTargetItemId }) => {
+const TreeEquipType = ({ nodeTypePattern, data, alarmList, treeEndNodeClicked, searchTargetItemId, setSearchTargetItemId }) => {
   const [expanded, setExpanded] = useState([]);
 
   const flatten = (data, depth = 1, parentId = null, main = []) => {
@@ -183,7 +183,7 @@ const TreeEquipType = ({ nodeTypePattern, data, alarmList, dblClickNode, searchT
 
   const [reloadTrigger, setReloadTrigger] = useState(false);
   return (
-    <TreeView tree={ filterSet() } handleExpand={ handleExpand } reloadTrigger={ !reloadTrigger } dblClickNode={ dblClickNode } searchTargetItemId={ searchTargetItemId } setSearchTargetItemId={ setSearchTargetItemId } />
+    <TreeView tree={ filterSet() } handleExpand={ handleExpand } reloadTrigger={ !reloadTrigger } treeEndNodeClicked={ treeEndNodeClicked } searchTargetItemId={ searchTargetItemId } setSearchTargetItemId={ setSearchTargetItemId } />
   );
 };
 

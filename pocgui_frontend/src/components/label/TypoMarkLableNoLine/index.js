@@ -1,7 +1,6 @@
 import React from 'react';
 import { styled } from '@mui/material/styles';
 import { Stack } from '@mui/material';
-import { FiberManualRecordTwoTone } from '@mui/icons-material';
 
 const TypographyStyled = styled('div')(({ theme, variant }) => ({
   ...theme.typography[variant]
@@ -18,12 +17,25 @@ const TypoMarkLableNoLine = ({ label, variant, paddingTop, width, style }) => {
 
   return (
     <Stack direction={'row'} spacing={0.1} m={0} p={0}>
-      <FiberManualRecordTwoTone fontSize='small' style={{ marginTop: '2px' }} sx={{ paddingTop: 0.2, color: '#87c5fc' }}/>
       <TypographyStyled
         {...tmp}
         sx={{
           paddingTop: tmp.paddingTop,
           width: tmp.width,
+          fontWeight: 'bold',
+          fontSize: '0.8rem',
+          '&:before': {
+            display: 'inline-block',
+            content: '""',
+            width: '5px',
+            height: '6px',
+            marginTop: '-3px',
+            marginLeft: '5px',
+            marginRight: '5px',
+            backgroundColor: '#42a6fd',
+            borderRadius: '4px',
+            verticalAlign: 'middle'
+          },
           ...style
         }}
       >{label}

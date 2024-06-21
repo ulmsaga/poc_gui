@@ -16,7 +16,7 @@ const checkedIcon = <CheckBoxOutlined fontSize="small" />;
 
 const CustLi = styled(List)({
   fontSize: '12px',
-  height: 24,
+  height: 30,
   verticalAlign: 'middle'
 });
 
@@ -71,7 +71,7 @@ const AutoCompleteGroup = ({ data, selectedList, onChange, width, groupFilter })
         {...params}
         sx={{
           "& .MuiOutlinedInput-root": {
-            height: 26,
+            height: 30,
             paddingTop: '-5px',
             borderRadius: 0
           },
@@ -81,6 +81,9 @@ const AutoCompleteGroup = ({ data, selectedList, onChange, width, groupFilter })
           "& .MuiOutlinedInput-root.MuiInputBase-sizeSmall": {
             padding: 0,
           },
+          // "& .MuiButtonBase-root.MuiChip-root.MuiChip-filled ":{
+          //   zIndex: '10 !important',
+          // },
           padding: 0
         }}
       />}

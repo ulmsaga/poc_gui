@@ -19,9 +19,7 @@ const NetworkMonitoring = () => {
   const [mmeTreeList, setMmeTreeList] = useState([]);
   const [enbTreeList, setEnbTreeList] = useState([]);
 
-  // eslint-disable-next-line no-unused-vars
   const [mmeAlarmList, setMmeAlarmList] = useState([]);
-  // eslint-disable-next-line no-unused-vars
   const [enbAlarmList, setEnbAlarmList] = useState([]);
   
   // FILTER COUNT
@@ -196,7 +194,7 @@ const NetworkMonitoring = () => {
     setLinkFilterCheck(event.target.checked);
   };
   
-  const dblClickNode = (params) => {
+  const treeEquipNodeClicked = (params) => {
     params.callFromMonitorType = 'EQUIP';
     params.monitorTime = monitorTime;
     setMonitorParam(params);
@@ -338,7 +336,7 @@ const NetworkMonitoring = () => {
     });
     setTimeout(() => setupEventSource(), 1000);
     return () => {
-      eventSource.current.close();
+      if (isFunction(eventSource.current.close)) eventSource.current.close();
       console.log('[sse] close useEffect => current close & status :: ', eventSource.current.readyState);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -365,10 +363,11 @@ const NetworkMonitoring = () => {
       <Grid sx={{ width: '100%', height: 'calc(100vh - 70px)', flexGrow: 1, paddingTop: '3px' }} container spacing={0.5}>
         <Grid item sx={{ width: '300px'}}>
           <Box height={'50px'} width={'100%'} gap={4} marginTop={1} marginRight={1} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' /*, backgroundColor: '#d8edff'*/ }} >
-            <Stack direction={'row'} spacing={0} p={0} marginTop={0.6} sx={{ justifyContent: 'space-between', verticalAlign: 'middle', height: '100%' }}>
+            <Stack direction={'row'} spacing={0} p={0} marginTop={0.6} sx={{ justifyContent: 'space-between', verticalAlign: 'middle', height: '30px' }}>
               <Stack direction={'row'} spacing={0} p={0} sx={{ verticalAlign: 'middle', height: '100%' }}>
                 <TypoMarkLableNoLine label={'감시'} style={{ width: '100%', paddingRight: '10px' }}/>
-                <TypoLabel label={ monitorFormatTime } style={{ height: '26px', width: '130px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', border: '0.5px solid #9fa2a7' /*, background: '#e6f4ff'*/ , borderRadius: '0px' }}/>
+                {/* <TypoLabel label={ monitorFormatTime } style={{ height: '26px', width: '130px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', border: '0.5px solid #9fa2a7' , borderRadius: '0px' }}/> */}
+                <TypoLabel label={ monitorFormatTime } width={ '130px' }/>
                 <IconButton size={ 'small' } color='primary' onClick={ () => { setIsOpenPopupHistoryDate(true) } }>
                   <DateRangeTwoTone fontSize='small' htmlColor="#3ea2b3" />
                 </IconButton>
@@ -381,11 +380,11 @@ const NetworkMonitoring = () => {
           </Box>
           {/* TREE1 */}
           <Box height={'calc(50% - 31px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }} >
-            <TreeEquipType nodeTypePattern={ NODE_TYPE_PATTERN_EPC } data={ mmeTreeList } alarmList={ mmeAlarmList } dblClickNode={ dblClickNode } searchTargetItemId={ searchTargetMmeId } setSearchTargetItemId={ setSearchTargetMmeId }/>
+            <TreeEquipType nodeTypePattern={ NODE_TYPE_PATTERN_EPC } data={ mmeTreeList } alarmList={ mmeAlarmList } treeEndNodeClicked={ treeEquipNodeClicked } searchTargetItemId={ searchTargetMmeId } setSearchTargetItemId={ setSearchTargetMmeId }/>
           </Box>
           {/* TREE2 */}
           <Box height={'calc(50% - 31px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }} >
-            <TreeEquipType nodeTypePattern={ NODE_TYPE_PATTERN_ENB } data={ enbTreeList } alarmList={ enbAlarmList } dblClickNode={ dblClickNode } searchTargetItemId={ searchTargetEnbId } setSearchTargetItemId={ setSearchTargetEnbId } />
+            <TreeEquipType nodeTypePattern={ NODE_TYPE_PATTERN_ENB } data={ enbTreeList } alarmList={ enbAlarmList } treeEndNodeClicked={ treeEquipNodeClicked } searchTargetItemId={ searchTargetEnbId } setSearchTargetItemId={ setSearchTargetEnbId } />
           </Box>
         </Grid>
         <Grid item sx={{ width: 'calc(100% - 310px)'}}>
@@ -401,18 +400,28 @@ const NetworkMonitoring = () => {
           <Box height={'calc(30% - 4px)'} width={'100%'} gap={4} marginTop={0.5} marginRight={1} marginBottom={1} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
             <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '100%' }}>
               <Stack spacing={0.5} p={0.5} sx={{ width:'100%' }}>
-                <Stack direction={'row'} sx={{ justifyContent: 'space-between' }}>
-                  <TypoMarkLableNoLine label={'ALARM LIST'} style={{ width: '100%' }}/>
+                <Stack direction={'row'} sx={{ justifyContent: 'space-between', verticalAlign: 'middle', height: '30px' }}>
                   <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '100%' }}>
+                    <TypoMarkLableNoLine label={'ALARM LIST'} style={{ width: '100%' }}/>
+                    {/* <span style={{ width: '10px' }}/> */}
+                    <Stack sx={{ width: '10px' }} />
                     <FormControlLabel
                       control={
                         <Checkbox
                           checked={ nodeFilterCheck }
                           onChange={ nodeFilterCheckChange }
                           color="primary"
-                          sx={{ paddingTop: 0, transform: 'scale(0.8)'}}
+                          sx={{ paddingTop: '6px', transform: 'scale(0.7)'}}
                         />
                       }
+                      sx={{
+                        paddingTop: '6px',
+                        '& .MuiTypography-root': {
+                          fontSize: '0.7rem',
+                          marginTop: '0px',
+                          marginLeft: '-6px'
+                        }
+                      }}
                       label="NODE"
                       labelPlacement="end"
                     />
@@ -422,12 +431,22 @@ const NetworkMonitoring = () => {
                           checked={ linkFilterCheck }
                           onChange={ linkFilterCheckChange }
                           color="primary"
-                          sx={{ paddingTop: 0, transform: 'scale(0.8)'}}
+                          sx={{ paddingTop: '6px', transform: 'scale(0.7)'}}
                         />
                       }
+                      sx={{
+                        paddingTop: '6px',
+                        '& .MuiTypography-root': {
+                          fontSize: '0.7rem',
+                          marginTop: '0px',
+                          marginLeft: '-6px'
+                        }
+                      }}
                       label="LINK"
                       labelPlacement="end"
                     />
+                  </Stack>
+                  <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '100%' }}>
                     <FiberManualRecordTwoTone fontSize='small' style={{ marginTop: '2px' }} sx={{ paddingTop: 0.2, color: '#FF6347' }}/>
                     <TypoLableNoLine label={filterCrCnt} variant={'h3'} style={{ height: '26px', width: '50px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', borderRadius: '0px' }}/>
                     <FiberManualRecordTwoTone fontSize='small' style={{ marginTop: '2px' }} sx={{ paddingTop: 0.2, color: '#FFA500' }}/>

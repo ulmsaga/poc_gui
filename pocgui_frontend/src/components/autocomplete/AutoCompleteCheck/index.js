@@ -19,7 +19,7 @@ const checkedIcon = <CheckBoxOutlined fontSize="small" />;
 
 const CustLi = styled(List)({
   fontSize: '12px',
-  height: 24,
+  height: 30,
   verticalAlign: 'middle'
 });
 
@@ -66,13 +66,16 @@ const AutoCompleteCheck = ({ data, selectedList, onChange, width }) => {
             padding: 0,
           },
           "& .MuiOutlinedInput-root": {
-            height: 26,
+            height: 30,
             paddingTop: '-5px',
             borderRadius: 0
           },
           "& .MuiAutocomplete-inputRoot":{
             padding: 0,
           },
+          // "& .MuiButtonBase-root.MuiChip-root.MuiChip-filled ":{
+          //   zIndex: '1500 !important',
+          // },
           padding: 0
         }}
       />}

@@ -4,20 +4,15 @@ import 'react-virtualized-tree/lib/main.css'
 import { AutoSizer, List } from "react-virtualized";
 import TreeItem from "./TreeItem";
 
-const TreeView = ({ tree, handleExpand, dblClickNode, reloadTrigger, searchTargetItemId, setSearchTargetItemId }) => {
-  // eslint-disable-next-line no-unused-vars
-  const onDoubleClick = (item) => {
-    dblClickNode(item);
-  };
-  
+const TreeView = ({ tree, handleExpand, treeEndNodeClicked, reloadTrigger, searchTargetItemId, setSearchTargetItemId }) => {
   const scrollToIndex = tree.findIndex(item => item.id === searchTargetItemId);
   setSearchTargetItemId('');
 
   const [selectedItemId, setSelectedItemId] = React.useState(null);
 
-  const handleItemDblClick = (item) => {
-    setSearchTargetItemId(item.id);
-    dblClickNode(item);
+  const handleEndNodeClicked = (item) => {
+    // setSearchTargetItemId(item.id);
+    treeEndNodeClicked(item);
   };
 
   return (
@@ -27,11 +22,10 @@ const TreeView = ({ tree, handleExpand, dblClickNode, reloadTrigger, searchTarge
           height={ height }
           width={ width }
           rowCount={ tree.length }
-          rowHeight={20}
+          rowHeight={26}
           rowRenderer={({ style, key, index }) => {
             const item = tree[index];
             return (
-              // <div style={style} key={key} onDoubleClick={ () => { onDoubleClick(item) } }>
               <div style={style} key={key}>
                 <TreeItem
                   item={item}
@@ -39,13 +33,13 @@ const TreeView = ({ tree, handleExpand, dblClickNode, reloadTrigger, searchTarge
                   reloadTrigger={ reloadTrigger }
                   isSelected={ item.id === selectedItemId }
                   setSelectedItemId = { setSelectedItemId }
-                  onDoubleClick={ handleItemDblClick }
+                  treeEndNodeClicked={ handleEndNodeClicked }
                 />
               </div>
             );
           }}
           scrollToIndex={ scrollToIndex }
-          scrollToAlignment="start"
+          scrollToAlignment="center"
         />
       )}
     </AutoSizer>
