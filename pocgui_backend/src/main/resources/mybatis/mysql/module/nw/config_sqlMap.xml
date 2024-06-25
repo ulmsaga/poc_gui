@@ -85,15 +85,7 @@
             <include refid="sqlEnbList" />
         ) A
         where 1 = 1
-        and branch_name is not null
-        and opteam_name is not null
-        and part_name is not null
 
-        <if test = 'searchType != null and searchText != null'>
-            <if test = 'searchType != "" and searchText != ""'>
-                AND ${searchType} LIKE concat('%', #{searchText}, '%')
-            </if>
-        </if>
 
         order by branch_id, opteam_id, part_id
     </select>
@@ -108,7 +100,7 @@
             ,	B.branch_name
             ,	CONCAT('TEAM_', A.opteam_id) opteam_id
             ,	C.team_name opteam_name
-            ,	CONCAT('PART_', A.part_id) part_id
+            ,	CONCAT('PART_', A.opteam_id, '_' , A.part_id) part_id
             ,	D.part_name
             ,	A.mtso_name
             ,	E.mtso_id
@@ -116,8 +108,8 @@
             ,	bts_name
             ,   enb_id value
             ,   concat(ifnull(bts_name, '-'), ' (', enb_id, ')') label
-            ,   case when ifnull(opteam_name, '-') = '-' then '미분류'
-                    else concat(opteam_name, ' (', opteam_id, ')')
+            ,   case when ifnull(C.team_name, '-') = '-' then '미분류'
+                    else concat(C.team_name, ' (', opteam_id, ')')
                 end group_filter
             ,   concat(ifnull(bts_name, '-'), ' (', enb_id, ')') description
             ,	@ROWNUM:=@ROWNUM+1 AS row_num
@@ -135,6 +127,29 @@
             where 1 = 1
             and opr_status = 'ACT'
         ) A
+        WHERE 1 = 1
+        and branch_name is not null
+        and opteam_name is not null
+        and part_name is not null
+
+        <if test = 'searchType != null and searchText != null'>
+            <if test = 'searchType != "" and searchText != ""'>
+                AND ${searchType} LIKE concat('%', #{searchText}, '%')
+            </if>
+        </if>
+
+        <!-- Test -->
+        <!--and opteam_id IN ('TEAM_1023')-->
+        <!--
+        and part_id IN (
+        'PART_1031'
+        , 'PART_1042'
+        , 'PART_2001'
+        , 'PART_2003'
+        , 'PART_2005'
+        )
+        -->
+        <!-- Test -->
 <!--        where A.row_num &lt; 4000-->
     </sql>
 </mapper>
