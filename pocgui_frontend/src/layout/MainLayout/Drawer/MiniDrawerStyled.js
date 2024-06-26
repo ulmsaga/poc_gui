@@ -7,14 +7,15 @@ import { drawerWidth } from 'config';
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
-  borderRight: `1px solid ${theme.palette.divider}`,
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.enteringScreen
   }),
   overflowX: 'hidden',
   boxShadow: 'none',
-  backgroundColor: '#1f396d'
+  backgroundColor: '#232C44',
+  // borderRight: `1px solid ${theme.palette.divider}`,
+  borderRight: '1px solid rgba(0, 0, 0, 0.12)',
 });
 
 const closedMixin = (theme) => ({

@@ -6,7 +6,6 @@ import MenuItem from '@mui/material/MenuItem';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import { IconButton, Typography } from '@mui/material';
 import { ContentPasteSearchOutlined, EventNoteOutlined, ManageAccountsOutlined, MonitorHeartOutlined, Settings } from '@mui/icons-material';
-import { SettingOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { setCurrentMenuInfo } from 'store/reducers/menu';
 

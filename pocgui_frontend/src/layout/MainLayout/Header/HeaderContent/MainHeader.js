@@ -5,9 +5,6 @@ import MiddleModuleTitle from "../MiddleModuleTitle.js";
 import RightContent from "../RightContent";
 
 const MainHeader = ({ open, handleDrawerToggle }) => {
-  const iconBackColor = 'grey.100';
-  const iconBackColorOpen = 'grey.200';
-
   return (
     <Toolbar style={{display: 'flex', justifyContent: 'space-between', backgroundColor: '#1a2335'}}>
       <IconButton
@@ -16,7 +13,7 @@ const MainHeader = ({ open, handleDrawerToggle }) => {
         onClick={handleDrawerToggle}
         edge="start"
         color="secondary"
-        sx={{ color: 'text.primary', bgcolor: open ? iconBackColorOpen : iconBackColor, ml: { xs: 0, lg: -2 } }}
+        sx={{ color: (theme) => theme.palette.grey[200], ml: { xs: 0, lg: -2 }, border: (theme) => '0.5px solid ' + theme.palette.grey[200] }}
       >
         {!open ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
       </IconButton>

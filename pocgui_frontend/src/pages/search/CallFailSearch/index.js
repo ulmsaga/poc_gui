@@ -1,4 +1,4 @@
-import { Box, Button, Grid, OutlinedInput, Stack } from "@mui/material";
+import { Box, Grid, OutlinedInput, Stack } from "@mui/material";
 import { getPacketFile, getSignalCallLogXdr } from "api/nw/searchApi";
 import { AutoCompleteCheck } from "components/autocomplete";
 import { DatePickerFromTo } from "components/datepicker";
@@ -11,6 +11,7 @@ import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { fileDownload, fnStrToDate, formatDate } from "utils/common";
 import { callLogCols } from "./data/callLogData";
 import useMessage from "hooks/useMessage";
+import { ButtonStd } from "components/button";
 
 
 const CallFailSearch = ({ params }) => {
@@ -148,44 +149,46 @@ const CallFailSearch = ({ params }) => {
   return (
     <Fragment>
       <Grid item sx={{ width: '100%' }}>
-        <Box height={'100%'} width={'100%'} gap={4} marginTop={0.5} marginRight={0.5} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
-          <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle' }}>
-            <Stack direction={'row'} spacing={0} sx={{ justifyContent: 'space-between', height: '26px' }}>
-              {/* ROW1 CONDS */}
-              <Stack direction={'row'} spacing={1.5}>
-                <Stack direction={'row'} spacing={0.2} sx={{ verticalAlign: 'middle' }}>
+        <Box height={'100%'} width={'100%'} gap={4} marginTop={0.5} marginRight={0.5} marginBottom={0.5} marginLeft={1} paddingTop={1} paddingRight={1} paddingBottom={1} paddingLeft={1}  sx={{ border: '0.5px solid #9fa2a7' }} >
+          <Stack margin={0} padding={0} spacing={1} sx={{ verticalAlign: 'middle' }}>
+            <Stack spacing={0.5} padding={0} sx={{ verticalAlign: 'middle' }}>
+              <Stack direction={'row'} spacing={0} sx={{ justifyContent: 'space-between', height: '30px' }}>
+                {/* ROW1 CONDS */}
+                <Stack direction={'row'} spacing={0.2} padding={0} margin={0} >
                   <TypoLabel label={'조회기간'} />
                   <SelectBox options={ periodList } value={ period } onChange={(e) => { setPeriod(e.target.value) }}/>
                   <DatePickerFromTo selectedDate={ selectedFromToDate } isRange={ true } format={ 'yyyy-MM-dd HH:mm:00' } showTimeSelect={ true } onChangeDate={ changeFromToDate } useMaxDate={ false }/>
                 </Stack>
+                {/* ROW1 BUTTONS */}
+                <Stack direction={'row'} spacing={0.2} padding={0} margin={0} sx={{float: 'right'}}>
+                  {/* <Button variant="contained" color="primary" onClick={ searchClick }>Search</Button>
+                  <Button variant="contained" color="secondary" onClick={ excelDownload }>Excel</Button> */}
+                  <ButtonStd label={'조회'} color='primary' iconType='search' onClick={ searchClick } />
+                  <ButtonStd label={'다운로드'} color='secondary' iconType='download' onClick={ excelDownload } />
+                </Stack>
               </Stack>
-              {/* ROW1 BUTTONS */}
-              <Stack direction={'row'} spacing={0.2} sx={{float: 'right'}}>
-                <Button variant="contained" color="primary" onClick={ searchClick }>Search</Button>
-                <Button variant="contained" color="secondary" onClick={ excelDownload }>Excel</Button>
+              {/* ROW2 */}
+              <Stack direction={'row'} spacing={1.5} padding={0} margin={0}  sx={{ height: '30px' }}>
+                <Stack direction={'row'} spacing={0.2}>
+                  <TypoLabel label={'IMSI / MDN'} />
+                  <OutlinedInput value={ imsi } onChange={(e) => {}} sx={{ width: 402, borderRadius: 0 }} />
+                </Stack>
+                <Stack direction={'row'} spacing={0.2} padding={0} margin={0}>
+                  <TypoLabel label={'CALL TYPE'} />
+                  <AutoCompleteCheck data={ JSON.parse(JSON.stringify(callTypeList)) } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 402 } />
+                </Stack>
               </Stack>
             </Stack>
-            {/* ROW2 */}
-            <Stack direction={'row'} spacing={1.5}  sx={{ height: '26px' }}>
-              <Stack direction={'row'} spacing={0.2}>
-                <TypoLabel label={'IMSI / MDN'} />
-                <OutlinedInput value={ imsi } onChange={(e) => {}} sx={{ width: 388, borderRadius: 0 }} />
-              </Stack>
-              <Stack direction={'row'} spacing={0.2}>
-                <TypoLabel label={'CALL TYPE'} />
-                <AutoCompleteCheck data={ JSON.parse(JSON.stringify(callTypeList)) } selectedList={ selectedCallTypes } onChange={ onChangeCallTypeList } width={ 388 } />
-              </Stack>
+            {/* GRID KPI - CAUSE */}
+            <Stack spacing={1} p={0} sx={{ verticalAlign: 'middle', height: '100%' }}>
+              <GridMain
+                className={'ag-theme-balham'}
+                style={{ height: '650px' }}
+                rowData={ callLogMainData }
+                columnDefs={ colDefs }
+                onCellDoubleClicked={ gridMainDblClick }
+              />
             </Stack>
-          </Stack>
-          {/* GRID KPI - CAUSE */}
-          <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle', height: '100%' }}>
-            <GridMain
-              className={'ag-theme-balham'}
-              style={{ height: '650px' }}
-              rowData={ callLogMainData }
-              columnDefs={ colDefs }
-              onCellDoubleClicked={ gridMainDblClick }
-            />
           </Stack>
         </Box>
       </Grid>

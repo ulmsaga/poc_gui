@@ -16,7 +16,7 @@ const ButtonIconArrow = ({ arrowDirection, color, buttonSize, iconSize, onClick 
 
 ButtonIconArrow.defaultProps = {
   arrowDirection: "Right",
-  color: "#3ea2b3",
+  color: "#42a6fd",
   buttonSize: "small",
   iconSize: "large",
   onClick: () => {}

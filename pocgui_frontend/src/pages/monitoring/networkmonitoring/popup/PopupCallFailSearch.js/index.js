@@ -1,10 +1,11 @@
 import { CloseCircleOutlined } from "@ant-design/icons";
-import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
+import { Dialog, DialogContent, DialogTitle, IconButton, Stack } from "@mui/material";
 import React from "react";
 import Paper from '@mui/material/Paper';
 import Draggable from 'react-draggable';
 import CallFailSearch from "pages/search/CallFailSearch";
-import { PollOutlined } from "@mui/icons-material";
+import { ManageSearchOutlined } from "@mui/icons-material";
+import { TypoLableNoLine } from "components/label";
 
 function PaperComponent(props) {
   return (
@@ -33,9 +34,11 @@ const PopupCallFailSearch = ({ title, params, style, isOpen, setIsOpen }) => {
       maxWidth={ false }
       sx={{ margin: 0, padding: 0}}
     >
-      <DialogTitle id="draggable-dialog-title">
-        <PollOutlined sx={{ marginRight: '4px', marginBottom: '-7px', marginLeft: '-10px', color: (theme) => theme.palette.grey[500] }}/>
-        { title }
+      <DialogTitle id="draggable-dialog-title" sx={{ margin: 0, padding: 1.5, backgroundColor: '#1a2335' }}>
+        <Stack direction={'row'} margin={0} padding={0} spacing={0.5} height={'26px'} width={'100%'} sx={{ verticalAlign: 'middle' }}>
+          <ManageSearchOutlined sx={{ fontSize: '20px', color: (theme) => theme.palette.grey[300] }} style={{ marginTop: '3px' }}/>
+          <TypoLableNoLine variant="h6" label={ title } style={{ fontWeight: 'bold', color: (theme) => theme.palette.grey[300] }}/>
+        </Stack>
       </DialogTitle>
       <IconButton
           aria-label="close"

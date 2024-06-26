@@ -158,19 +158,16 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
     <Grid item sx={{ width: '100%' }}>
       <Box height={'100%'} width={'100%'} gap={4} marginTop={0.5} marginRight={0.5} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5}  sx={{ border: '0.5px solid #9fa2a7' }} >
         <Stack spacing={0.5} p={0.5} sx={{ verticalAlign: 'middle' }}>
-          <Box gap={4} marginTop={0.5} marginRight={0.5} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5} sx={{ border: '0.5px solid #9fa2a7' }}>
-            <Stack spacing={0.5} p={0.5} direction={'row'} sx={{ justifyContent: 'space-between', height: '34px' }}>
+          <Box gap={4} marginTop={0.5} marginRight={0.5} marginBottom={0.5} marginLeft={1} paddingTop={1} paddingRight={1} paddingBottom={1} paddingLeft={1} sx={{ border: '0.5px solid #9fa2a7' }}>
+            <Stack spacing={0.5} p={0.5} direction={'row'} margin={0} padding={0} sx={{ justifyContent: 'space-between', verticalAlign: 'middle', height: '30px' }}>
               {/* ROW1 CONDS */}
-              <Stack direction={'row'} spacing={1.5}>
-                <Stack direction={'row'} spacing={0.2} sx={{ verticalAlign: 'middle' }}>
-                  <TypoLabel label={'검색조건'} />
-                  <SelectBox options={ condTypeList } defaultValue={ condType.value } value={ condType.value } onChange={ condTypeChange } style={{ width: '120px' }}/>
-                  <OutlinedInput placeholder="검색어를 입력하세요" value={ condTypeText } onChange={ (e) => setCondTypeText(e.target.value) } sx={{ width: 300 }} onKeyDown={ (e) => { if (e.key==="Enter") { searchClick() }} }/>
-                </Stack>
+              <Stack direction={'row'} spacing={0.2} margin={0} padding={0}>
+                <TypoLabel label={'검색조건'} />
+                <SelectBox options={ condTypeList } defaultValue={ condType.value } value={ condType.value } onChange={ condTypeChange } style={{ width: '120px' }}/>
+                <OutlinedInput placeholder="검색어를 입력하세요" value={ condTypeText } onChange={ (e) => setCondTypeText(e.target.value) } sx={{ width: 300 }} onKeyDown={ (e) => { if (e.key==="Enter") { searchClick() }} }/>
               </Stack>
               {/* ROW1 BUTTONS */}
-              <Stack direction={'row'} spacing={0.2} sx={{float: 'right'}}>
-                {/* <Button variant="contained" color='primary' sx={{ fontSize: 13 }} startIcon={<SearchOutlined fontSize="small" />} onClick={ (e) => {contentCallBack()} }>조회</Button> */}
+              <Stack direction={'row'} spacing={0.2} margin={0} padding={0} sx={{float: 'right'}}>
                 <ButtonStd label={'조회'} iconType='search' onClick={searchClick} />
               </Stack>
             </Stack>
@@ -178,7 +175,6 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
         </Stack>
         {/* GRID KPI - CAUSE */}
         <Stack spacing={0.5} p={0} sx={{ verticalAlign: 'middle' }}>
-          {/* <Box gap={4} marginTop={0.5} marginRight={0.5} marginBottom={0.5} marginLeft={1} paddingTop={0.5} paddingRight={0.5} paddingBottom={0.5} paddingLeft={0.5} sx={{ border: '0.5px solid #9fa2a7' }}> */}
             <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ justifyContent: 'space-between', verticalAlign: 'middle', height: '100%' }}>
               <Stack direction={'column'} spacing={0.5} p={0.5} width={ '46%' } >
                 <TypoMarkLableNoLine label={'조회 내역'} width={ 70 }/>
@@ -191,7 +187,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
                   getSelectedData={ getSelectedTargetData }
                 />
               </Stack>
-              <Stack direction={'column'} spacing={2} p={0.5} sx={{ verticalAlign: 'middle', paddingTop: '150px'}}>
+              <Stack direction={'column'} spacing={4} p={0.5} sx={{ verticalAlign: 'middle', paddingTop: '240px'}}>
                 <ButtonIconArrow arrowDirection={ "Right" } onClick={ addSelectedTarget } />
                 <ButtonIconArrow arrowDirection={ "Left" } onClick={ removeSelectedTarget }/>
               </Stack>
