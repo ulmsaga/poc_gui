@@ -177,7 +177,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
         <Stack spacing={0.5} p={0} sx={{ verticalAlign: 'middle' }}>
             <Stack direction={'row'} spacing={0.5} p={0.5} sx={{ justifyContent: 'space-between', verticalAlign: 'middle', height: '100%' }}>
               <Stack direction={'column'} spacing={0.5} p={0.5} width={ '46%' } >
-                <TypoMarkLableNoLine label={'조회 내역'} width={ 70 }/>
+                <TypoMarkLableNoLine label={'조회 내역'} width={ 100 }/>
                 <GridMain
                   className={'ag-theme-balham'}
                   style={{ height: '560px', width: '100%' }}
@@ -192,7 +192,7 @@ const EquipSearch = ({ params, contentCallBack, selectedNode }) => {
                 <ButtonIconArrow arrowDirection={ "Left" } onClick={ removeSelectedTarget }/>
               </Stack>
               <Stack direction={'column'} spacing={0.5} p={0.5} width={ '46%' } >
-                <TypoMarkLableNoLine label={'선택 내역'} width={ 70 }/>
+                <TypoMarkLableNoLine label={'선택 내역'} width={ 100 }/>
                 <GridMain
                   className={'ag-theme-balham'}
                   style={{ height: '560px', width: '100%' }}
