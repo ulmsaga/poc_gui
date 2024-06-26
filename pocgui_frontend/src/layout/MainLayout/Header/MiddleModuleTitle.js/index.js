@@ -11,7 +11,7 @@ const MiddleModuleTitle = () => {
 
   return (
     <div style={{ marginLeft: titleLeftMargin }} >
-      <Typography variant="h3">{title}</Typography>
+      <Typography variant="h3" sx={{ color: (theme) => theme.palette.grey[200] }} >{title}</Typography>
     </div>
   );
 }

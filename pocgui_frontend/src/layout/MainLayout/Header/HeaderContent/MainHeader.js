@@ -9,7 +9,7 @@ const MainHeader = ({ open, handleDrawerToggle }) => {
   const iconBackColorOpen = 'grey.200';
 
   return (
-    <Toolbar style={{display: 'flex', justifyContent: 'space-between'}}>
+    <Toolbar style={{display: 'flex', justifyContent: 'space-between', backgroundColor: '#1a2335'}}>
       <IconButton
         disableRipple
         aria-label="open drawer"

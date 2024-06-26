@@ -367,14 +367,14 @@ const NetworkMonitoring = () => {
               <Stack direction={'row'} spacing={0} p={0} sx={{ verticalAlign: 'middle', height: '100%' }}>
                 <TypoMarkLableNoLine label={'감시'} style={{ width: '100%', paddingRight: '10px' }}/>
                 {/* <TypoLabel label={ monitorFormatTime } style={{ height: '26px', width: '130px', fontSize: '14px', fontWeight: 'bold', marginTop: '1px', textAlign: 'center', border: '0.5px solid #9fa2a7' , borderRadius: '0px' }}/> */}
-                <TypoLabel label={ monitorFormatTime } width={ '130px' }/>
+                <TypoLabel label={ monitorFormatTime } width={ '130px' } bgType={ 'gray' }/>
                 <IconButton size={ 'small' } color='primary' onClick={ () => { setIsOpenPopupHistoryDate(true) } }>
-                  <DateRangeTwoTone fontSize='small' htmlColor="#3ea2b3" />
+                  <DateRangeTwoTone fontSize='small' htmlColor="#42a6fd" />
                 </IconButton>
               </Stack>
               <IconButton size={ 'small' } color='primary' onClick={ () => {setIsMonitoring(!isMonitoring)} }>
-                { (isMonitoring) && <PauseCircleFilledTwoTone fontSize='small' htmlColor="#3ea2b3" />}
-                { (!isMonitoring) && <PlayCircleFilledTwoTone fontSize='small' htmlColor="#3ea2b3" />}
+                { (isMonitoring) && <PauseCircleFilledTwoTone fontSize='small' htmlColor="#42a6fd" />}
+                { (!isMonitoring) && <PlayCircleFilledTwoTone fontSize='small' htmlColor="#42a6fd" />}
               </IconButton>
             </Stack>
           </Box>

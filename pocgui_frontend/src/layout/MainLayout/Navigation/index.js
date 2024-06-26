@@ -5,7 +5,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
 import { IconButton, Typography } from '@mui/material';
-import { ContentPasteSearchOutlined, EventNoteOutlined, ManageAccountsOutlined, MonitorHeartOutlined } from '@mui/icons-material';
+import { ContentPasteSearchOutlined, EventNoteOutlined, ManageAccountsOutlined, MonitorHeartOutlined, Settings } from '@mui/icons-material';
 import { SettingOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import { setCurrentMenuInfo } from 'store/reducers/menu';
@@ -69,12 +69,12 @@ const Navigation = () => {
             {(popupState) => (
               <React.Fragment>
                 <IconButtonStyled variant="contained" {...bindTrigger(popupState)} align="center">
-                  { menu.module_id === '0001' && <MonitorHeartOutlined /> }
-                  { menu.module_id === '0002' && <EventNoteOutlined /> }
-                  { menu.module_id === '0003' && <ContentPasteSearchOutlined /> }
-                  { menu.module_id === '0004' && <SettingOutlined /> }
-                  { menu.module_id === '0005' && <ManageAccountsOutlined /> }
-                  <Typography variant="caption" display="block" gutterBottom align='center'>
+                  { menu.module_id === '0001' && <MonitorHeartOutlined sx={{ color: (theme) => theme.palette.grey[200] }} /> }
+                  { menu.module_id === '0002' && <EventNoteOutlined sx={{ color: (theme) => theme.palette.grey[200] }} /> }
+                  { menu.module_id === '0003' && <ContentPasteSearchOutlined sx={{ color: (theme) => theme.palette.grey[200] }} /> }
+                  { menu.module_id === '0004' && <Settings  sx={{ color: (theme) => theme.palette.grey[200] }}/> }
+                  { menu.module_id === '0005' && <ManageAccountsOutlined sx={{ color: (theme) => theme.palette.grey[200] }} /> }
+                  <Typography variant="caption" display="block" gutterBottom align='center' sx={{ color: (theme) => theme.palette.grey[200] }}>
                     {menu.menu_name}
                   </Typography>
                 </IconButtonStyled>

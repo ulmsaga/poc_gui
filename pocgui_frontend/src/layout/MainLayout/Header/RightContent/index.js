@@ -1,4 +1,4 @@
-import { LogoutOutlined, PermIdentityOutlined, UpdateOutlined } from "@mui/icons-material";
+import { AccountCircle, LogoutOutlined, UpdateOutlined } from "@mui/icons-material";
 import { Box, Divider, Fade, IconButton, Popper, Stack, Typography } from "@mui/material";
 import { logout } from "api/login/loginApi";
 import React, { useEffect, useState } from "react";
@@ -92,9 +92,9 @@ const HeaderRightContent = () => {
     >
       <Stack direction="row" spacing={0}>
         <IconButton onClick={handleClick}>
-          <PermIdentityOutlined />
+          <AccountCircle sx={{ color: (theme) => theme.palette.grey[200] }} />
         </IconButton>
-        <Typography variant="subtitle1" paddingTop={1} paddingRight={0.9}>{loginUserId}</Typography>
+        <Typography variant="subtitle1" paddingTop={1} paddingRight={0.9} sx={{ color: (theme) => theme.palette.grey[200] }} >{loginUserId}</Typography>
         <Popper id={id} open={open} anchorEl={anchorEl} transition sx={{zIndex: (theme) => theme.zIndex.drawer + 1}}>
           {({ TransitionProps }) => (
             <Fade {...TransitionProps} timeout={350}>
@@ -115,13 +115,13 @@ const HeaderRightContent = () => {
         </Popper>
       </Stack>
       <Stack direction={"row"} spacing={0}>
-        <Typography variant="subtitle1" paddingTop={1} paddingLeft={0.6} width={76}>{remainExpMin + '분 ' + remainExpSec + '초'}</Typography>
-        <IconButton onClick={extendPeriod}>
+        <Typography variant="subtitle1" paddingTop={1} paddingLeft={0.6} width={76} sx={{ color: (theme) => theme.palette.grey[200] }}>{remainExpMin + '분 ' + remainExpSec + '초'}</Typography>
+        <IconButton onClick={extendPeriod} sx={{ color: (theme) => theme.palette.grey[200] }}>
           <UpdateOutlined />
         </IconButton>
       </Stack>
       <IconButton onClick={doLogout}>
-        <LogoutOutlined />
+        <LogoutOutlined sx={{ color: (theme) => theme.palette.grey[200] }}/>
       </IconButton>
     </Stack>
   );
