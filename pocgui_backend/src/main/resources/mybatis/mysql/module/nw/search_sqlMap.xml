@@ -9,6 +9,9 @@
     <select id="getSignalCallLogXdr" resultType="com.mobigen.cdev.poc.module.nw.dto.SignalXdrDto" parameterType="map" >
         <include refid="sqlSignalFailXdr"/>
     </select>
+    <select id="getSignalCallLogXdrExcel" resultType="java.util.HashMap" parameterType="map" >
+        <include refid="sqlSignalFailXdr"/>
+    </select>
     <sql id="sqlSignalFailXdr">
         SELECT
             <include refid="sqlDefColSignalFailXdr" />

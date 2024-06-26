@@ -1,6 +1,7 @@
 package com.mobigen.cdev.poc.module.nw.repository.mybatis;
 
 import com.mobigen.cdev.poc.core.file.dto.FileDto;
+import com.mobigen.cdev.poc.core.file.excel.handler.ExcelDefaultExceptionHandler;
 import com.mobigen.cdev.poc.module.nw.dto.SignalXdrDto;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
@@ -21,6 +22,11 @@ public class NwSearchRepositoryImpl implements NwSearchRepository {
     @Override
     public List<SignalXdrDto> getSignalCallLogXdr(Map<String, Object> param) {
         return sqlSessionTemplatePemdb1.selectList(namespace + ".getSignalCallLogXdr", param);
+    }
+
+    @Override
+    public void getSignalCallLogXdrExcel(Map<String, Object> param, ExcelDefaultExceptionHandler rh) {
+        sqlSessionTemplatePemdb1.select(namespace + ".getSignalCallLogXdrExcel", param, rh);
     }
 
     @Override

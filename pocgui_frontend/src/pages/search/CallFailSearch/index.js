@@ -1,5 +1,5 @@
 import { Box, Grid, OutlinedInput, Stack } from "@mui/material";
-import { getPacketFile, getSignalCallLogXdr } from "api/nw/searchApi";
+import { getPacketFile, getSignalCallLogXdr, getSignalCallLogXdrExcel } from "api/nw/searchApi";
 import { AutoCompleteCheck } from "components/autocomplete";
 import { DatePickerFromTo } from "components/datepicker";
 import GridMain from "components/grid/GridMain";
@@ -8,7 +8,7 @@ import SelectBox from "components/select/SelectBox";
 import { callTypeList, periodList } from "data/common";
 import { add, addMinutes, differenceInMinutes } from "date-fns";
 import React, { Fragment, useEffect, useMemo, useState } from "react";
-import { fileDownload, fnStrToDate, formatDate } from "utils/common";
+import { fileDownload, fnStrToDate, formatDate, getExcelFile } from "utils/common";
 import { callLogCols } from "./data/callLogData";
 import useMessage from "hooks/useMessage";
 import { ButtonStd } from "components/button";
@@ -51,8 +51,8 @@ const CallFailSearch = ({ params }) => {
     setCallLogMainData([]);
   };
 
-  const searchClick = () => {
-    const param = {};
+  const getParams = (param) => {
+    if (param === undefined) param = {};
     param.isValid = true;
     param.nonValidMsg = '';
 
@@ -92,6 +92,11 @@ const CallFailSearch = ({ params }) => {
       param.nonValidMsg = param.nonValidMsg + 'imis / mdn을 입력 해 주시기 바랍니다.\n';
     }
 
+    return param;
+  }
+
+  const searchClick = () => {
+    const param = getParams();
     if (param.isValid === false) {
       alert(param.nonValidMsg);
       return;
@@ -113,7 +118,14 @@ const CallFailSearch = ({ params }) => {
     });
 
   };
-  const excelDownload = () => {};
+  const excelDownload = () => {
+    const param = getParams();
+    if (param.isValid === false) {
+      alert(param.nonValidMsg);
+      return;
+    }
+    getExcelFile(getSignalCallLogXdrExcel(), param, colDefs, 'CALL_FAIL', alert);
+  };
 
   const gridMainDblClick = (e) => {
     const param = {

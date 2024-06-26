@@ -25,6 +25,13 @@ public class NwSearchController {
         return ResponseEntity.ok(result);
     }
 
+    @RequestMapping(value = "/getSignalCallLogXdrExcel")
+    public ResponseEntity<RsResultDto> getSignalCallLogXdrExcel(@RequestBody Map<String, Object> param) {
+        RsResultDto result = new RsResultDto();
+        result.setRs(nwSearchService.getSignalCallLogXdrExcel(param));
+        return ResponseEntity.ok(result);
+    }
+
     @RequestMapping(value = "/getPacketFile")
     public ResponseEntity<RsResultDto> getPacketFile(@RequestBody Map<String, Object> param) {
         RsResultDto result = new RsResultDto();

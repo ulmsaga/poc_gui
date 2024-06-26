@@ -3,8 +3,8 @@
     <Properties>
         <Property name="PRODUCT_NAME">POC-GUI</Property>
         <Property name="LOG_FORMAT">%d{yyyy-MM-dd HH:mm:ss} %p %m%n</Property>
-        <Property name="BASE_DIR">C:\ztemp\${PRODUCT_NAME}\logs\</Property>
-        <Property name="BASE_BACKUP_DIR">C:\ztemp\${PRODUCT_NAME}\logs\bak\</Property>
+        <Property name="BASE_DIR">/Users/sclee1115/Project/Dev/poc_gui/98.data/${PRODUCT_NAME}/logs/</Property>
+        <Property name="BASE_BACKUP_DIR">/Users/sclee1115/Project/Dev/poc_gui/98.data/${PRODUCT_NAME}/logs/bak/</Property>
     </Properties>
 
     <Appenders>
