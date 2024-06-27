@@ -326,7 +326,7 @@ const NetworkMonitoring = () => {
   });
   // SSE EVENT
   // ====================================================================================================
-
+  
   useEffect(() => {
     getMmeTreeList({}).then((response) => {
       setMmeTreeList(response.data.rs);
@@ -341,8 +341,6 @@ const NetworkMonitoring = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  
 
   useEffect(() => {
     if (isMonitoring && isReRun) {
