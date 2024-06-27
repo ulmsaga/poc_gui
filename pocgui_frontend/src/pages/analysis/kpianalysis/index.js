@@ -384,6 +384,11 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
     return param;
   };
 
+  const apiRef = useRef();
+  const getGridCurrApi = (api) => {
+    apiRef.current = api;
+  };
+
   const excelDownload = () => {
     const param = getParams();
     if (param.isValid === false) {
@@ -393,7 +398,8 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
     getExcelFile(getKpiAnalysisExcel(), param, analysisCols, 'KPI_ANALYSIS', alert);
   };
 
-  const searchClick = () => {
+  const searchClick = (callFromMonitor) => {
+    if (callFromMonitor === undefined || callFromMonitor === null) callFromMonitor = false;
     const param = getParams();
     if (param.isValid === false) {
       alert(param.nonValidMsg);
@@ -401,6 +407,8 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
     }
 
     initGridMain();
+    
+    let tmpList = [];
     getKpiAnalysis(param).then(response => response.data).then((ret) => {
       if (ret !== undefined) {
         if (ret.rs !== undefined) {
@@ -411,13 +419,86 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
             }
             if (ret.rs?.causeList !== null && ret.rs?.causeList !== undefined) rootCauseAddedCols(ret.rs.causeList);
             if (ret.rs?.list !== null && ret.rs?.list !== undefined) setKpiAnalysisData([...ret.rs.list]);
+            tmpList = ret.rs.list;
+            // if (callFromMonitor) {
+            //   setTimeout(() => {
+            //     findCellAndFocus();
+            //   }, 300);
+            // }
           }
         }
+      }
+    }).then(() => {
+      if (callFromMonitor) {
+        // if (tmpList.length === 0) return;
+        setTimeout(() => {
+          findCellAndFocus(tmpList);
+        }, 300);
       }
     });
   };
 
-  
+  const findCellAndFocus = (dataList) => {
+    if (monitorParam?.alarm_class !== undefined) {
+      // ---------------------------
+      // ALARM GRID DOUBLE CLICK
+      // ---------------------------
+      console.log('monitorParam :: ', monitorParam);
+      // Step1 Find Row
+      let tmpRow = -1;
+      dataList.forEach((item, index) => {
+        if (item.EVENT_TIME === monitorParam.monitorTime && item.NODE1_EXP_ID === monitorParam.node1_key && item.NODE2_EXP_ID === monitorParam.node2_key && item.CALL_TYPE === monitorParam.call_type) {
+          tmpRow = index;
+          return true;
+        } 
+      });
+      
+      // Step2 Find Column
+      let tmpField = '';
+      switch (monitorParam.alarm_name) {
+        case  '접속 시도호':
+          tmpField = 'ATTEMPT_CNT';
+          break;
+        case '접속 성공율':
+          tmpField = 'SUCCESS_RATE';
+          break;
+        case 'DATA 시도호':
+          tmpField = 'DATA_ATTEMPT_CNT';
+          break;
+        case 'DATA 성공율':
+          tmpField = 'DATA_SUCCESS_RATE';
+          break;
+        case 'IMS 시도호':
+          tmpField = 'IMS_ATTEMPT_CNT';
+          break;
+        case 'IMS 성공율':
+          tmpField = 'IMS_SUCCESS_RATE';
+          break
+        case 'CD':
+          tmpField = 'DROP_CNT';
+          break;
+        default:
+      }
+
+      let tmpColKey = '';
+      defaultCols.forEach((item) => {
+        if (item.children !== undefined) {
+          item.children.forEach((child) => {
+            if (child.field === tmpField) {
+              tmpColKey = child.field;
+              return true;
+            }
+          });
+        }
+      });
+
+      // Step3 setFocusCell
+      if (tmpRow >= 0 && tmpColKey !== '') {
+        console.log('Exist Target Row & Column');
+        apiRef.current.setFocusedCell(tmpRow, tmpColKey);
+      }
+    }
+  };
 
   const initGridMain = () => {
     setKpiAnalysisData([]);
@@ -608,7 +689,7 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
 
   const [searchTrigger, setSearchTrigger] = useState(false);
   useEffect(() => {
-    console.log(monitorParam);
+    // console.log(monitorParam);
     if (monitorParam?.monitorTime !== null && monitorParam?.monitorTime !== undefined && monitorParam?.monitorTime !== '') {
       setSelectedFromToDate({ ...selectedFromToDate, startDate: fnStrToDate(monitorParam.monitorTime), endDate: addMinutes(fnStrToDate(monitorParam.monitorTime), 1) });
       setNode1List([]);
@@ -691,7 +772,7 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
   
   useEffect(() => {
     if (monitorParam?.monitorTime === null || monitorParam?.monitorTime === undefined || monitorParam?.monitorTime === '') return;
-    searchClick();
+    searchClick(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTrigger]);
 
@@ -759,6 +840,7 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
             columnDefs={analysisCols}
             rowData={kpiAnalysisData}
             // getSelectedData={ getSelectedKpiAnalysisData }
+            getGridCurrApi = { getGridCurrApi }
             onCellDoubleClicked={ gridKpiCellDbClick }
             onCellCustomContextMenu={ onCellCustomContextMenu }
           />
