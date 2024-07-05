@@ -406,6 +406,7 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
       return;
     }
 
+    initGridEquips();
     initGridMain();
     
     let tmpList = [];
