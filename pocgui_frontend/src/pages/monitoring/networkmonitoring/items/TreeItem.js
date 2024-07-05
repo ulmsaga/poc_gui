@@ -4,8 +4,13 @@ import AlarmIcon from "components/alarmIcons/AlarmIcon";
 import React, { Fragment, useEffect } from "react";
 
 const animFadeInOut = keyframes`
-  0%{ opacity:0; }
-  20%{ opacity:0.7; }
+  // 0%{ opacity:0; }
+  // 20%{ opacity:0.7; }
+  // 60%{ opacity:0.9; }
+  // 100%{ opacity:1; }
+  0%{ opacity:0.1; }
+  20%{ opacity:0.6; }
+  40%{ opacity:0.8; }
   60%{ opacity:0.9; }
   100%{ opacity:1; }
 `;

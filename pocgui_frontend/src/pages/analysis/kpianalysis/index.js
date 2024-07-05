@@ -445,10 +445,12 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
       // ---------------------------
       console.log('monitorParam :: ', monitorParam);
       // Step1 Find Row
+      const rowData = { data: {}, column: { parent: { groupId: 0 }, colId: '', colDef: {headerName: ''} } };
       let tmpRow = -1;
       dataList.forEach((item, index) => {
         if (item.EVENT_TIME === monitorParam.monitorTime && item.NODE1_EXP_ID === monitorParam.node1_key && item.NODE2_EXP_ID === monitorParam.node2_key && item.CALL_TYPE === monitorParam.call_type) {
           tmpRow = index;
+          rowData.data = item;
           return true;
         } 
       });
@@ -481,14 +483,19 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
       }
 
       let tmpColKey = '';
+      let groupId = 0;
       defaultCols.forEach((item) => {
         if (item.children !== undefined) {
           item.children.forEach((child) => {
             if (child.field === tmpField) {
               tmpColKey = child.field;
+              rowData.column.parent.groupId = groupId;
+              rowData.column.colId = child.field;
+              rowData.column.colDef.headerName = child.headerName;
               return true;
             }
           });
+          groupId++;
         }
       });
 
@@ -496,6 +503,9 @@ const KpiAnalysis = ({ monitorParam, callKpiFlag }) => {
       if (tmpRow >= 0 && tmpColKey !== '') {
         console.log('Exist Target Row & Column');
         apiRef.current.setFocusedCell(tmpRow, tmpColKey);
+
+        setTrendParam(rowData);
+        setIsOpenTrendChart(true);
       }
     }
   };

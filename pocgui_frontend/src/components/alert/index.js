@@ -1,5 +1,7 @@
 import { CloseCircleOutlined } from "@ant-design/icons";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from "@mui/material";
+import { InfoOutlined } from "@mui/icons-material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Stack } from "@mui/material";
+import { TypoLableNoLine } from "components/label";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { closeAlert } from "store/reducers/message";
@@ -40,8 +42,14 @@ const Alert = () => {
       aria-describedby="alert-dialog-description"
       sx={{ margin: 0.5, padding: 0.5}}
     >
-      <DialogTitle id="alert-dialog-title">
+      {/* <DialogTitle id="alert-dialog-title">
         { message.title }
+      </DialogTitle> */}
+      <DialogTitle id="draggable-dialog-title" sx={{ margin: 0, padding: 1.5, backgroundColor: '#1a2335' }}>
+        <Stack direction={'row'} margin={0} padding={0} spacing={0.5} height={'26px'} width={'100%'} sx={{ verticalAlign: 'middle' }}>
+          <InfoOutlined sx={{ fontSize: '20px', color: (theme) => theme.palette.grey[300] }} style={{ marginTop: '3px' }}/>
+          <TypoLableNoLine variant="h6" label={ message.title } style={{ fontWeight: 'bold', color: (theme) => theme.palette.grey[300] }}/>
+        </Stack>
       </DialogTitle>
       <IconButton
           aria-label="close"
